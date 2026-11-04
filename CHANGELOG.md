@@ -2,6 +2,12 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.2.0] - 2026-11-05
+
+- Add rich embeds to channel messages and interaction responses.
+- Add ephemeral interaction responses, deferrals, and follow-up messages.
+- Expose the discovered Gateway endpoint for platform adapters.
+
 ## [0.1.0] - 2026-11-05
 
 Initial public release.

@@ -34,10 +34,12 @@ type Client struct {
 type APIError struct{ StatusCode int }
 
 type Message struct {
-	ID        string `json:"id"`
-	ChannelID string `json:"channel_id"`
-	GuildID   string `json:"guild_id,omitempty"`
-	Content   string `json:"content"`
+	ID        string  `json:"id"`
+	ChannelID string  `json:"channel_id"`
+	GuildID   string  `json:"guild_id,omitempty"`
+	Content   string  `json:"content"`
+	Embeds    []Embed `json:"embeds,omitempty"`
+	Flags     int     `json:"flags,omitempty"`
 }
 
 func (e *APIError) Error() string { return fmt.Sprintf("Micup API returned HTTP %d", e.StatusCode) }
@@ -137,7 +139,7 @@ func (c *Client) REST(ctx context.Context, method, path string, body, dest any) 
 		}
 		req.Header.Set("Authorization", "Bot "+c.config.Token)
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", "micup.go/0.1")
+		req.Header.Set("User-Agent", "micup.go/0.2")
 		resp, requestErr := c.config.HTTP.Do(req)
 		if requestErr != nil {
 			if ctx.Err() != nil {
@@ -186,15 +188,102 @@ func (c *Client) Gateway(ctx context.Context, handler EventHandler) error {
 	return runGateway(ctx, c, handler)
 }
 
+func (c *Client) GatewayEndpoint() string { return c.gatewayURL }
+
 func (c *Client) SendMessage(ctx context.Context, channelID, content, replyTo string) (Message, error) {
-	if channelID == "" || content == "" {
-		return Message{}, errors.New("channel and message content are required")
+	if content == "" {
+		return Message{}, errors.New("message content is required")
 	}
-	body := map[string]any{"content": content, "allowed_mentions": map[string]any{"parse": []string{}}}
-	if replyTo != "" {
-		body["message_reference"] = map[string]string{"message_id": replyTo, "channel_id": channelID}
+	return c.SendMessageWithOptions(ctx, channelID, MessageOptions{Content: content, ReplyTo: replyTo})
+}
+
+func (c *Client) SendMessageWithOptions(ctx context.Context, channelID string, options MessageOptions) (Message, error) {
+	if channelID == "" {
+		return Message{}, errors.New("channel ID is required")
+	}
+	if options.Content == "" && len(options.Embeds) == 0 {
+		return Message{}, errors.New("message content or at least one embed is required")
+	}
+	if len(options.Embeds) > 10 {
+		return Message{}, errors.New("a message can contain at most 10 embeds")
+	}
+	body := map[string]any{"allowed_mentions": map[string]any{"parse": []string{}}}
+	if options.Content != "" {
+		body["content"] = options.Content
+	}
+	if len(options.Embeds) != 0 {
+		body["embeds"] = options.Embeds
+	}
+	if options.ReplyTo != "" {
+		body["message_reference"] = map[string]string{"message_id": options.ReplyTo, "channel_id": channelID}
 	}
 	var message Message
 	err := c.REST(ctx, http.MethodPost, "/channels/"+url.PathEscape(channelID)+"/messages", body, &message)
 	return message, err
+}
+
+func (c *Client) RespondToInteraction(ctx context.Context, interaction Interaction, options MessageOptions, ephemeral bool) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	data, err := interactionMessageData(options, ephemeral)
+	if err != nil {
+		return err
+	}
+	body := map[string]any{"type": 4, "data": data}
+	path := "/interactions/" + url.PathEscape(interaction.ID) + "/" + url.PathEscape(interaction.Token) + "/callback"
+	return c.REST(ctx, http.MethodPost, path, body, nil)
+}
+
+func (c *Client) DeferInteraction(ctx context.Context, interaction Interaction, ephemeral bool) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	data := map[string]any{}
+	if ephemeral {
+		data["flags"] = 64
+	}
+	path := "/interactions/" + url.PathEscape(interaction.ID) + "/" + url.PathEscape(interaction.Token) + "/callback"
+	return c.REST(ctx, http.MethodPost, path, map[string]any{"type": 5, "data": data}, nil)
+}
+
+func (c *Client) SendInteractionFollowup(ctx context.Context, interaction Interaction, options MessageOptions, ephemeral bool) (Message, error) {
+	if interaction.ApplicationID == "" || interaction.Token == "" {
+		return Message{}, errors.New("interaction application ID and token are required")
+	}
+	data, err := interactionMessageData(options, ephemeral)
+	if err != nil {
+		return Message{}, err
+	}
+	var message Message
+	path := "/webhooks/" + url.PathEscape(interaction.ApplicationID) + "/" + url.PathEscape(interaction.Token)
+	err = c.REST(ctx, http.MethodPost, path, data, &message)
+	return message, err
+}
+
+func validateInteraction(interaction Interaction) error {
+	if interaction.ID == "" || interaction.Token == "" {
+		return errors.New("interaction ID and token are required")
+	}
+	return nil
+}
+
+func interactionMessageData(options MessageOptions, ephemeral bool) (map[string]any, error) {
+	if options.Content == "" && len(options.Embeds) == 0 {
+		return nil, errors.New("interaction response content or at least one embed is required")
+	}
+	if len(options.Embeds) > 10 {
+		return nil, errors.New("an interaction response can contain at most 10 embeds")
+	}
+	data := map[string]any{"allowed_mentions": map[string]any{"parse": []string{}}}
+	if options.Content != "" {
+		data["content"] = options.Content
+	}
+	if len(options.Embeds) != 0 {
+		data["embeds"] = options.Embeds
+	}
+	if ephemeral {
+		data["flags"] = 64
+	}
+	return data, nil
 }

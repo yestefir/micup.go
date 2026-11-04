@@ -60,7 +60,7 @@ func runGateway(parent context.Context, client *Client, handler EventHandler) er
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	dialer := *websocket.DefaultDialer
-	conn, _, err := dialer.DialContext(ctx, client.gatewayURL, http.Header{"User-Agent": []string{"micup.go/0.1"}})
+	conn, _, err := dialer.DialContext(ctx, client.gatewayURL, http.Header{"User-Agent": []string{"micup.go/0.2"}})
 	if err != nil {
 		return errors.New("Micup Gateway connection failed")
 	}
