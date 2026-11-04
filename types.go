@@ -66,9 +66,11 @@ type EmbedField struct {
 }
 
 type MessageOptions struct {
-	Content string  `json:"content,omitempty"`
-	Embeds  []Embed `json:"embeds,omitempty"`
-	ReplyTo string  `json:"-"`
+	Content      string  `json:"content,omitempty"`
+	Embeds       []Embed `json:"embeds,omitempty"`
+	ReplyTo      string  `json:"-"`
+	Nonce        string  `json:"nonce,omitempty"`
+	EnforceNonce bool    `json:"enforce_nonce,omitempty"`
 }
 
 type Interaction struct {

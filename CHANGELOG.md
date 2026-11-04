@@ -2,6 +2,10 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.2.1] - 2026-11-05
+
+- Support idempotent channel message creation with a nonce in `MessageOptions`.
+
 ## [0.2.0] - 2026-11-05
 
 - Add rich embeds to channel messages and interaction responses.

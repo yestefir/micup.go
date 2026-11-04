@@ -11,7 +11,7 @@ Modül Micup taşımasını uygulama mantığından ayırır. Müzik arama ve ku
 - Ses yayını için `libopus` destekli FFmpeg
 
 ```sh
-go get github.com/yestefir/micup.go@v0.2.0
+go get github.com/yestefir/micup.go@v0.2.1
 ```
 
 Public depo [github.com/yestefir/micup.go](https://github.com/yestefir/micup.go); `go.mod` modül yolu bu adresle eşleşir.
@@ -48,4 +48,4 @@ Go kaynaklarında yorum satırı kullanılmaz. API örnekleri ve kullanım açı
 
 Proje MIT lisansıyla ücretsiz kullanılabilir. Ticari kullanım, değiştirme ve yeniden dağıtım serbesttir; kopyalarda telif ve lisans bildirimi korunmalıdır. Ayrıntılar [LICENSE](LICENSE) dosyasındadır.
 
-Güncel public sürüm `v0.2.0`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
+Güncel public sürüm `v0.2.1`'dir. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.

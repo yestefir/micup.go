@@ -217,6 +217,12 @@ func (c *Client) SendMessageWithOptions(ctx context.Context, channelID string, o
 	if options.ReplyTo != "" {
 		body["message_reference"] = map[string]string{"message_id": options.ReplyTo, "channel_id": channelID}
 	}
+	if options.Nonce != "" {
+		body["nonce"] = options.Nonce
+	}
+	if options.EnforceNonce {
+		body["enforce_nonce"] = true
+	}
 	var message Message
 	err := c.REST(ctx, http.MethodPost, "/channels/"+url.PathEscape(channelID)+"/messages", body, &message)
 	return message, err

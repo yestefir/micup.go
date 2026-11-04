@@ -7,7 +7,7 @@ Use Go 1.26.8 or newer. A bot token is required. The voice package also requires
 Install the module:
 
 ```sh
-go get github.com/yestefir/micup.go@v0.2.0
+go get github.com/yestefir/micup.go@v0.2.1
 ```
 
 ## Create a client
