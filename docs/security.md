@@ -13,10 +13,10 @@ Client discovery requires REST and Gateway endpoints to use the configured Micup
 
 ## Before publishing
 
-1. Confirm the GitHub owner and module path in `go.mod`, README install commands, and examples.
+1. Keep the GitHub module path in `go.mod`, README install commands, and examples aligned with `github.com/yestefir/micup.go`.
 2. Keep the MIT license text and copyright notice with distributed copies.
 3. Search the repository and Git history for credentials and generated local configuration.
 4. Run the full test suite, `go vet ./...`, and `go test -race ./...`.
-5. Confirm the module owner and tag `v0.1.0` only after the exported API and docs agree.
+5. Tag releases only after the exported API and docs agree.
 
-This repository is a local draft until these release decisions are complete.
+The public v0.1.0 release is available from the tagged commit.

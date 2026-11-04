@@ -13,10 +13,10 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/mitune/micup.go
+go get github.com/yestefir/micup.go
 ```
 
-The module path assumes the repository will be hosted under the `mitune` GitHub organization. Update `go.mod` and the install instructions if the public repository uses another owner.
+The public repository is [yestefir/micup.go](https://github.com/yestefir/micup.go). The Go module path matches that repository.
 
 ## Quick start
 
@@ -64,4 +64,4 @@ Go source files intentionally contain no comments. The documentation site is the
 
 The first release target is the public REST/Gateway transport and the LiveKit PCM publishing helper. The Gateway runner holds one connection and returns on a disconnect; reconnect and resume policy belongs to the calling application. Identify uses the configured shard ID and count. It does not discover shard counts or redistribute shards.
 
-The first release candidate is `v0.1.0`. Release history is in [CHANGELOG.md](CHANGELOG.md). The repository is a local draft; confirm the final module owner before creating the public tag.
+The first release candidate is `v0.1.0`. Release history is in [CHANGELOG.md](CHANGELOG.md). The public v0.1.0 release is available as a Go module.

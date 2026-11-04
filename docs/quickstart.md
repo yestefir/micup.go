@@ -7,7 +7,7 @@ Use Go 1.26.8 or newer. A bot token is required. The voice package also requires
 Install the module:
 
 ```sh
-go get github.com/mitune/micup.go
+go get github.com/yestefir/micup.go
 ```
 
 ## Create a client
@@ -23,7 +23,7 @@ if err != nil {
 }
 ```
 
-`New` reads Micup's `/.well-known/fluxer` document, checks that the advertised API and Gateway stay on the configured origin, validates the bot identity, and reads the application's message-content grant when available. The default origin is `https://micup.gg`. Tests and private deployments can provide `Config.Origin` and an `http.Client`.
+The module is published from [github.com/yestefir/micup.go](https://github.com/yestefir/micup.go). `New` reads Micup's `/.well-known/fluxer` document, checks that the advertised API and Gateway stay on the configured origin, validates the bot identity, and reads the application's message-content grant when available. The default origin is `https://micup.gg`. Tests and private deployments can provide `Config.Origin` and an `http.Client`.
 
 The HTTP client rejects redirects so a bot token is not forwarded to another origin. REST calls use the bot authorization scheme, bound response sizes, and honor rate-limit delays with context cancellation.
 

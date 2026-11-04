@@ -2,9 +2,9 @@
 
 Notable changes to micup.go are recorded here.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-11-05
 
-Initial public-release candidate.
+Initial public release.
 
 ### Added
 
@@ -19,4 +19,3 @@ Initial public-release candidate.
 - The Gateway runner returns on disconnect; applications own reconnect and resume policy.
 - Shard counts must be configured by the application.
 - The voice package publishes outgoing PCM only and requires FFmpeg with `libopus`.
-- The GitHub module owner and public repository URL must be confirmed before tagging.

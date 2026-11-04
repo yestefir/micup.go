@@ -1,4 +1,4 @@
-module github.com/mitune/micup.go
+module github.com/yestefir/micup.go
 
 go 1.26.8
 

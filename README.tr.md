@@ -11,10 +11,10 @@ Modül Micup taşımasını uygulama mantığından ayırır. Müzik arama ve ku
 - Ses yayını için `libopus` destekli FFmpeg
 
 ```sh
-go get github.com/mitune/micup.go
+go get github.com/yestefir/micup.go
 ```
 
-GitHub modül yolu şu an `mitune` sahibi varsayımıyla ayarlandı. Public yayımdan önce gerçek GitHub sahibi kesinleştirilmeli ve `go.mod` ile kurulum örnekleri birlikte güncellenmelidir.
+Public depo [github.com/yestefir/micup.go](https://github.com/yestefir/micup.go); `go.mod` modül yolu bu adresle eşleşir.
 
 ## Başlangıç
 
@@ -48,4 +48,4 @@ Go kaynaklarında yorum satırı kullanılmaz. API örnekleri ve kullanım açı
 
 Proje MIT lisansıyla ücretsiz kullanılabilir. Ticari kullanım, değiştirme ve yeniden dağıtım serbesttir; kopyalarda telif ve lisans bildirimi korunmalıdır. Ayrıntılar [LICENSE](LICENSE) dosyasındadır.
 
-İlk sürüm adayı `v0.1.0` olarak belirlenmiştir. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır. Public GitHub adresi kesinleşmeden bu etiket yayımlanmaz.
+İlk sürüm adayı `v0.1.0` olarak belirlenmiştir. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır. Public v0.1.0 sürümü Go modülü olarak kullanılabilir.
