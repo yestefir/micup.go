@@ -10,6 +10,7 @@ import (
 
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/internal/fixture"
+	"github.com/yestefir/micup.go/src/model"
 	"github.com/yestefir/micup.go/src/rest"
 	"github.com/yestefir/micup.go/src/session"
 	"github.com/yestefir/micup.go/src/shard"
@@ -156,6 +157,37 @@ func TestManagerStopsAllShardsOnFatalClose(t *testing.T) {
 		done <- err
 	case <-time.After(5 * time.Second):
 		t.Fatal("manager kept running after a fatal close")
+	}
+}
+
+func TestManagerPresenceReachesEveryShard(t *testing.T) {
+	p := fixture.New(t)
+	m := newManager(t, p, shard.Options{ShardCount: 2, IdentifyInterval: time.Millisecond})
+	run(t, m)
+	fixture.Eventually(t, m.Ready)
+	ctx := context.Background()
+	if err := m.SetCustomStatus(ctx, model.CustomStatus{Text: "!yardım"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.SetStatus(ctx, model.StatusIdle); err != nil {
+		t.Fatal(err)
+	}
+	// Shards send on separate sockets, so arrival order is not fixed.
+	fixture.Eventually(t, func() bool { return len(p.Presences()) == 4 })
+	final := 0
+	for _, raw := range p.Presences() {
+		if strings.Contains(string(raw), `"idle"`) && strings.Contains(string(raw), "!yardım") {
+			final++
+		}
+	}
+	if final != 2 {
+		t.Fatalf("each shard must send the status with the kept custom status: %s", p.Presences())
+	}
+	if presence := m.Presence(); presence.Status != model.StatusIdle || presence.CustomStatus == nil {
+		t.Fatalf("manager presence is wrong: %+v", presence)
+	}
+	if err := m.SetCustomStatus(ctx, model.CustomStatus{}); err == nil || len(p.Presences()) != 4 {
+		t.Fatal("an invalid custom status reached a shard")
 	}
 }
 

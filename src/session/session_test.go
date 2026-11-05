@@ -2,6 +2,7 @@ package session_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -259,6 +260,61 @@ func TestSessionSendsIdentifyOptionsAndPresence(t *testing.T) {
 	}
 	if _, err := session.New(session.Config{Endpoint: "wss://micup.gg", Token: "t"}, session.Options{IgnoredEvents: []string{"typing start"}}); err == nil {
 		t.Fatal("invalid ignored event accepted")
+	}
+}
+
+func TestSessionPresenceHelpers(t *testing.T) {
+	p := fixture.New(t)
+	s := newSession(t, p, session.Options{MinBackoff: 10 * time.Millisecond, Presence: &model.Presence{Status: model.StatusIdle, CustomStatus: &model.CustomStatus{Text: "!yardım"}}})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx := context.Background()
+	last := func(n int) map[string]json.RawMessage {
+		t.Helper()
+		fixture.Eventually(t, func() bool { return len(p.Presences()) == n })
+		var payload map[string]json.RawMessage
+		if err := json.Unmarshal(p.Presences()[n-1], &payload); err != nil {
+			t.Fatal(err)
+		}
+		return payload
+	}
+	if err := s.SetStatus(ctx, model.StatusDND); err != nil {
+		t.Fatal(err)
+	}
+	if got := last(1); string(got["status"]) != `"dnd"` || string(got["custom_status"]) != `{"text":"!yardım"}` {
+		t.Fatalf("SetStatus did not keep the custom status: %s %s", got["status"], got["custom_status"])
+	}
+	if err := s.SetCustomStatus(ctx, model.CustomStatus{Text: "3 sunucuda", EmojiName: "🎵"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := last(2); string(got["status"]) != `"dnd"` || !strings.Contains(string(got["custom_status"]), "3 sunucuda") {
+		t.Fatalf("SetCustomStatus did not keep the status: %s %s", got["status"], got["custom_status"])
+	}
+	if err := s.ClearCustomStatus(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if got := last(3); string(got["custom_status"]) != "null" || string(got["status"]) != `"dnd"` {
+		t.Fatalf("ClearCustomStatus did not send null: %s", p.Presences()[2])
+	}
+	if presence := s.Presence(); presence.Status != model.StatusDND || presence.CustomStatus != nil {
+		t.Fatalf("remembered presence is wrong: %+v", presence)
+	}
+	if err := s.SetCustomStatus(ctx, model.CustomStatus{Text: strings.Repeat("a", model.MaxCustomStatusText+1)}); err == nil {
+		t.Fatal("over-long custom status accepted")
+	}
+	if err := s.SetStatus(ctx, "busy"); err == nil {
+		t.Fatal("invalid status accepted")
+	}
+	if len(p.Presences()) != 3 || s.Presence().Status != model.StatusDND {
+		t.Fatal("a refused update was sent or remembered")
+	}
+	p.Send(map[string]any{"op": gateway.OpInvalidSession, "d": false})
+	fixture.Eventually(t, func() bool { return p.Identifies.Load() == 2 })
+	if got := string(p.LastIdentify()["presence"]); !strings.Contains(got, `"dnd"`) || !strings.Contains(got, `"custom_status":null`) {
+		t.Fatalf("re-identify did not use the remembered presence: %s", got)
+	}
+	if _, err := session.New(session.Config{Endpoint: "wss://micup.gg", Token: "t"}, session.Options{Presence: &model.Presence{Status: model.StatusOnline, CustomStatus: &model.CustomStatus{}}}); err == nil {
+		t.Fatal("invalid initial custom status accepted")
 	}
 }
 

@@ -2,6 +2,18 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.6.0] - 2026-11-05
+
+### Added
+
+- `SetStatus`, `SetCustomStatus`, `ClearCustomStatus` and `Presence` on `Session` and `ShardManager`. Each helper changes one part of the presence and keeps the rest.
+- `CustomStatus.Until(t)` sets the expiry. `Presence.Validate` and `CustomStatus.Validate` check Micup's limits, exported as `MaxCustomStatusText` and `MaxCustomStatusEmoji`.
+
+### Fixed
+
+- A custom status could not be removed. A nil `CustomStatus` left the field out, and Micup keeps the previous custom status when the field is missing. `Presence` now sends `custom_status: null`, so `UpdatePresence` with a nil `CustomStatus` clears it.
+- Micup drops an invalid presence update silently. Presence changes and `SessionOptions.Presence` now return an error for text over 128 characters, an empty custom status, a malformed or past expiry, or an unknown status, and send nothing.
+
 ## [0.5.0] - 2026-11-05
 
 ### Added

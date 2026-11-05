@@ -139,6 +139,9 @@ const (
 	StatusDND       = model.StatusDND
 	StatusInvisible = model.StatusInvisible
 	StatusOffline   = model.StatusOffline
+
+	MaxCustomStatusText  = model.MaxCustomStatusText
+	MaxCustomStatusEmoji = model.MaxCustomStatusEmoji
 )
 
 const (

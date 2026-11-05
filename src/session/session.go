@@ -3,7 +3,6 @@ package session
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -63,6 +62,7 @@ type Session struct {
 	pending        map[string]chan joinResult
 	joinOrder      []string
 	presence       *model.Presence
+	presenceMu     sync.Mutex
 	memberRequests map[string]chan memberChunk
 }
 
@@ -82,8 +82,12 @@ func New(config Config, options Options) (*Session, error) {
 	if options.TrackMembers && config.Members == nil {
 		return nil, errors.New("member tracking requires a member lookup")
 	}
-	if options.Presence != nil && !model.ValidStatus(options.Presence.Status) {
-		return nil, fmt.Errorf("invalid presence status %q", options.Presence.Status)
+	if options.Presence != nil {
+		if err := options.Presence.Validate(time.Now()); err != nil {
+			return nil, err
+		}
+		presence := *options.Presence
+		options.Presence = &presence
 	}
 	if options.MinBackoff <= 0 {
 		options.MinBackoff = DefaultMinBackoff
@@ -235,9 +239,58 @@ func sleep(ctx context.Context, wait time.Duration) error {
 	}
 }
 
+// UpdatePresence replaces the bot's presence on this session and remembers it
+// for later IDENTIFYs. A nil CustomStatus clears the custom status.
 func (s *Session) UpdatePresence(ctx context.Context, presence model.Presence) error {
-	if !model.ValidStatus(presence.Status) {
-		return fmt.Errorf("invalid presence status %q", presence.Status)
+	return s.changePresence(ctx, func(*model.Presence) model.Presence { return presence })
+}
+
+// SetStatus changes only the status and keeps the custom status.
+func (s *Session) SetStatus(ctx context.Context, status string) error {
+	return s.changePresence(ctx, func(p *model.Presence) model.Presence {
+		p.Status = status
+		return *p
+	})
+}
+
+// SetCustomStatus changes only the custom status and keeps the status.
+func (s *Session) SetCustomStatus(ctx context.Context, custom model.CustomStatus) error {
+	return s.changePresence(ctx, func(p *model.Presence) model.Presence {
+		p.CustomStatus = &custom
+		return *p
+	})
+}
+
+// ClearCustomStatus removes the custom status and keeps the status.
+func (s *Session) ClearCustomStatus(ctx context.Context) error {
+	return s.changePresence(ctx, func(p *model.Presence) model.Presence {
+		p.CustomStatus = nil
+		return *p
+	})
+}
+
+// Presence returns the presence this session publishes. Before any update
+// it is online with no custom status.
+func (s *Session) Presence() model.Presence {
+	if p := s.currentPresence(); p != nil {
+		return *p
+	}
+	return model.Presence{Status: model.StatusOnline}
+}
+
+// changePresence serialises read-modify-send so concurrent helpers do not
+// overwrite each other's field.
+func (s *Session) changePresence(ctx context.Context, change func(*model.Presence) model.Presence) error {
+	s.presenceMu.Lock()
+	defer s.presenceMu.Unlock()
+	current := s.Presence()
+	if current.CustomStatus != nil {
+		custom := *current.CustomStatus
+		current.CustomStatus = &custom
+	}
+	presence := change(&current)
+	if err := presence.Validate(time.Now()); err != nil {
+		return err
 	}
 	s.mu.Lock()
 	s.presence = &presence

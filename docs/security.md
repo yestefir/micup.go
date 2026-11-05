@@ -19,4 +19,4 @@ Discovery requires REST and Gateway endpoints to use the configured Micup origin
 4. Run `make check` (gofmt, vet, build, race tests and the package layer test).
 5. Tag releases only after the exported API and docs agree.
 
-The current release is v0.5.0.
+The current release is v0.6.0.

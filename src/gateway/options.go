@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/yestefir/micup.go/src/internal/version"
 	"github.com/yestefir/micup.go/src/model"
@@ -55,8 +56,10 @@ func (o Options) normalize() (Options, error) {
 	if o.Flags < 0 {
 		return o, errors.New("Gateway session flags must not be negative")
 	}
-	if o.Presence != nil && !model.ValidStatus(o.Presence.Status) {
-		return o, fmt.Errorf("invalid presence status %q", o.Presence.Status)
+	if o.Presence != nil {
+		if err := o.Presence.Validate(time.Now()); err != nil {
+			return o, err
+		}
 	}
 	if o.ShardCount == 0 {
 		o.ShardCount = 1

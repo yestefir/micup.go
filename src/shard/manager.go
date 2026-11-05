@@ -194,10 +194,47 @@ func (m *Manager) ResolveGuild(ctx context.Context, channelID string) (string, e
 	return channel.GuildID, nil
 }
 
+// UpdatePresence replaces the presence on every shard. A nil CustomStatus
+// clears the custom status.
 func (m *Manager) UpdatePresence(ctx context.Context, presence model.Presence) error {
+	if err := presence.Validate(time.Now()); err != nil {
+		return err
+	}
+	return m.eachPresence(func(s *session.Session) error { return s.UpdatePresence(ctx, presence) })
+}
+
+// SetStatus changes the status on every shard and keeps the custom status.
+func (m *Manager) SetStatus(ctx context.Context, status string) error {
+	if !model.ValidStatus(status) {
+		return fmt.Errorf("invalid presence status %q", status)
+	}
+	return m.eachPresence(func(s *session.Session) error { return s.SetStatus(ctx, status) })
+}
+
+// SetCustomStatus changes the custom status on every shard and keeps the status.
+func (m *Manager) SetCustomStatus(ctx context.Context, custom model.CustomStatus) error {
+	if err := custom.Validate(time.Now()); err != nil {
+		return err
+	}
+	return m.eachPresence(func(s *session.Session) error { return s.SetCustomStatus(ctx, custom) })
+}
+
+// ClearCustomStatus removes the custom status on every shard.
+func (m *Manager) ClearCustomStatus(ctx context.Context) error {
+	return m.eachPresence(func(s *session.Session) error { return s.ClearCustomStatus(ctx) })
+}
+
+// Presence returns the presence of the first shard; helpers keep all shards equal.
+func (m *Manager) Presence() model.Presence {
+	return m.sessions[m.ids[0]].Presence()
+}
+
+// eachPresence applies a change to every shard. A shard that is disconnected
+// still remembers the presence and sends it on its next IDENTIFY.
+func (m *Manager) eachPresence(update func(*session.Session) error) error {
 	var errs []error
 	for _, id := range m.ids {
-		if err := m.sessions[id].UpdatePresence(ctx, presence); err != nil && !errors.Is(err, gateway.ErrClosed) {
+		if err := update(m.sessions[id]); err != nil && !errors.Is(err, gateway.ErrClosed) {
 			errs = append(errs, fmt.Errorf("Micup shard %d: %w", id, err))
 		}
 	}

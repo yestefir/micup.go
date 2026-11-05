@@ -81,9 +81,30 @@ After a disconnect the session sends RESUME with the last session ID and the las
 | `Flags` | Session flags: `micup.FlagChannelThreads`, `micup.FlagDebounceMessageReactions`, `micup.FlagGuildVisits` |
 | `Compress` | Connects with `compress=zstd-stream&stream=1`. Every server frame is then one part of a single zstd stream, and every client message goes through one compressor for the whole connection, as Micup requires. Cuts Gateway bandwidth substantially for bots in many guilds; off by default |
 
-`Session.UpdatePresence(ctx, presence)` (or `ShardManager.UpdatePresence` for every shard) sends opcode 3 and remembers the presence, so a later IDENTIFY uses it too. Status is one of `online`, `idle`, `dnd`, `invisible` or `offline`.
+#### Changing the bot's status
 
-Micup limits each connection to 600 commands per 60 seconds and 5 presence updates per 20 seconds, and closes or drops over the limit. The connection queues commands at 540 per 60 seconds (heartbeats, IDENTIFY and RESUME are not counted against that) and presence updates at 5 per 20 seconds, so `Send` and `UpdatePresence` wait instead of being dropped; the wait ends with the context. A command over Micup's 16,384-byte limit returns an error instead of being sent.
+Each call sends opcode 3 and remembers the result, so the next IDENTIFY publishes it too. `ShardManager` has the same methods and applies them to every shard. A shard that is disconnected keeps the new presence and sends it when it identifies again.
+
+| Method | Effect |
+|---|---|
+| `SetStatus(ctx, micup.StatusIdle)` | Changes the status and keeps the custom status |
+| `SetCustomStatus(ctx, micup.CustomStatus{Text: "!help", EmojiName: "🎵"})` | Changes the custom status and keeps the status |
+| `ClearCustomStatus(ctx)` | Removes the custom status |
+| `UpdatePresence(ctx, presence)` | Replaces the whole presence. A nil `CustomStatus` clears the custom status |
+| `Presence()` | The presence the session publishes; `online` with no custom status before any change |
+
+```go
+status := micup.CustomStatus{Text: "Bakımdayız", EmojiName: "🔧"}.Until(time.Now().Add(30 * time.Minute))
+if err := shards.SetCustomStatus(ctx, status); err != nil {
+	return err
+}
+```
+
+Status is one of `online`, `idle`, `dnd`, `invisible` or `offline`; Micup publishes `offline` as `invisible`. A custom status needs text or an emoji. Text is at most `micup.MaxCustomStatusText` (128) and `EmojiName` at most `micup.MaxCustomStatusEmoji` (32) UTF-16 units, as Micup counts them. `EmojiName` must be a single Unicode emoji, and Micup ignores it when `EmojiID` is set. `CustomStatus.Until(t)` sets `ExpiresAt`, and Micup clears the status at that time; it must be in the future.
+
+Micup drops an invalid presence update without telling the bot. The methods and `SessionOptions.Presence` therefore check these limits first, return an error, and send nothing. Micup's checks that need its data, such as whether a custom emoji exists or content moderation, cannot be done here.
+
+Micup limits each connection to 600 commands per 60 seconds and 5 presence updates per 20 seconds, and closes or drops over the limit. The connection queues commands at 540 per 60 seconds (heartbeats, IDENTIFY and RESUME are not counted against that) and presence updates at 5 per 20 seconds, so `Send` and the presence methods wait instead of being dropped; the wait ends with the context. A command over Micup's 16,384-byte limit returns an error instead of being sent.
 
 `Session.Ready()` is true between `READY`/`RESUMED` and the next disconnect. `Session.Send(ctx, opcode, data)` sends any native opcode on the live connection and returns `micup.ErrGatewayClosed` while disconnected. `Session.ShardID()` returns the shard it runs.
 
