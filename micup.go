@@ -319,6 +319,9 @@ type (
 	EmbedAuthor        = model.EmbedAuthor
 	EmbedField         = model.EmbedField
 	Interaction        = model.Interaction
+	ComponentData      = model.ComponentData
+	ActionRow          = model.ActionRow
+	Button             = model.Button
 	VoiceState         = model.VoiceState
 	VoiceServerUpdate  = model.VoiceServerUpdate
 )
@@ -358,3 +361,39 @@ const (
 	MentionRoles       = model.MentionRoles
 	MentionEveryone    = model.MentionEveryone
 )
+
+const (
+	ComponentTypeActionRow = model.ComponentTypeActionRow
+	ComponentTypeButton    = model.ComponentTypeButton
+	ButtonStylePrimary     = model.ButtonStylePrimary
+	ButtonStyleSecondary   = model.ButtonStyleSecondary
+	ButtonStyleSuccess     = model.ButtonStyleSuccess
+	ButtonStyleDanger      = model.ButtonStyleDanger
+	ButtonStyleLink        = model.ButtonStyleLink
+	MaxActionRows          = model.MaxActionRows
+	MaxButtonsPerRow       = model.MaxButtonsPerRow
+	MaxCustomIDLength      = model.MaxCustomIDLength
+	MaxButtonLabelLength   = model.MaxButtonLabelLength
+)
+
+const (
+	InteractionTypePing               = model.InteractionTypePing
+	InteractionTypeApplicationCommand = model.InteractionTypeApplicationCommand
+	InteractionTypeMessageComponent   = model.InteractionTypeMessageComponent
+	InteractionTypeAutocomplete       = model.InteractionTypeAutocomplete
+	InteractionTypeModalSubmit        = model.InteractionTypeModalSubmit
+)
+
+func NewActionRow(buttons ...Button) ActionRow { return model.NewActionRow(buttons...) }
+
+func PrimaryButton(customID, label string) Button { return model.PrimaryButton(customID, label) }
+
+func SecondaryButton(customID, label string) Button { return model.SecondaryButton(customID, label) }
+
+func SuccessButton(customID, label string) Button { return model.SuccessButton(customID, label) }
+
+func DangerButton(customID, label string) Button { return model.DangerButton(customID, label) }
+
+func LinkButton(url, label string) Button { return model.LinkButton(url, label) }
+
+func DisableButtons(rows []ActionRow) []ActionRow { return model.DisableButtons(rows) }

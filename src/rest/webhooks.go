@@ -51,7 +51,10 @@ func (c *Client) ExecuteWebhook(ctx context.Context, webhookID, token string, me
 	if options.Content == "" && len(options.Embeds) == 0 && len(options.Files) == 0 && len(options.Attachments) == 0 && len(options.StickerIDs) == 0 {
 		return nil, errors.New("webhook message content, an embed, a file or a sticker is required")
 	}
-	body, err := messageBody(options.Content, options.Embeds, options.AllowedMentions, options.Files, options.Attachments, "webhook message")
+	if len(options.Components) != 0 {
+		return nil, errors.New("webhook messages cannot carry buttons")
+	}
+	body, err := messageBody(options.Content, options.Embeds, nil, options.AllowedMentions, options.Files, options.Attachments, "webhook message")
 	if err != nil {
 		return nil, err
 	}

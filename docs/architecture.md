@@ -24,7 +24,7 @@ A package imports only packages in lower layers.
 
 | Package | Owns | May import |
 |---|---|---|
-| `model` | Plain payload types (users, channels, messages, embeds, interactions, voice) | nothing |
+| `model` | Plain payload types (users, channels, messages, embeds, buttons, interactions, voice) | nothing |
 | `discovery` | `/.well-known/fluxer`, origin and endpoint validation | `internal/httpx` |
 | `rest` | Authenticated HTTP, rate limits, channel/message/interaction/user resources | `model`, `internal/httpx`, `internal/version` |
 | `gateway` | Protocol: opcodes, close codes, events, resume state, one connection loop | `internal/version` |

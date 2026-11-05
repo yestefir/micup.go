@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	interactionResponseMessage  = 4
-	interactionResponseDeferred = 5
+	interactionResponseMessage       = 4
+	interactionResponseDeferred      = 5
+	interactionResponseDeferUpdate   = 6
+	interactionResponseUpdateMessage = 7
 )
 
 func (c *Client) RespondToInteraction(ctx context.Context, interaction model.Interaction, options model.MessageOptions, ephemeral bool) error {
@@ -22,7 +24,7 @@ func (c *Client) RespondToInteraction(ctx context.Context, interaction model.Int
 	if err != nil {
 		return err
 	}
-	return c.Do(ctx, http.MethodPost, callbackPath(interaction), map[string]any{"type": interactionResponseMessage, "data": data}, nil)
+	return c.callback(ctx, interaction, interactionResponseMessage, data)
 }
 
 func (c *Client) DeferInteraction(ctx context.Context, interaction model.Interaction, ephemeral bool) error {
@@ -33,7 +35,47 @@ func (c *Client) DeferInteraction(ctx context.Context, interaction model.Interac
 	if ephemeral {
 		data["flags"] = model.MessageFlagEphemeral
 	}
-	return c.Do(ctx, http.MethodPost, callbackPath(interaction), map[string]any{"type": interactionResponseDeferred, "data": data}, nil)
+	return c.callback(ctx, interaction, interactionResponseDeferred, data)
+}
+
+func (c *Client) UpdateInteractionMessage(ctx context.Context, interaction model.Interaction, edit model.MessageEdit) error {
+	if err := validateComponentInteraction(interaction); err != nil {
+		return err
+	}
+	if len(edit.Files) != 0 || len(edit.Attachments) != 0 {
+		return errors.New("an interaction message update cannot carry files")
+	}
+	data, err := editBody(edit, "interaction update")
+	if err != nil {
+		return err
+	}
+	if len(data) == 0 {
+		return errors.New("interaction update needs content, embeds, buttons, flags or allowed mentions")
+	}
+	return c.callback(ctx, interaction, interactionResponseUpdateMessage, data)
+}
+
+func (c *Client) DeferInteractionUpdate(ctx context.Context, interaction model.Interaction) error {
+	if err := validateComponentInteraction(interaction); err != nil {
+		return err
+	}
+	return c.callback(ctx, interaction, interactionResponseDeferUpdate, nil)
+}
+
+func (c *Client) EditInteractionResponse(ctx context.Context, interaction model.Interaction, edit model.MessageEdit) (model.Message, error) {
+	if interaction.ApplicationID == "" || interaction.Token == "" {
+		return model.Message{}, errors.New("interaction application ID and token are required")
+	}
+	body, err := editBody(edit, "interaction response")
+	if err != nil {
+		return model.Message{}, err
+	}
+	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
+		body["attachments"] = attachments
+	}
+	var message model.Message
+	err = c.call(ctx, &request{method: http.MethodPatch, path: path("webhooks", url.PathEscape(interaction.ApplicationID), url.PathEscape(interaction.Token), "messages", "@original"), body: body, files: edit.Files, dest: &message})
+	return message, err
 }
 
 func (c *Client) SendInteractionFollowup(ctx context.Context, interaction model.Interaction, options model.MessageOptions, ephemeral bool) (model.Message, error) {
@@ -49,8 +91,12 @@ func (c *Client) SendInteractionFollowup(ctx context.Context, interaction model.
 	return message, err
 }
 
-func callbackPath(interaction model.Interaction) string {
-	return path("interactions", url.PathEscape(interaction.ID), url.PathEscape(interaction.Token), "callback")
+func (c *Client) callback(ctx context.Context, interaction model.Interaction, kind int, data map[string]any) error {
+	body := map[string]any{"type": kind}
+	if data != nil {
+		body["data"] = data
+	}
+	return c.Do(ctx, http.MethodPost, path("interactions", url.PathEscape(interaction.ID), url.PathEscape(interaction.Token), "callback"), body, nil)
 }
 
 func validateInteraction(interaction model.Interaction) error {
@@ -60,11 +106,21 @@ func validateInteraction(interaction model.Interaction) error {
 	return nil
 }
 
+func validateComponentInteraction(interaction model.Interaction) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	if interaction.Type != model.InteractionTypeMessageComponent {
+		return errors.New("only a button or other component interaction can update its message")
+	}
+	return nil
+}
+
 func interactionMessageData(options model.MessageOptions, ephemeral bool) (map[string]any, error) {
 	if options.Content == "" && len(options.Embeds) == 0 {
 		return nil, errors.New("interaction response content or at least one embed is required")
 	}
-	data, err := messageBody(options.Content, options.Embeds, options.AllowedMentions, nil, nil, "interaction response")
+	data, err := messageBody(options.Content, options.Embeds, options.Components, options.AllowedMentions, nil, nil, "interaction response")
 	if err != nil {
 		return nil, err
 	}

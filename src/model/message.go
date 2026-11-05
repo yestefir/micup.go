@@ -63,6 +63,7 @@ type Message struct {
 	Embeds            []Embed           `json:"embeds,omitempty"`
 	Attachments       []Attachment      `json:"attachments,omitempty"`
 	Reactions         []Reaction        `json:"reactions,omitempty"`
+	Components        []ActionRow       `json:"components,omitempty"`
 	MessageReference  *MessageReference `json:"message_reference,omitempty"`
 	ReferencedMessage *Message          `json:"referenced_message,omitempty"`
 	Nonce             json.RawMessage   `json:"nonce,omitempty"`
@@ -137,6 +138,7 @@ type UploadedAttachment struct {
 type MessageOptions struct {
 	Content         string
 	Embeds          []Embed
+	Components      []ActionRow
 	ReplyTo         string
 	Nonce           string
 	EnforceNonce    bool
@@ -151,6 +153,7 @@ type MessageOptions struct {
 type MessageEdit struct {
 	Content         *string
 	Embeds          *[]Embed
+	Components      *[]ActionRow
 	Flags           *int
 	AllowedMentions *AllowedMentions
 	Files           []File

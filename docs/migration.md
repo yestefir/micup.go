@@ -13,7 +13,8 @@ The import path stays `github.com/yestefir/micup.go` and most names are unchange
 | `client.NewSession(options)` returns `*Session` | `b.NewSession(options)` returns `(*Session, error)` |
 | `client.NewShardManager(micup.ShardManagerOptions{...})` | `b.NewShardManager(micup.ShardOptions{...})` |
 | `micup.State.Apply(event)` | `micup.State.Apply(event.Name, event.Data)` |
+| `micup.Interaction.Member`, `User` as raw JSON | `*micup.Member`, `*micup.User` |
 
 Unchanged: `micup.New`, `micup.Config`, `micup.DefaultOrigin`, `micup.Session`, `micup.SessionOptions`, `micup.VoiceJoin`, `micup.Event`, `micup.EventHandler`, every `micup.Event*` and `micup.Op*` constant, `micup.CloseError`, every `micup.Err*` error, `micup.ShardForGuild`, `micup.ShardManager`, `micup.DefaultIdentifyInterval`, `micup.APIError`, all payload types (`micup.MessageCreate`, `micup.MessageOptions`, `micup.Embed`, ...), and the `voice` package.
 
-New: `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager` and `micup.NewState` for building parts without `micup.New`, plus `b.SessionConfig()` and `b.Endpoints()`.
+New: `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager` and `micup.NewState` for building parts without `micup.New`, plus `b.SessionConfig()` and `b.Endpoints()`, and [buttons](components.md).

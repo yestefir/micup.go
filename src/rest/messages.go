@@ -22,10 +22,10 @@ func (c *Client) SendMessageWithOptions(ctx context.Context, channelID string, o
 	if channelID == "" {
 		return model.Message{}, errors.New("channel ID is required")
 	}
-	if options.Content == "" && len(options.Embeds) == 0 && len(options.Files) == 0 && len(options.Attachments) == 0 && len(options.StickerIDs) == 0 {
-		return model.Message{}, errors.New("message content, an embed, a file or a sticker is required")
+	if options.Content == "" && len(options.Embeds) == 0 && len(options.Components) == 0 && len(options.Files) == 0 && len(options.Attachments) == 0 && len(options.StickerIDs) == 0 {
+		return model.Message{}, errors.New("message content, an embed, a button, a file or a sticker is required")
 	}
-	body, err := messageBody(options.Content, options.Embeds, options.AllowedMentions, options.Files, options.Attachments, "message")
+	body, err := messageBody(options.Content, options.Embeds, options.Components, options.AllowedMentions, options.Files, options.Attachments, "message")
 	if err != nil {
 		return model.Message{}, err
 	}
@@ -82,27 +82,15 @@ func (c *Client) EditMessage(ctx context.Context, channelID, messageID string, e
 	if channelID == "" || messageID == "" {
 		return model.Message{}, errors.New("channel ID and message ID are required")
 	}
-	body := map[string]any{}
-	if edit.Content != nil {
-		body["content"] = *edit.Content
-	}
-	if edit.Embeds != nil {
-		if len(*edit.Embeds) > model.MaxEmbeds {
-			return model.Message{}, fmt.Errorf("message can contain at most %d embeds", model.MaxEmbeds)
-		}
-		body["embeds"] = *edit.Embeds
-	}
-	if edit.Flags != nil {
-		body["flags"] = *edit.Flags
-	}
-	if edit.AllowedMentions != nil {
-		body["allowed_mentions"] = edit.AllowedMentions
+	body, err := editBody(edit, "message")
+	if err != nil {
+		return model.Message{}, err
 	}
 	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
 		body["attachments"] = attachments
 	}
 	var message model.Message
-	err := c.call(ctx, &request{method: http.MethodPatch, path: messagePath(channelID, messageID), body: body, files: edit.Files, dest: &message})
+	err = c.call(ctx, &request{method: http.MethodPatch, path: messagePath(channelID, messageID), body: body, files: edit.Files, dest: &message})
 	return message, err
 }
 
@@ -130,16 +118,45 @@ func (c *Client) TriggerTyping(ctx context.Context, channelID string) error {
 	return c.call(ctx, &request{method: http.MethodPost, path: path("channels", url.PathEscape(channelID), "typing")})
 }
 
+func editBody(edit model.MessageEdit, kind string) (map[string]any, error) {
+	body := map[string]any{}
+	if edit.Content != nil {
+		body["content"] = *edit.Content
+	}
+	if edit.Embeds != nil {
+		if len(*edit.Embeds) > model.MaxEmbeds {
+			return nil, fmt.Errorf("%s can contain at most %d embeds", kind, model.MaxEmbeds)
+		}
+		body["embeds"] = *edit.Embeds
+	}
+	if edit.Components != nil {
+		if err := validateComponents(*edit.Components, kind); err != nil {
+			return nil, err
+		}
+		body["components"] = componentList(*edit.Components)
+	}
+	if edit.Flags != nil {
+		body["flags"] = *edit.Flags
+	}
+	if edit.AllowedMentions != nil {
+		body["allowed_mentions"] = edit.AllowedMentions
+	}
+	return body, nil
+}
+
 func messagePath(channelID, messageID string) string {
 	return path("channels", url.PathEscape(channelID), "messages", url.PathEscape(messageID))
 }
 
-func messageBody(content string, embeds []model.Embed, mentions *model.AllowedMentions, files []model.File, uploads []model.UploadedAttachment, kind string) (map[string]any, error) {
+func messageBody(content string, embeds []model.Embed, components []model.ActionRow, mentions *model.AllowedMentions, files []model.File, uploads []model.UploadedAttachment, kind string) (map[string]any, error) {
 	if len(embeds) > model.MaxEmbeds {
 		return nil, fmt.Errorf("%s can contain at most %d embeds", kind, model.MaxEmbeds)
 	}
 	if len(files)+len(uploads) > model.MaxAttachments {
 		return nil, fmt.Errorf("%s can contain at most %d attachments", kind, model.MaxAttachments)
+	}
+	if err := validateComponents(components, kind); err != nil {
+		return nil, err
 	}
 	body := map[string]any{}
 	if mentions != nil {
@@ -152,6 +169,9 @@ func messageBody(content string, embeds []model.Embed, mentions *model.AllowedMe
 	}
 	if len(embeds) != 0 {
 		body["embeds"] = embeds
+	}
+	if len(components) != 0 {
+		body["components"] = components
 	}
 	if attachments := attachmentMetadata(files, uploads); len(attachments) != 0 {
 		body["attachments"] = attachments

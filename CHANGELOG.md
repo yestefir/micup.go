@@ -24,6 +24,9 @@ Notable changes to micup.go are recorded here.
 - Breaking: `Session.Send` and `GatewayConn.Send` take a context.
 - `APIError` carries Micup's `Code`, `Message`, field `Errors`, `RequestID`, `RetryAfter` and `Global`.
 - REST rate limiting follows Micup's rules: global 429s pause every route, exhausted buckets delay the next request on that route, 423 is retried, and 5xx is retried only for idempotent requests.
+- Breaking: `Interaction.Member` is `*micup.Member` and `Interaction.User` is `*micup.User` instead of raw JSON.
+- `ExecuteWebhook` returns an error when the message has buttons.
+- The docs no longer say that interactions are limited to official Micup apps; ordinary bots receive button clicks.
 
 ### Added
 
@@ -39,12 +42,16 @@ Notable changes to micup.go are recorded here.
 - Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
 - Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
 - `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
-- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
+- Documented Micup limits the module does not work around: 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 - `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager`, `micup.NewState`, `Bot.SessionConfig`, `Bot.Endpoints`, `RESTClient.CurrentUser`, `RESTClient.CurrentApplication`, `CloseError.ResetsSession`, `State.Remember`.
 - Layer and facade tests in `src/internal/layers`, and a shared Gateway test fixture in `src/internal/fixture`.
 - Tests for discovery, the state cache, Gateway option validation, bot wiring and the facades.
+- Buttons: `micup.ActionRow`, `micup.Button`, `NewActionRow`, `PrimaryButton`, `SecondaryButton`, `SuccessButton`, `DangerButton`, `LinkButton`, `Button.WithEmoji`, `Button.WithDisabled`, `DisableButtons`, and style, component type and limit constants. See [Buttons](docs/components.md).
+- `MessageOptions.Components`, `MessageEdit.Components` and `Message.Components`. The client checks row, button, label and custom ID rules before sending.
+- Button clicks: `Interaction.IsButton`, `CustomID`, `ComponentData`, `Invoker`, the `Message` the button is on, `Locale`, `GuildLocale`, `AppPermissions`, and `InteractionType*` constants.
+- `UpdateInteractionMessage` (callback 7), `DeferInteractionUpdate` (callback 6) and `EditInteractionResponse`. `RespondToInteraction` and `SendInteractionFollowup` carry buttons.
 
 ## [0.3.0] - 2026-11-05
 

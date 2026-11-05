@@ -32,7 +32,7 @@ Typed payloads for common events:
 | `EventGuildRoleCreate`, `EventGuildRoleUpdate`, `EventGuildRoleDelete` | `micup.RoleEvent`, `micup.RoleDelete` |
 | `EventChannelCreate`, `EventChannelUpdate`, `EventChannelDelete` | `micup.Channel` |
 | `EventVoiceStateUpdate`, `EventVoiceServerUpdate` | `micup.VoiceState`, `micup.VoiceServerUpdate` |
-| `EventInteractionCreate` | `micup.Interaction` (official Micup apps only, see below) |
+| `EventInteractionCreate` | `micup.Interaction`; button clicks, see [Buttons](components.md) |
 
 Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpPresenceUpdate`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpRequestGuildMembers`, `OpInvalidSession`, `OpHello`, `OpHeartbeatAck`, `OpGatewayError`, `OpLazyRequest`, `OpRequestGuildCounts` and `OpRequestChannelMemberCounts`. Bots need no Lazy Request; Micup never treats bot sessions as passive.
 
@@ -195,7 +195,7 @@ It returns when the socket disconnects (`*micup.CloseError` when a close code is
 
 Decode message payloads into `micup.MessageCreate`. `Type` is `micup.MessageTypeDefault` for a normal message and `micup.MessageTypeReply` for a reply. Ignore messages authored by bots and use `micup.RESTClient.SendMessage` for plain replies or `SendMessageWithOptions` for embeds. Automatic mentions are disabled for both methods.
 
-Micup delivers interactions and real message components only to its own official apps; the public Fluxer API has no interaction routes for other bots. `RespondToInteraction`, `DeferInteraction` and `SendInteractionFollowup` are for those apps. Other bots build menus from embeds and reactions (`AddReaction` plus `EventReactionAdd`).
+Bots receive an `INTERACTION_CREATE` event when someone presses one of their buttons. [Buttons](components.md) covers sending buttons, reading clicks and every way to answer them.
 
 Ephemeral messages are interaction responses, not regular channel messages. Decode an `INTERACTION_CREATE` event as `micup.Interaction`, then answer it over REST with `RespondToInteraction`. Pass `true` for the `ephemeral` argument to make the response visible only to the user who invoked the interaction. Use `DeferInteraction` when work needs more time; the ephemeral choice is made when deferring and cannot be changed by later responses. A follow-up can be sent with `SendInteractionFollowup` while the interaction token remains valid.
 
