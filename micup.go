@@ -58,17 +58,45 @@ func RunGateway(ctx context.Context, options GatewayOptions, handler EventHandle
 }
 
 const (
-	EventReady             = gateway.EventReady
-	EventResumed           = gateway.EventResumed
-	EventGuildCreate       = gateway.EventGuildCreate
-	EventGuildDelete       = gateway.EventGuildDelete
-	EventChannelCreate     = gateway.EventChannelCreate
-	EventChannelUpdate     = gateway.EventChannelUpdate
-	EventChannelDelete     = gateway.EventChannelDelete
-	EventMessageCreate     = gateway.EventMessageCreate
-	EventInteractionCreate = gateway.EventInteractionCreate
-	EventVoiceStateUpdate  = gateway.EventVoiceStateUpdate
-	EventVoiceServerUpdate = gateway.EventVoiceServerUpdate
+	EventReady               = gateway.EventReady
+	EventResumed             = gateway.EventResumed
+	EventGuildCreate         = gateway.EventGuildCreate
+	EventGuildSync           = gateway.EventGuildSync
+	EventGuildUpdate         = gateway.EventGuildUpdate
+	EventGuildDelete         = gateway.EventGuildDelete
+	EventGuildRoleCreate     = gateway.EventGuildRoleCreate
+	EventGuildRoleUpdate     = gateway.EventGuildRoleUpdate
+	EventGuildRoleUpdateBulk = gateway.EventGuildRoleUpdateBulk
+	EventGuildRoleDelete     = gateway.EventGuildRoleDelete
+	EventGuildMemberAdd      = gateway.EventGuildMemberAdd
+	EventGuildMemberUpdate   = gateway.EventGuildMemberUpdate
+	EventGuildMemberRemove   = gateway.EventGuildMemberRemove
+	EventGuildMembersChunk   = gateway.EventGuildMembersChunk
+	EventGuildBanAdd         = gateway.EventGuildBanAdd
+	EventGuildBanRemove      = gateway.EventGuildBanRemove
+	EventChannelUpdateBulk   = gateway.EventChannelUpdateBulk
+	EventChannelPinsUpdate   = gateway.EventChannelPinsUpdate
+	EventMessageUpdate       = gateway.EventMessageUpdate
+	EventMessageDelete       = gateway.EventMessageDelete
+	EventMessageDeleteBulk   = gateway.EventMessageDeleteBulk
+	EventReactionAdd         = gateway.EventReactionAdd
+	EventReactionRemove      = gateway.EventReactionRemove
+	EventReactionRemoveAll   = gateway.EventReactionRemoveAll
+	EventReactionRemoveEmoji = gateway.EventReactionRemoveEmoji
+	EventTypingStart         = gateway.EventTypingStart
+	EventPresenceUpdate      = gateway.EventPresenceUpdate
+	EventUserUpdate          = gateway.EventUserUpdate
+	EventWebhooksUpdate      = gateway.EventWebhooksUpdate
+	EventInviteCreate        = gateway.EventInviteCreate
+	EventInviteDelete        = gateway.EventInviteDelete
+	EventRateLimited         = gateway.EventRateLimited
+	EventChannelCreate       = gateway.EventChannelCreate
+	EventChannelUpdate       = gateway.EventChannelUpdate
+	EventChannelDelete       = gateway.EventChannelDelete
+	EventMessageCreate       = gateway.EventMessageCreate
+	EventInteractionCreate   = gateway.EventInteractionCreate
+	EventVoiceStateUpdate    = gateway.EventVoiceStateUpdate
+	EventVoiceServerUpdate   = gateway.EventVoiceServerUpdate
 )
 
 const (
@@ -120,12 +148,13 @@ const (
 )
 
 type (
-	Session           = session.Session
-	SessionConfig     = session.Config
-	SessionOptions    = session.Options
-	VoiceJoin         = session.VoiceJoin
-	VoiceRefusedError = session.VoiceRefusedError
-	ChannelLookup     = session.ChannelLookup
+	Session                 = session.Session
+	SessionConfig           = session.Config
+	SessionOptions          = session.Options
+	VoiceJoin               = session.VoiceJoin
+	VoiceRefusedError       = session.VoiceRefusedError
+	MembersRateLimitedError = session.MembersRateLimitedError
+	ChannelLookup           = session.ChannelLookup
 )
 
 func NewSession(config SessionConfig, options SessionOptions) (*Session, error) {
@@ -138,11 +167,13 @@ const (
 )
 
 var (
-	ErrNotReady         = session.ErrNotReady
-	ErrVoiceJoinPending = session.ErrVoiceJoinPending
-	ErrVoiceGrant       = session.ErrVoiceGrant
-	ErrVoiceMoved       = session.ErrVoiceMoved
-	ErrVoiceRefused     = session.ErrVoiceRefused
+	ErrNotReady           = session.ErrNotReady
+	ErrVoiceJoinPending   = session.ErrVoiceJoinPending
+	ErrVoiceGrant         = session.ErrVoiceGrant
+	ErrVoiceMoved         = session.ErrVoiceMoved
+	ErrVoiceRefused       = session.ErrVoiceRefused
+	ErrVoicePermission    = session.ErrVoicePermission
+	ErrMembersRateLimited = session.ErrMembersRateLimited
 )
 
 type (
@@ -170,6 +201,84 @@ const DefaultIdentifyInterval = shard.DefaultIdentifyInterval
 var (
 	ErrShardNotOwned       = shard.ErrNotOwned
 	ErrShardManagerRunning = shard.ErrRunning
+)
+
+type (
+	Permissions         = model.Permissions
+	PermissionOverwrite = model.PermissionOverwrite
+	Role                = model.Role
+	GuildMember         = model.GuildMember
+	MemberEdit          = model.MemberEdit
+	MemberQuery         = model.MemberQuery
+	Ban                 = model.Ban
+	MembersRequest      = model.MembersRequest
+)
+
+func ComputePermissions(guildID, ownerID, userID string, roles map[string]Role, memberRoles []string, overwrites []PermissionOverwrite) Permissions {
+	return model.ComputePermissions(guildID, ownerID, userID, roles, memberRoles, overwrites)
+}
+
+const (
+	PermissionCreateInstantInvite   = model.PermissionCreateInstantInvite
+	PermissionKickMembers           = model.PermissionKickMembers
+	PermissionBanMembers            = model.PermissionBanMembers
+	PermissionAdministrator         = model.PermissionAdministrator
+	PermissionManageChannels        = model.PermissionManageChannels
+	PermissionManageGuild           = model.PermissionManageGuild
+	PermissionAddReactions          = model.PermissionAddReactions
+	PermissionViewAuditLog          = model.PermissionViewAuditLog
+	PermissionPrioritySpeaker       = model.PermissionPrioritySpeaker
+	PermissionStream                = model.PermissionStream
+	PermissionViewChannel           = model.PermissionViewChannel
+	PermissionSendMessages          = model.PermissionSendMessages
+	PermissionSendTTSMessages       = model.PermissionSendTTSMessages
+	PermissionManageMessages        = model.PermissionManageMessages
+	PermissionEmbedLinks            = model.PermissionEmbedLinks
+	PermissionAttachFiles           = model.PermissionAttachFiles
+	PermissionReadMessageHistory    = model.PermissionReadMessageHistory
+	PermissionMentionEveryone       = model.PermissionMentionEveryone
+	PermissionUseExternalEmojis     = model.PermissionUseExternalEmojis
+	PermissionConnect               = model.PermissionConnect
+	PermissionSpeak                 = model.PermissionSpeak
+	PermissionMuteMembers           = model.PermissionMuteMembers
+	PermissionDeafenMembers         = model.PermissionDeafenMembers
+	PermissionMoveMembers           = model.PermissionMoveMembers
+	PermissionUseVAD                = model.PermissionUseVAD
+	PermissionChangeNickname        = model.PermissionChangeNickname
+	PermissionManageNicknames       = model.PermissionManageNicknames
+	PermissionManageRoles           = model.PermissionManageRoles
+	PermissionManageWebhooks        = model.PermissionManageWebhooks
+	PermissionManageExpressions     = model.PermissionManageExpressions
+	PermissionManageThreads         = model.PermissionManageThreads
+	PermissionCreatePublicThreads   = model.PermissionCreatePublicThreads
+	PermissionCreatePrivateThreads  = model.PermissionCreatePrivateThreads
+	PermissionUseExternalStickers   = model.PermissionUseExternalStickers
+	PermissionSendMessagesInThreads = model.PermissionSendMessagesInThreads
+	PermissionModerateMembers       = model.PermissionModerateMembers
+	PermissionCreateExpressions     = model.PermissionCreateExpressions
+	PermissionPinMessages           = model.PermissionPinMessages
+	PermissionBypassSlowmode        = model.PermissionBypassSlowmode
+	PermissionUpdateRTCRegion       = model.PermissionUpdateRTCRegion
+	PermissionViewChannelMembers    = model.PermissionViewChannelMembers
+	PermissionAll                   = model.PermissionAll
+	OverwriteRole                   = model.OverwriteRole
+	OverwriteMember                 = model.OverwriteMember
+)
+
+const (
+	ChannelTypeGuildText          = model.ChannelTypeGuildText
+	ChannelTypeDM                 = model.ChannelTypeDM
+	ChannelTypeGuildVoice         = model.ChannelTypeGuildVoice
+	ChannelTypeGroupDM            = model.ChannelTypeGroupDM
+	ChannelTypeGuildCategory      = model.ChannelTypeGuildCategory
+	ChannelTypeGuildAnnouncement  = model.ChannelTypeGuildAnnouncement
+	ChannelTypeAnnouncementThread = model.ChannelTypeAnnouncementThread
+	ChannelTypePublicThread       = model.ChannelTypePublicThread
+	ChannelTypePrivateThread      = model.ChannelTypePrivateThread
+	ChannelTypeGuildForum         = model.ChannelTypeGuildForum
+	ChannelTypeGuildMedia         = model.ChannelTypeGuildMedia
+	ChannelTypeGuildLink          = model.ChannelTypeGuildLink
+	ChannelTypePersonalNotes      = model.ChannelTypePersonalNotes
 )
 
 type (

@@ -21,6 +21,7 @@ const (
 	BotID      = "bot"
 	GuildID    = "4194304"
 	VoiceID    = "voice"
+	LockedID   = "locked"
 	TextID     = "text"
 	Connection = "conn-1"
 )
@@ -41,6 +42,7 @@ type Platform struct {
 	CloseCode         int
 	CloseShard        int
 	RefuseVoice       string
+	RateLimitMembers  bool
 	Identifies        atomic.Int64
 	Resumes           atomic.Int64
 	Leaves            atomic.Int64
@@ -171,6 +173,20 @@ func (p *Platform) serve(ws *websocket.Conn) {
 		switch packet.Op {
 		case gateway.OpHeartbeat:
 			c.send(map[string]any{"op": gateway.OpHeartbeatAck})
+		case gateway.OpRequestGuildMembers:
+			var guild, nonce string
+			_ = json.Unmarshal(fields["guild_id"], &guild)
+			_ = json.Unmarshal(fields["nonce"], &nonce)
+			p.mu.Lock()
+			limited := p.RateLimitMembers
+			p.mu.Unlock()
+			if limited {
+				c.event(gateway.EventRateLimited, map[string]any{"opcode": gateway.OpRequestGuildMembers, "retry_after": 12.5, "meta": map[string]string{"guild_id": guild, "nonce": nonce}})
+				continue
+			}
+			for i, user := range []string{"listener", "dj"} {
+				c.event(gateway.EventGuildMembersChunk, map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}})
+			}
 		case gateway.OpPresenceUpdate:
 			p.mu.Lock()
 			p.presences = append(p.presences, append(json.RawMessage(nil), packet.D...))
@@ -227,7 +243,14 @@ func (p *Platform) identify(c *peer, fields map[string]json.RawMessage) bool {
 	}
 	guilds := []any{}
 	if owner := (4194304 >> 22) % pair[1]; owner == pair[0] {
-		guilds = append(guilds, map[string]any{"id": GuildID, "channels": []map[string]string{{"id": VoiceID}}, "voice_states": []map[string]string{{"user_id": "listener", "channel_id": VoiceID}}})
+		guilds = append(guilds, map[string]any{
+			"id":           GuildID,
+			"properties":   map[string]string{"owner_id": "owner"},
+			"roles":        []map[string]string{{"id": GuildID, "permissions": "1049600"}},
+			"channels":     []map[string]any{{"id": VoiceID, "type": 2}, {"id": LockedID, "type": 2, "permission_overwrites": []map[string]any{{"id": GuildID, "type": 0, "allow": "0", "deny": "1048576"}}}},
+			"members":      []map[string]any{{"user": map[string]string{"id": BotID}, "roles": []string{}}},
+			"voice_states": []map[string]string{{"user_id": "listener", "channel_id": VoiceID}},
+		})
 	}
 	c.event(gateway.EventReady, map[string]any{"session_id": fmt.Sprintf("session-%d", pair[0]+1), "guilds": guilds})
 	return true

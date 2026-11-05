@@ -31,6 +31,11 @@ Notable changes to micup.go are recorded here.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
+- The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
+- `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
+- `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
+- Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
+- Event name constants for every Micup dispatch the module handles.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
@@ -46,6 +51,11 @@ Notable changes to micup.go are recorded here.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
+- The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
+- `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
+- `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
+- Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
+- Event name constants for every Micup dispatch the module handles.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
@@ -87,6 +97,11 @@ Initial public release.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
+- The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
+- `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
+- `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
+- Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
+- Event name constants for every Micup dispatch the module handles.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 

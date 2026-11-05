@@ -203,3 +203,11 @@ func (m *Manager) UpdatePresence(ctx context.Context, presence model.Presence) e
 	}
 	return errors.Join(errs...)
 }
+
+func (m *Manager) RequestGuildMembers(ctx context.Context, request model.MembersRequest) ([]model.Member, error) {
+	s, err := m.ForGuild(request.GuildID)
+	if err != nil {
+		return nil, err
+	}
+	return s.RequestGuildMembers(ctx, request)
+}

@@ -48,17 +48,18 @@ type Options struct {
 }
 
 type Session struct {
-	config    Config
-	options   Options
-	cache     *state.Cache
-	resume    gateway.Resume
-	ready     atomic.Bool
-	mu        sync.Mutex
-	conn      *gateway.Conn
-	grants    map[string]model.VoiceServerUpdate
-	pending   map[string]chan joinResult
-	joinOrder []string
-	presence  *model.Presence
+	config         Config
+	options        Options
+	cache          *state.Cache
+	resume         gateway.Resume
+	ready          atomic.Bool
+	mu             sync.Mutex
+	conn           *gateway.Conn
+	grants         map[string]model.VoiceServerUpdate
+	pending        map[string]chan joinResult
+	joinOrder      []string
+	presence       *model.Presence
+	memberRequests map[string]chan memberChunk
 }
 
 func New(config Config, options Options) (*Session, error) {
@@ -84,12 +85,13 @@ func New(config Config, options Options) (*Session, error) {
 		options.MaxBackoff = max(DefaultMaxBackoff, options.MinBackoff)
 	}
 	return &Session{
-		config:   config,
-		options:  options,
-		cache:    state.New(config.BotID),
-		grants:   map[string]model.VoiceServerUpdate{},
-		pending:  map[string]chan joinResult{},
-		presence: options.Presence,
+		config:         config,
+		options:        options,
+		cache:          state.New(config.BotID),
+		grants:         map[string]model.VoiceServerUpdate{},
+		pending:        map[string]chan joinResult{},
+		memberRequests: map[string]chan memberChunk{},
+		presence:       options.Presence,
 	}, nil
 }
 
@@ -191,6 +193,10 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 		s.handleBotVoiceMove(move)
 	case gateway.EventVoiceServerUpdate:
 		s.handleVoiceServerUpdate(event)
+	case gateway.EventGuildMembersChunk:
+		s.handleMembersChunk(event)
+	case gateway.EventRateLimited:
+		s.handleRateLimited(event)
 	}
 	if s.options.Handler == nil {
 		return nil

@@ -260,3 +260,37 @@ func TestSessionSendsIdentifyOptionsAndPresence(t *testing.T) {
 		t.Fatal("invalid ignored event accepted")
 	}
 }
+
+func TestJoinVoiceFailsFastWithoutConnectPermission(t *testing.T) {
+	p := fixture.New(t)
+	s := newSession(t, p, session.Options{})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	if _, err := s.JoinVoice(context.Background(), fixture.GuildID, fixture.LockedID, session.VoiceJoin{}); !errors.Is(err, session.ErrVoicePermission) {
+		t.Fatalf("join into a locked channel was sent: %v", err)
+	}
+	if perms, ok := s.State().BotPermissions(fixture.GuildID, fixture.VoiceID); !ok || !perms.Has(model.PermissionConnect) {
+		t.Fatal("bot permissions were not computed from READY")
+	}
+}
+
+func TestRequestGuildMembersCollectsChunks(t *testing.T) {
+	p := fixture.New(t)
+	s := newSession(t, p, session.Options{})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	members, err := s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID})
+	if err != nil || len(members) != 2 {
+		t.Fatalf("chunks were not collected: %v %d", err, len(members))
+	}
+	if _, ok := s.State().MemberRoles(fixture.GuildID, "dj"); !ok {
+		t.Fatal("chunk members were not cached")
+	}
+	p.RateLimitMembers = true
+	var limited *session.MembersRateLimitedError
+	if _, err = s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID}); !errors.As(err, &limited) || limited.RetryAfter != 12500*time.Millisecond || !errors.Is(err, session.ErrMembersRateLimited) {
+		t.Fatalf("rate limit was not returned: %v", err)
+	}
+}

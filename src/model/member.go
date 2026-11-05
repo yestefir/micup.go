@@ -9,3 +9,38 @@ type Member struct {
 	Deaf                       bool     `json:"deaf,omitempty"`
 	CommunicationDisabledUntil *string  `json:"communication_disabled_until,omitempty"`
 }
+
+type GuildMember struct {
+	Member
+	GuildID string `json:"guild_id"`
+}
+
+type MemberEdit struct {
+	Nick                       *string
+	Roles                      *[]string
+	Mute                       *bool
+	Deaf                       *bool
+	CommunicationDisabledUntil *string
+	ChannelID                  *string
+	Disconnect                 bool
+	ConnectionID               string
+}
+
+type MemberQuery struct {
+	Limit int
+	After string
+}
+
+type Ban struct {
+	DeleteMessageSeconds int
+	DurationSeconds      int
+	Reason               string
+}
+
+type MembersRequest struct {
+	GuildID   string
+	Query     string
+	Limit     int
+	UserIDs   []string
+	Presences bool
+}

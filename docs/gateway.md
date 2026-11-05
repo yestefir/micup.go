@@ -77,16 +77,23 @@ Without `bot`, build a session with `micup.NewSession(micup.SessionConfig{Endpoi
 
 ### State cache
 
-`Session.State()` returns a `*micup.State` updated from `READY`, `GUILD_CREATE`, `GUILD_DELETE`, `CHANNEL_CREATE`, `CHANNEL_UPDATE`, `CHANNEL_DELETE` and `VOICE_STATE_UPDATE`:
+`Session.State()` returns a `*micup.State` built from `READY`, `GUILD_CREATE`, `GUILD_SYNC`, `GUILD_UPDATE`, `GUILD_DELETE`, the role, member and channel events (including `CHANNEL_UPDATE_BULK` and `GUILD_ROLE_UPDATE_BULK`), `MESSAGE_CREATE` (the author's `member`), `GUILD_MEMBERS_CHUNK` and `VOICE_STATE_UPDATE`. `GUILD_CREATE` and `GUILD_SYNC` replace a guild's roles, channels and voice states and add their members, as Micup specifies; `GUILD_DELETE` with `unavailable: true` keeps the guild and marks it unavailable.
 
 | Method | Returns |
 |---|---|
-| `GuildForChannel(channelID)` | The guild that owns a cached channel |
-| `VoiceChannel(guildID, userID)` | The voice channel a user is in, or `""` |
-| `BotVoiceChannel(guildID)` | The bot's own voice channel |
-| `Guilds()`, `Channels()` | Cache sizes for diagnostics |
+| `GuildForChannel(channelID)`, `Channel(channelID)` | The owning guild, or the cached channel with its permission overwrites |
+| `Role(guildID, roleID)`, `MemberRoles(guildID, userID)`, `OwnerID(guildID)` | Cached roles, a member's role IDs and the owner |
+| `Permissions(guildID, channelID, userID)`, `BotPermissions(guildID, channelID)` | The computed permission mask and whether the cache knew enough to compute it |
+| `VoiceChannel(guildID, userID)`, `VoiceMembers(guildID, channelID)`, `BotVoiceChannel(guildID)` | Voice state |
+| `Unavailable(guildID)`, `Guilds()`, `Channels()` | Outage flag and cache sizes |
 | `Apply(name, data)` | Applies an event; returns a `*micup.VoiceMove` when the bot's own voice channel changed |
 | `Remember(channelID, guildID)` | Adds a channel learned elsewhere |
+
+Micup sends only the bot's own member and the members in voice channels with `GUILD_CREATE`, so `Permissions` is known for the bot and voice users and grows as messages, member events and chunks arrive. It follows Micup's order: the owner has every permission, `ADMINISTRATOR` skips overwrites, then the `@everyone` overwrite, the member's role overwrites combined (an allow beats a deny), and the member's own overwrite. `micup.ComputePermissions` runs the same computation on your own data, and `Permissions.Has(micup.PermissionConnect | micup.PermissionSpeak)` checks bits.
+
+### Member requests
+
+`Session.RequestGuildMembers(ctx, micup.MembersRequest{GuildID, Query, Limit, UserIDs, Presences})` sends opcode 8 with a nonce, collects every `GUILD_MEMBERS_CHUNK` page and returns the members, which are also added to the cache. An empty `Query` with `Limit` 0 asks for the full list, which needs `MANAGE_ROLES`, `KICK_MEMBERS` and `BAN_MEMBERS` and is allowed once every 30 seconds per guild; a refused request returns `*micup.MembersRateLimitedError` (`errors.Is(err, micup.ErrMembersRateLimited)`) with `RetryAfter`. Micup drops a request without permission silently, so bound the call with a context. `ShardManager.RequestGuildMembers` routes by guild.
 
 Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)` reads the cache and falls back to `GET /channels/{id}` once, then caches the answer. `b.REST.Channel(ctx, channelID)` performs that request directly.
 
@@ -95,6 +102,7 @@ Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)
 `Session.JoinVoice(ctx, guildID, channelID, micup.VoiceJoin{SelfDeaf: true})` sends opcode 4, waits for the matching `VOICE_SERVER_UPDATE`, and returns it as a `micup.VoiceServerUpdate` with the LiveKit endpoint, short-lived token and connection ID. Bound the wait with the context. It returns:
 
 - `micup.ErrNotReady` before the session is ready,
+- `micup.ErrVoicePermission` when the cache shows the bot lacks `VIEW_CHANNEL` or `CONNECT` in the channel (Micup would ignore the join silently),
 - `micup.ErrVoiceJoinPending` while another join for the same guild is waiting,
 - `micup.ErrVoiceGrant` when the update has no endpoint or token,
 - `micup.ErrVoiceMoved` when Micup grants a different channel,
