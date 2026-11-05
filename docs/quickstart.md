@@ -44,7 +44,32 @@ The HTTP client rejects redirects so a bot token is not forwarded to another ori
 
 ## REST without the Gateway
 
-`micup.NewREST(micup.RESTConfig{BaseURL: apiURL, Token: token})` creates a REST client directly. `BaseURL` is the API root without the version; the client appends `/v1`. `Client.Do(ctx, method, path, body, dest)` sends any API-relative request and returns `*micup.APIError` for non-2xx responses.
+`micup.NewREST(micup.RESTConfig{BaseURL: apiURL, Token: token})` creates a REST client directly. `BaseURL` is the API root without the version; the client appends `/v1`. `Client.Do(ctx, method, path, body, dest)` sends any API-relative request.
+
+## Errors
+
+A failed request returns `*micup.APIError`:
+
+| Field | Meaning |
+|---|---|
+| `StatusCode` | HTTP status |
+| `Code` | Micup's stable error code, such as `MISSING_PERMISSIONS` or `UNKNOWN_MESSAGE`; branch on this |
+| `Message` | Translated text for logs; do not parse it |
+| `Errors` | Field errors (`Path`, `Code`, `Message`) on `INVALID_FORM_BODY` |
+| `RequestID` | The `X-Request-ID` header, for bug reports |
+| `RetryAfter`, `Global` | Set on rate limits and cooldowns |
+
+## Rate limits and retries
+
+The REST client handles Micup's limits for you:
+
+- A 429 waits `retry_after` (fractional seconds from the body) and retries. With `global: true` it pauses every route of that client, not only the one that hit the limit. Waits over 30 s return the error instead.
+- After a response with `X-RateLimit-Remaining: 0`, the next request to the same route waits for `X-RateLimit-Reset-After`. Routes are keyed by method and path, with channel, guild and webhook IDs kept, so one channel's limit does not slow another.
+- A 423 (`RESOURCE_LOCKED`) waits `Retry-After` and retries.
+- 5xx responses and connection failures are retried with backoff only for `GET`, `PUT` and `DELETE`, and for message sends that carry a `Nonce`. Other `POST` and `PATCH` requests are not retried, so they are never applied twice.
+- At most 5 attempts are made, and every wait stops when the context ends.
+
+Routes that write the audit log take `micup.WithReason("text")`, which sends `X-Audit-Log-Reason` (up to 512 characters).
 
 ## Shards
 

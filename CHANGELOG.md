@@ -22,8 +22,12 @@ Notable changes to micup.go are recorded here.
 - `session` reaches REST only through `micup.ChannelLookup`, and the Gateway adds its own `v` and `encoding` query parameters.
 - The default User-Agent is `micup.go/0.4.0`.
 - Breaking: `Session.Send` and `GatewayConn.Send` take a context.
+- `APIError` carries Micup's `Code`, `Message`, field `Errors`, `RequestID`, `RetryAfter` and `Global`.
+- REST rate limiting follows Micup's rules: global 429s pause every route, exhausted buckets delay the next request on that route, 423 is retried, and 5xx is retried only for idempotent requests.
 
 ### Added
+
+- `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 
 - `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager`, `micup.NewState`, `Bot.SessionConfig`, `Bot.Endpoints`, `RESTClient.CurrentUser`, `RESTClient.CurrentApplication`, `CloseError.ResetsSession`, `State.Remember`.
 - Layer and facade tests in `src/internal/layers`, and a shared Gateway test fixture in `src/internal/fixture`.
@@ -32,6 +36,8 @@ Notable changes to micup.go are recorded here.
 ## [0.3.0] - 2026-11-05
 
 ### Added
+
+- `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 
 - `Session`: a supervised Gateway connection with bounded reconnect backoff, RESUME, fatal close-code detection, and a ready flag.
 - `State`: guild channel and voice state cache, plus `Session.ResolveGuild` with a cached REST fallback.
@@ -66,6 +72,8 @@ Notable changes to micup.go are recorded here.
 Initial public release.
 
 ### Added
+
+- `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 
 - Micup endpoint discovery and bot-authenticated REST requests.
 - Native Gateway connection with explicit shard settings, heartbeats, and event callbacks.

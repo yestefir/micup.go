@@ -151,7 +151,7 @@ if err := event.Send(ctx, micup.OpVoiceStateUpdate, payload); err != nil {
 }
 ```
 
-It returns when the socket disconnects (`*micup.CloseError` when a close code is known), when Micup asks for a reconnect (`micup.ErrReconnectRequested`) or invalidates the session (`micup.ErrSessionInvalidated`), or when the handler returns an error. It does not resume or keep a cache unless you pass your own `micup.GatewayOptions.Resume` between calls.
+It returns when the socket disconnects (`*micup.CloseError` when a close code is known), when Micup asks for a reconnect (`micup.ErrReconnectRequested`), or when the handler returns an error. An invalid session is handled on the same socket by identifying again. It does not resume or keep a cache unless you pass your own `micup.GatewayOptions.Resume` between calls.
 
 ## Messages and interactions
 

@@ -29,11 +29,16 @@ type Endpoints = discovery.Endpoints
 type (
 	RESTClient  = rest.Client
 	RESTConfig  = rest.Config
-	APIError    = rest.APIError
-	Application = rest.Application
+	APIError      = rest.APIError
+	FieldError    = rest.FieldError
+	Application   = rest.Application
+	RequestOption = rest.RequestOption
+	File          = rest.File
 )
 
 func NewREST(config RESTConfig) (*RESTClient, error) { return rest.New(config) }
+
+func WithReason(reason string) RequestOption { return rest.WithReason(reason) }
 
 type (
 	Event          = gateway.Event
