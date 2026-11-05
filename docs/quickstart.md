@@ -5,7 +5,7 @@
 Use Go 1.26.8 or newer. A bot token is required. The voice package also requires an FFmpeg executable built with `libopus` support.
 
 ```sh
-go get github.com/yestefir/micup.go@v0.4.0
+go get github.com/yestefir/micup.go@v0.5.0
 ```
 
 ## One import

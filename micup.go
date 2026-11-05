@@ -155,6 +155,8 @@ type (
 	VoiceRefusedError       = session.VoiceRefusedError
 	MembersRateLimitedError = session.MembersRateLimitedError
 	ChannelLookup           = session.ChannelLookup
+	MemberLookup            = session.MemberLookup
+	GuildMembers            = session.GuildMembers
 )
 
 func NewSession(config SessionConfig, options SessionOptions) (*Session, error) {

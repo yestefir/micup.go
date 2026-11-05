@@ -2,6 +2,13 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.5.0] - 2026-11-05
+
+### Added
+
+- Opt-in `SessionOptions.TrackMembers` and `Session.MemberInventories()` with per-guild user IDs, bot flags, availability and completeness. The session owns REST pagination, concurrent member-event reconciliation, READY/guild-sync resets and bounded retries.
+- `MemberLookup` and `SessionConfig.Members` for standalone sessions; `Bot.SessionConfig()` supplies the REST client automatically. Member requests stop with `Session.Run`.
+
 ## [0.4.0] - 2026-11-05
 
 ### Fixed

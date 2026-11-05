@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -292,5 +293,76 @@ func TestRequestGuildMembersCollectsChunks(t *testing.T) {
 	var limited *session.MembersRateLimitedError
 	if _, err = s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID}); !errors.As(err, &limited) || limited.RetryAfter != 12500*time.Millisecond || !errors.Is(err, session.ErrMembersRateLimited) {
 		t.Fatalf("rate limit was not returned: %v", err)
+	}
+}
+
+type inventoryLookup struct {
+	entered chan struct{}
+	stopped chan struct{}
+	block   bool
+}
+
+func (l *inventoryLookup) Members(ctx context.Context, guild string, query model.MemberQuery) ([]model.Member, error) {
+	if l.block {
+		close(l.entered)
+		<-ctx.Done()
+		close(l.stopped)
+		return nil, ctx.Err()
+	}
+	return []model.Member{{User: &model.User{ID: "human"}}, {User: &model.User{ID: fixture.BotID, Bot: true}}}, nil
+}
+
+func TestSessionTracksMemberInventoryAndStopsRequests(t *testing.T) {
+	for _, block := range []bool{false, true} {
+		t.Run(fmt.Sprint(block), func(t *testing.T) {
+			p := fixture.New(t)
+			lookup := &inventoryLookup{entered: make(chan struct{}), stopped: make(chan struct{}), block: block}
+			s, err := session.New(session.Config{Endpoint: p.GatewayURL(), Token: fixture.Token, BotID: fixture.BotID, Members: lookup}, session.Options{TrackMembers: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			done := make(chan error, 1)
+			go func() { done <- s.Run(ctx) }()
+			defer func() {
+				cancel()
+				select {
+				case err := <-done:
+					if err != nil {
+						t.Fatal(err)
+					}
+				case <-time.After(3 * time.Second):
+					t.Fatal("session did not stop member requests")
+				}
+			}()
+			if block {
+				select {
+				case <-lookup.entered:
+				case <-time.After(3 * time.Second):
+					t.Fatal("enumeration did not start")
+				}
+				cancel()
+				select {
+				case <-lookup.stopped:
+				case <-time.After(3 * time.Second):
+					t.Fatal("lookup was not cancelled")
+				}
+				return
+			}
+			fixture.Eventually(t, func() bool {
+				v := s.MemberInventories()
+				return len(v) == 1 && v[0].Complete && len(v[0].Members) == 2 && v[0].Members[fixture.BotID]
+			})
+			p.Event(gateway.EventGuildMemberRemove, map[string]any{"guild_id": fixture.GuildID, "user": map[string]string{"id": "human"}})
+			fixture.Eventually(t, func() bool { return len(s.MemberInventories()[0].Members) == 1 })
+		})
+	}
+}
+
+func TestMemberTrackingRequiresLookup(t *testing.T) {
+	_, err := session.New(session.Config{Endpoint: "ws://localhost", Token: "fixture"}, session.Options{TrackMembers: true})
+	if err == nil {
+		t.Fatal("tracking accepted without member lookup")
 	}
 }

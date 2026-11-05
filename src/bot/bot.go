@@ -87,6 +87,7 @@ func (b *Bot) SessionConfig() session.Config {
 		ShardID:    b.config.ShardID,
 		ShardCount: b.config.ShardCount,
 		Channels:   b.REST,
+		Members:    b.REST,
 	}
 }
 

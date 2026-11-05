@@ -31,11 +31,13 @@ type Config struct {
 	ShardID        int
 	ShardCount     int
 	Channels       ChannelLookup
+	Members        MemberLookup
 	BeforeIdentify func(context.Context) error
 }
 
 type Options struct {
 	Handler       gateway.Handler
+	TrackMembers  bool
 	OnVoiceLost   func(guildID, connectionID string)
 	OnVoiceGrant  func(grant model.VoiceServerUpdate)
 	IgnoredEvents []string
@@ -49,6 +51,7 @@ type Options struct {
 }
 
 type Session struct {
+	inventory      memberInventory
 	config         Config
 	options        Options
 	cache          *state.Cache
@@ -75,6 +78,9 @@ func New(config Config, options Options) (*Session, error) {
 	}
 	if err := gateway.ValidateIgnoredEvents(options.IgnoredEvents); err != nil {
 		return nil, err
+	}
+	if options.TrackMembers && config.Members == nil {
+		return nil, errors.New("member tracking requires a member lookup")
 	}
 	if options.Presence != nil && !model.ValidStatus(options.Presence.Status) {
 		return nil, fmt.Errorf("invalid presence status %q", options.Presence.Status)
@@ -103,6 +109,15 @@ func (s *Session) Ready() bool { return s.ready.Load() }
 func (s *Session) ShardID() int { return s.config.ShardID }
 
 func (s *Session) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	var requests sync.WaitGroup
+	defer func() { cancel(); requests.Wait() }()
+	if s.options.TrackMembers {
+		for range 2 {
+			requests.Add(1)
+			go func() { defer requests.Done(); s.enumerateMembers(ctx) }()
+		}
+	}
 	delay := s.options.MinBackoff
 	for ctx.Err() == nil {
 		established := false
@@ -184,6 +199,9 @@ func (s *Session) attach(conn *gateway.Conn) {
 }
 
 func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
+	if s.options.TrackMembers {
+		s.inventory.observe(event.Name, event.Data)
+	}
 	move := s.cache.Apply(event.Name, event.Data)
 	switch event.Name {
 	case gateway.EventReady:

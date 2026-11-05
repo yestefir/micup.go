@@ -43,7 +43,7 @@ A package imports only packages in lower layers.
 
 `gateway.Run` holds one WebSocket: HELLO, IDENTIFY or RESUME, heartbeats and ACKs, dispatch, reconnect requests, invalid sessions and close codes. It knows nothing about reconnecting or caching. `session.Session` wraps it in a backoff loop, owns a `gateway.Resume`, applies each event to its `state.Cache`, then calls the application handler. `shard.Manager` owns one `Session` per local shard, passes a shared IDENTIFY limiter as `BeforeIdentify`, routes guild-scoped calls with `shard.ForGuild`, and stops every shard together on a fatal close.
 
-`session` depends on `rest` only through the `session.ChannelLookup` interface, so the Gateway side never imports the HTTP side.
+`session` depends on `rest` only through the `session.ChannelLookup` and `session.MemberLookup` interfaces, so the Gateway side never imports the HTTP side.
 
 ## Boundaries
 
@@ -57,3 +57,5 @@ Applications connect Gateway and voice by handling voice events, pairing the sho
 - Gateway protocol pieces live in `gateway/`: `run.go` (connection loop), `conn.go` (send pacing and size checks), `compress.go` (zstd-stream), `limiter.go`, `options.go`, `event.go`, `errors.go`. Session features live in `session/`: `voice.go` (join handshake, grants, refusals), `members.go` (opcode 8), `permissions.go`.
 - A new Gateway behavior that needs connection state belongs in `session/`; protocol-only additions (opcodes, close codes, event names) belong in `gateway/`.
 - A new domain gets a new directory under `src/` and a row in the layer test.
+
+Optional member inventories live in `session/member_inventory.go`. The session owns pagination and event reconciliation; application statistics, persistence and worker coordination remain outside the module. See [member inventories](guilds.md#maintained-member-inventories).
