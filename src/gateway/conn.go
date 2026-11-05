@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -18,6 +19,20 @@ type Conn struct {
 	commands  *windowLimiter
 	presences *windowLimiter
 	zstd      *zstdWriter
+	// heartbeatAt is when the last heartbeat was written, in Unix nanoseconds;
+	// latency is the round trip to its acknowledgement.
+	heartbeatAt atomic.Int64
+	latency     atomic.Int64
+}
+
+// Latency is the round trip of the last acknowledged heartbeat, or 0 before
+// the first acknowledgement on this connection.
+func (c *Conn) Latency() time.Duration { return time.Duration(c.latency.Load()) }
+
+func (c *Conn) acknowledged() {
+	if sent := c.heartbeatAt.Swap(0); sent != 0 {
+		c.latency.Store(max(time.Now().UnixNano()-sent, 1))
+	}
 }
 
 func newConn(ws *websocket.Conn) *Conn {
@@ -55,5 +70,8 @@ func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
 		kind = websocket.BinaryMessage
 	}
 	_ = c.ws.SetWriteDeadline(time.Now().Add(writeTimeout))
+	if opcode == OpHeartbeat {
+		c.heartbeatAt.Store(time.Now().UnixNano())
+	}
 	return c.ws.WriteMessage(kind, encoded)
 }

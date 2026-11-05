@@ -7,6 +7,7 @@ Notable changes to micup.go are recorded here.
 ### Added
 
 - `SetStatus`, `SetCustomStatus`, `ClearCustomStatus` and `Presence` on `Session` and `ShardManager`. Each helper changes one part of the presence and keeps the rest.
+- `Session.Latency()` returns the Gateway heartbeat round trip of the live connection, for ping commands and health checks.
 - `CustomStatus.Until(t)` sets the expiry. `Presence.Validate` and `CustomStatus.Validate` check Micup's limits, exported as `MaxCustomStatusText` and `MaxCustomStatusEmoji`.
 
 ### Fixed

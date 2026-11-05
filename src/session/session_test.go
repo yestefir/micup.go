@@ -318,6 +318,21 @@ func TestSessionPresenceHelpers(t *testing.T) {
 	}
 }
 
+func TestSessionLatencyFromHeartbeats(t *testing.T) {
+	p := fixture.New(t)
+	s := newSession(t, p, session.Options{})
+	if s.Latency() != 0 {
+		t.Fatal("latency before connecting")
+	}
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	// The fixture asks for a heartbeat every 200 ms and acknowledges at once.
+	fixture.Eventually(t, func() bool { return s.Latency() > 0 })
+	if l := s.Latency(); l > time.Second {
+		t.Fatalf("latency %v is not a local round trip", l)
+	}
+}
+
 func TestJoinVoiceFailsFastWithoutConnectPermission(t *testing.T) {
 	p := fixture.New(t)
 	s := newSession(t, p, session.Options{})

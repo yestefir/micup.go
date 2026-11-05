@@ -196,6 +196,19 @@ func (s *Session) gatewayOptions() gateway.Options {
 	}
 }
 
+// Latency is the Gateway heartbeat round trip of the live connection. It is
+// 0 while disconnected and until the first heartbeat is acknowledged, one
+// heartbeat interval after connecting.
+func (s *Session) Latency() time.Duration {
+	s.mu.Lock()
+	conn := s.conn
+	s.mu.Unlock()
+	if conn == nil {
+		return 0
+	}
+	return conn.Latency()
+}
+
 func (s *Session) attach(conn *gateway.Conn) {
 	s.mu.Lock()
 	s.conn = conn

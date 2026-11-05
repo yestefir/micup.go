@@ -92,6 +92,7 @@ func Run(parent context.Context, options Options, handler Handler) error {
 			identified = true
 		case OpHeartbeatAck:
 			acknowledged.Store(true)
+			conn.acknowledged()
 		case OpHeartbeat:
 			if err = conn.Send(ctx, OpHeartbeat, resume.last()); err != nil {
 				return err

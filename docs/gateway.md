@@ -106,6 +106,8 @@ Micup drops an invalid presence update without telling the bot. The methods and 
 
 Micup limits each connection to 600 commands per 60 seconds and 5 presence updates per 20 seconds, and closes or drops over the limit. The connection queues commands at 540 per 60 seconds (heartbeats, IDENTIFY and RESUME are not counted against that) and presence updates at 5 per 20 seconds, so `Send` and the presence methods wait instead of being dropped; the wait ends with the context. A command over Micup's 16,384-byte limit returns an error instead of being sent.
 
+`Session.Latency()` is the round trip of the last acknowledged heartbeat on the live connection. It is 0 while disconnected and until the first acknowledgement, which comes one heartbeat interval (about 41 seconds on Micup) after connecting.
+
 `Session.Ready()` is true between `READY`/`RESUMED` and the next disconnect. `Session.Send(ctx, opcode, data)` sends any native opcode on the live connection and returns `micup.ErrGatewayClosed` while disconnected. `Session.ShardID()` returns the shard it runs.
 
 The handler runs after the session updates its own state, so a handler that reads `Session.State()` sees the current event applied.
