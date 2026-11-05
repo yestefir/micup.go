@@ -10,6 +10,7 @@ import (
 
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/internal/fixture"
+	"github.com/yestefir/micup.go/src/model"
 	"github.com/yestefir/micup.go/src/rest"
 	"github.com/yestefir/micup.go/src/session"
 )
@@ -159,6 +160,9 @@ func TestSessionIdentifiesAgainAfterInvalidSession(t *testing.T) {
 	if p.Resumes.Load() != 0 {
 		t.Fatal("invalidated session was resumed")
 	}
+	if p.Connects.Load() != 1 {
+		t.Fatalf("invalid session opened a new socket instead of identifying on the same one: %d", p.Connects.Load())
+	}
 }
 
 func TestJoinVoiceRequiresReadySession(t *testing.T) {
@@ -176,5 +180,53 @@ func TestNewRejectsInvalidConfig(t *testing.T) {
 		if _, err := session.New(config, session.Options{}); err == nil {
 			t.Fatalf("%s accepted", name)
 		}
+	}
+}
+
+func TestJoinVoiceFailsFastOnGatewayRefusal(t *testing.T) {
+	p := fixture.New(t)
+	p.RefuseVoice = gateway.VoiceChannelFull
+	s := newSession(t, p, session.Options{})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	started := time.Now()
+	_, err := s.JoinVoice(ctx, fixture.GuildID, fixture.VoiceID, session.VoiceJoin{})
+	var refused *session.VoiceRefusedError
+	if !errors.As(err, &refused) || refused.Code != gateway.VoiceChannelFull || !errors.Is(err, session.ErrVoiceRefused) {
+		t.Fatalf("refusal was not returned: %v", err)
+	}
+	if time.Since(started) > time.Second {
+		t.Fatal("refused join waited for the context instead of failing fast")
+	}
+}
+
+func TestUnrequestedGrantRotatesWhenHandled(t *testing.T) {
+	p := fixture.New(t)
+	lost := &lostVoice{}
+	rotated := make(chan string, 1)
+	s := newSession(t, p, session.Options{OnVoiceLost: lost.add, OnVoiceGrant: func(grant model.VoiceServerUpdate) { rotated <- grant.ConnectionID }})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if _, err := s.JoinVoice(ctx, fixture.GuildID, fixture.VoiceID, session.VoiceJoin{}); err != nil {
+		t.Fatal(err)
+	}
+	p.Event(gateway.EventVoiceServerUpdate, map[string]string{"guild_id": fixture.GuildID, "channel_id": fixture.VoiceID, "connection_id": fixture.Connection, "endpoint": "wss://voice-2.invalid", "token": "new-token"})
+	select {
+	case id := <-rotated:
+		if id != fixture.Connection {
+			t.Fatalf("rotated grant has the wrong connection: %s", id)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("region change grant was not delivered")
+	}
+	if grant, ok := s.Voice(fixture.GuildID); !ok || grant.Endpoint != "wss://voice-2.invalid" {
+		t.Fatalf("rotated grant was not stored: %+v", grant)
+	}
+	if lost.count() != 0 {
+		t.Fatal("region change was reported as voice loss")
 	}
 }

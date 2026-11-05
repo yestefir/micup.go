@@ -42,6 +42,7 @@ type (
 	GatewayConn    = gateway.Conn
 	Resume         = gateway.Resume
 	CloseError     = gateway.CloseError
+	GatewayError   = gateway.GatewayError
 )
 
 func RunGateway(ctx context.Context, options GatewayOptions, handler EventHandler) error {
@@ -65,8 +66,14 @@ const (
 const (
 	OpDispatch         = gateway.OpDispatch
 	OpHeartbeat        = gateway.OpHeartbeat
-	OpIdentify         = gateway.OpIdentify
-	OpVoiceStateUpdate = gateway.OpVoiceStateUpdate
+	OpIdentify                   = gateway.OpIdentify
+	OpPresenceUpdate             = gateway.OpPresenceUpdate
+	OpVoiceStateUpdate           = gateway.OpVoiceStateUpdate
+	OpRequestGuildMembers        = gateway.OpRequestGuildMembers
+	OpGatewayError               = gateway.OpGatewayError
+	OpLazyRequest                = gateway.OpLazyRequest
+	OpRequestGuildCounts         = gateway.OpRequestGuildCounts
+	OpRequestChannelMemberCounts = gateway.OpRequestChannelMemberCounts
 	OpResume           = gateway.OpResume
 	OpReconnect        = gateway.OpReconnect
 	OpInvalidSession   = gateway.OpInvalidSession
@@ -76,15 +83,21 @@ const (
 
 var (
 	ErrReconnectRequested = gateway.ErrReconnectRequested
-	ErrSessionInvalidated = gateway.ErrSessionInvalidated
 	ErrGatewayClosed      = gateway.ErrClosed
+)
+
+const (
+	VoiceChannelFull        = gateway.VoiceChannelFull
+	VoiceP2PConsentRequired = gateway.VoiceP2PConsentRequired
+	VoiceP2PUnavailable     = gateway.VoiceP2PUnavailable
 )
 
 type (
 	Session        = session.Session
 	SessionConfig  = session.Config
 	SessionOptions = session.Options
-	VoiceJoin      = session.VoiceJoin
+	VoiceJoin         = session.VoiceJoin
+	VoiceRefusedError = session.VoiceRefusedError
 	ChannelLookup  = session.ChannelLookup
 )
 
@@ -102,6 +115,7 @@ var (
 	ErrVoiceJoinPending = session.ErrVoiceJoinPending
 	ErrVoiceGrant       = session.ErrVoiceGrant
 	ErrVoiceMoved       = session.ErrVoiceMoved
+	ErrVoiceRefused     = session.ErrVoiceRefused
 )
 
 type (

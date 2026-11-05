@@ -34,6 +34,10 @@ func TestCacheTracksGuildsChannelsAndVoice(t *testing.T) {
 	if c.Apply(gateway.EventVoiceStateUpdate, raw(t, map[string]string{"guild_id": "g", "user_id": "u", "channel_id": ""})) != nil || c.VoiceChannel("g", "u") != "" {
 		t.Fatal("user voice leave was not applied")
 	}
+	c.Apply(gateway.EventGuildDelete, raw(t, map[string]any{"id": "g", "unavailable": true}))
+	if c.Guilds() != 1 || c.Channels() != 1 {
+		t.Fatal("temporary outage dropped cached guild data")
+	}
 	c.Apply(gateway.EventGuildDelete, raw(t, map[string]string{"id": "g"}))
 	if c.Guilds() != 0 || c.Channels() != 0 {
 		t.Fatal("guild delete left cached data")

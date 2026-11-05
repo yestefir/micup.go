@@ -36,8 +36,5 @@ func (e Event) Send(ctx context.Context, opcode int, data any) error {
 	if e.conn == nil {
 		return errors.New("event is not attached to a Gateway connection")
 	}
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	return e.conn.Send(opcode, data)
+	return e.conn.Send(ctx, opcode, data)
 }

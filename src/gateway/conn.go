@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -14,7 +15,10 @@ type Conn struct {
 	mu sync.Mutex
 }
 
-func (c *Conn) Send(opcode int, data any) error {
+func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	_ = c.ws.SetWriteDeadline(time.Now().Add(writeTimeout))

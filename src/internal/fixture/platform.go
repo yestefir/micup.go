@@ -38,6 +38,7 @@ type Platform struct {
 	identifyLog       []Identify
 	CloseCode         int
 	CloseShard        int
+	RefuseVoice       string
 	Identifies        atomic.Int64
 	Resumes           atomic.Int64
 	Leaves            atomic.Int64
@@ -184,6 +185,13 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			_ = json.Unmarshal(fields["channel_id"], &channel)
 			if channel == "" {
 				p.Leaves.Add(1)
+				continue
+			}
+			p.mu.Lock()
+			refuse := p.RefuseVoice
+			p.mu.Unlock()
+			if refuse != "" {
+				c.send(map[string]any{"op": gateway.OpGatewayError, "d": map[string]string{"code": refuse, "message": "refused"}})
 				continue
 			}
 			c.event(gateway.EventVoiceServerUpdate, map[string]string{"guild_id": guild, "connection_id": Connection, "endpoint": "wss://voice.invalid", "token": "grant-token"})

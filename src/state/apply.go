@@ -65,9 +65,10 @@ func (c *Cache) applyGuildCreate(data json.RawMessage) {
 
 func (c *Cache) applyGuildDelete(data json.RawMessage) {
 	var guild struct {
-		ID string `json:"id"`
+		ID          string `json:"id"`
+		Unavailable bool   `json:"unavailable"`
 	}
-	if json.Unmarshal(data, &guild) != nil || guild.ID == "" {
+	if json.Unmarshal(data, &guild) != nil || guild.ID == "" || guild.Unavailable {
 		return
 	}
 	c.mu.Lock()

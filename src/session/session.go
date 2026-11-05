@@ -34,24 +34,26 @@ type Config struct {
 }
 
 type Options struct {
-	Handler     gateway.Handler
-	OnVoiceLost func(guildID, connectionID string)
-	UserAgent   string
-	Browser     string
-	MinBackoff  time.Duration
-	MaxBackoff  time.Duration
+	Handler      gateway.Handler
+	OnVoiceLost  func(guildID, connectionID string)
+	OnVoiceGrant func(grant model.VoiceServerUpdate)
+	UserAgent    string
+	Browser      string
+	MinBackoff   time.Duration
+	MaxBackoff   time.Duration
 }
 
 type Session struct {
-	config  Config
-	options Options
-	cache   *state.Cache
-	resume  gateway.Resume
-	ready   atomic.Bool
-	mu      sync.Mutex
-	conn    *gateway.Conn
-	grants  map[string]model.VoiceServerUpdate
-	pending map[string]chan model.VoiceServerUpdate
+	config    Config
+	options   Options
+	cache     *state.Cache
+	resume    gateway.Resume
+	ready     atomic.Bool
+	mu        sync.Mutex
+	conn      *gateway.Conn
+	grants    map[string]model.VoiceServerUpdate
+	pending   map[string]chan joinResult
+	joinOrder []string
 }
 
 func New(config Config, options Options) (*Session, error) {
@@ -75,7 +77,7 @@ func New(config Config, options Options) (*Session, error) {
 		options: options,
 		cache:   state.New(config.BotID),
 		grants:  map[string]model.VoiceServerUpdate{},
-		pending: map[string]chan model.VoiceServerUpdate{},
+		pending: map[string]chan joinResult{},
 	}, nil
 }
 
@@ -111,14 +113,14 @@ func (s *Session) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *Session) Send(opcode int, data any) error {
+func (s *Session) Send(ctx context.Context, opcode int, data any) error {
 	s.mu.Lock()
 	conn := s.conn
 	s.mu.Unlock()
 	if conn == nil {
 		return gateway.ErrClosed
 	}
-	return conn.Send(opcode, data)
+	return conn.Send(ctx, opcode, data)
 }
 
 func (s *Session) ResolveGuild(ctx context.Context, channelID string) (string, error) {
@@ -138,15 +140,20 @@ func (s *Session) ResolveGuild(ctx context.Context, channelID string) (string, e
 
 func (s *Session) gatewayOptions() gateway.Options {
 	return gateway.Options{
-		URL:            s.config.Endpoint,
-		Token:          s.config.Token,
-		ShardID:        s.config.ShardID,
-		ShardCount:     s.config.ShardCount,
-		UserAgent:      s.options.UserAgent,
-		Browser:        s.options.Browser,
-		Resume:         &s.resume,
-		OnConnect:      s.attach,
-		OnDisconnect:   func() { s.attach(nil) },
+		URL:          s.config.Endpoint,
+		Token:        s.config.Token,
+		ShardID:      s.config.ShardID,
+		ShardCount:   s.config.ShardCount,
+		UserAgent:    s.options.UserAgent,
+		Browser:      s.options.Browser,
+		Resume:       &s.resume,
+		OnConnect:    s.attach,
+		OnDisconnect: func() { s.attach(nil) },
+		OnSessionInvalidated: func() {
+			s.ready.Store(false)
+			s.dropAllGrants()
+		},
+		OnGatewayError: s.handleGatewayError,
 		BeforeIdentify: s.config.BeforeIdentify,
 	}
 }
@@ -161,9 +168,7 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 	move := s.cache.Apply(event.Name, event.Data)
 	switch event.Name {
 	case gateway.EventReady:
-		s.mu.Lock()
-		s.grants = map[string]model.VoiceServerUpdate{}
-		s.mu.Unlock()
+		s.dropAllGrants()
 		s.ready.Store(true)
 	case gateway.EventResumed:
 		s.ready.Store(true)

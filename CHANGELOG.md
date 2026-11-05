@@ -4,6 +4,16 @@ Notable changes to micup.go are recorded here.
 
 ## [0.4.0] - Unreleased
 
+### Fixed
+
+- The Gateway acknowledged an event's sequence before its handler finished, so an event whose handler failed was not replayed after RESUME. Sequences are now acknowledged only after the handler returns `nil`.
+- An invalid session closed the socket and reconnected with backoff. The session now identifies again on the same socket, as Micup allows.
+- A region change grant was reported as voice loss. `SessionOptions.OnVoiceGrant` now receives unrequested grants.
+- `JoinVoice` waited for its context when Micup refused the join with opcode 12. It now returns `*VoiceRefusedError` at once.
+- `GUILD_DELETE` with `unavailable: true` cleared the cached guild. A temporary outage now keeps it.
+- A new READY dropped stored voice grants without calling `OnVoiceLost`.
+- Removed close codes 4013 and 4014, which Micup does not use, from the fatal set, and removed the unused `MessageCreate.Raw` field and `ErrSessionInvalidated`.
+
 ### Changed
 
 - The implementation moved into domain packages under `src/`: `bot`, `discovery`, `rest`, `gateway`, `state`, `session`, `shard`, `model` and `voice`. Applications keep importing `github.com/yestefir/micup.go` and `github.com/yestefir/micup.go/voice`, which are now thin facades over `src/`.
@@ -11,6 +21,7 @@ Notable changes to micup.go are recorded here.
 - Breaking: `Bot.NewSession` returns an error; `ShardManagerOptions` is `ShardOptions`; `State.Apply` takes the event name and data.
 - `session` reaches REST only through `micup.ChannelLookup`, and the Gateway adds its own `v` and `encoding` query parameters.
 - The default User-Agent is `micup.go/0.4.0`.
+- Breaking: `Session.Send` and `GatewayConn.Send` take a context.
 
 ### Added
 

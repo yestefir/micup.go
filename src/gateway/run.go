@@ -63,7 +63,6 @@ func Run(parent context.Context, options Options, handler Handler) error {
 		if err = ws.ReadJSON(&p); err != nil {
 			return readError(parent, resume, err)
 		}
-		resume.observe(p.Sequence)
 		switch p.Op {
 		case OpHello:
 			if identified {
@@ -82,14 +81,21 @@ func Run(parent context.Context, options Options, handler Handler) error {
 		case OpHeartbeatAck:
 			acknowledged.Store(true)
 		case OpHeartbeat:
-			if err = conn.Send(OpHeartbeat, resume.last()); err != nil {
+			if err = conn.Send(ctx, OpHeartbeat, resume.last()); err != nil {
 				return err
 			}
 		case OpReconnect:
 			return ErrReconnectRequested
 		case OpInvalidSession:
-			resume.Reset()
-			return ErrSessionInvalidated
+			if err = reidentify(ctx, conn, options, resume); err != nil {
+				return err
+			}
+		case OpGatewayError:
+			if options.OnGatewayError != nil {
+				var refusal GatewayError
+				_ = json.Unmarshal(p.Data, &refusal)
+				options.OnGatewayError(refusal)
+			}
 		case OpDispatch:
 			if p.Name == EventReady {
 				var ready struct {
@@ -98,10 +104,11 @@ func Run(parent context.Context, options Options, handler Handler) error {
 				_ = json.Unmarshal(p.Data, &ready)
 				resume.start(ready.SessionID)
 			}
-			event := Event{Name: p.Name, Sequence: resume.last(), ShardID: options.ShardID, Data: append(json.RawMessage(nil), p.Data...), conn: conn}
+			event := Event{Name: p.Name, Sequence: copySequence(p.Sequence), ShardID: options.ShardID, Data: append(json.RawMessage(nil), p.Data...), conn: conn}
 			if err = handler(ctx, event); err != nil {
 				return err
 			}
+			resume.observe(p.Sequence)
 		}
 	}
 }
@@ -145,11 +152,32 @@ func helloInterval(data json.RawMessage) (time.Duration, error) {
 	return time.Duration(hello.Interval) * time.Millisecond, nil
 }
 
+func reidentify(ctx context.Context, conn *Conn, options Options, resume *Resume) error {
+	resume.Reset()
+	if options.OnSessionInvalidated != nil {
+		options.OnSessionInvalidated()
+	}
+	if options.BeforeIdentify != nil {
+		if err := options.BeforeIdentify(ctx); err != nil {
+			return err
+		}
+	}
+	return identify(conn, options, resume)
+}
+
+func copySequence(sequence *int64) *int64 {
+	if sequence == nil {
+		return nil
+	}
+	n := *sequence
+	return &n
+}
+
 func identify(conn *Conn, options Options, resume *Resume) error {
 	if sessionID, sequence := resume.snapshot(); sessionID != "" && sequence != nil {
-		return conn.Send(OpResume, map[string]any{"token": options.Token, "session_id": sessionID, "seq": *sequence})
+		return conn.Send(context.Background(), OpResume, map[string]any{"token": options.Token, "session_id": sessionID, "seq": *sequence})
 	}
-	return conn.Send(OpIdentify, map[string]any{
+	return conn.Send(context.Background(), OpIdentify, map[string]any{
 		"token":      options.Token,
 		"properties": map[string]string{"os": "go", "browser": options.Browser, "device": options.Browser},
 		"shard":      []int{options.ShardID, options.ShardCount},
@@ -164,7 +192,7 @@ func heartbeat(ctx context.Context, cancel context.CancelFunc, conn *Conn, resum
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if !acknowledged.Swap(false) || conn.Send(OpHeartbeat, resume.last()) != nil {
+			if !acknowledged.Swap(false) || conn.Send(ctx, OpHeartbeat, resume.last()) != nil {
 				cancel()
 				return
 			}

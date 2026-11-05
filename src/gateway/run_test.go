@@ -67,8 +67,8 @@ func TestRunIdentifiesAndDeliversEvents(t *testing.T) {
 	if !errors.Is(err, want) {
 		t.Fatalf("Gateway returned the wrong handler result: %v", err)
 	}
-	if !resume.Resumable() {
-		t.Fatal("READY did not record a resumable session")
+	if resume.Resumable() {
+		t.Fatal("READY was acknowledged although its handler failed")
 	}
 }
 
@@ -90,5 +90,39 @@ func TestCloseErrorClassification(t *testing.T) {
 	}
 	if !(&CloseError{Code: 4009}).ResetsSession() || (&CloseError{Code: 4000}).ResetsSession() {
 		t.Fatal("session-reset close codes misclassified")
+	}
+}
+
+func TestRunAcknowledgesOnlyProcessedEvents(t *testing.T) {
+	upgrader := websocket.Upgrader{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer ws.Close()
+		_ = ws.WriteJSON(map[string]any{"op": OpHello, "d": map[string]int{"heartbeat_interval": 5000}})
+		var identify map[string]any
+		_ = ws.ReadJSON(&identify)
+		_ = ws.WriteJSON(map[string]any{"op": OpDispatch, "s": 1, "t": EventReady, "d": map[string]string{"session_id": "s"}})
+		_ = ws.WriteJSON(map[string]any{"op": OpDispatch, "s": 2, "t": EventMessageCreate, "d": map[string]string{}})
+		_, _, _ = ws.ReadMessage()
+	}))
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	failed := errors.New("handler failed")
+	resume := &Resume{}
+	err := Run(ctx, Options{URL: "ws" + strings.TrimPrefix(server.URL, "http"), Token: "fixture", Resume: resume}, func(_ context.Context, event Event) error {
+		if event.Name == EventMessageCreate {
+			return failed
+		}
+		return nil
+	})
+	if !errors.Is(err, failed) {
+		t.Fatalf("handler error was not returned: %v", err)
+	}
+	if last := resume.last(); last == nil || *last != 1 {
+		t.Fatalf("failed event was acknowledged: %v", last)
 	}
 }

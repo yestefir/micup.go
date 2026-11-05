@@ -9,16 +9,18 @@ import (
 )
 
 type Options struct {
-	URL            string
-	Token          string
-	ShardID        int
-	ShardCount     int
-	UserAgent      string
-	Browser        string
-	Resume         *Resume
-	OnConnect      func(*Conn)
-	OnDisconnect   func()
-	BeforeIdentify func(context.Context) error
+	URL                  string
+	Token                string
+	ShardID              int
+	ShardCount           int
+	UserAgent            string
+	Browser              string
+	Resume               *Resume
+	OnConnect            func(*Conn)
+	OnDisconnect         func()
+	OnSessionInvalidated func()
+	OnGatewayError       func(GatewayError)
+	BeforeIdentify       func(context.Context) error
 }
 
 func ValidateShard(shardID, shardCount int) error {

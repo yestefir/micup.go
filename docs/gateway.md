@@ -51,9 +51,11 @@ if err := s.Run(ctx); err != nil {
 }
 ```
 
-`Run` returns `nil` when the context ends. It returns a `*micup.CloseError` only when Micup closes the connection with a code that retrying cannot fix, such as an invalid token (`CloseError.Fatal()` reports this). Every other disconnect, reconnect request, heartbeat timeout, or handler error closes the current connection and starts a new one after `MinBackoff` (default `micup.DefaultMinBackoff`, 1 s), doubling up to `MaxBackoff` (default 15 s). The delay resets after a successful `READY` or `RESUMED`.
+`Run` returns `nil` when the context ends.
 
-After a disconnect the session sends RESUME with the last session ID and sequence. An invalid-session response, or close code 4007 or 4009 (`CloseError.ResetsSession()`), clears that state so the next connection identifies again.
+A handler error is a request to see the event again: the session does not acknowledge an event until its handler returns `nil`, so after the reconnect Micup replays it with RESUME. Return an error only for failures worth retrying, and log and return `nil` for events you want to skip. It returns a `*micup.CloseError` only when Micup closes the connection with a code that retrying cannot fix, such as an invalid token (`CloseError.Fatal()` reports this). Every other disconnect, reconnect request, heartbeat timeout, or handler error closes the current connection and starts a new one after `MinBackoff` (default `micup.DefaultMinBackoff`, 1 s), doubling up to `MaxBackoff` (default 15 s). The delay resets after a successful `READY` or `RESUMED`.
+
+After a disconnect the session sends RESUME with the last session ID and the last sequence it finished processing. Heartbeats carry the same processed sequence, because Micup drops replayable events up to it. An invalid-session response (opcode 9) clears the resume state and the session identifies again on the same socket, paced by the shard manager's identify limiter. Close codes 4007 and 4009 (`CloseError.ResetsSession()`) clear it before the next connection.
 
 `Session.Ready()` is true between `READY`/`RESUMED` and the next disconnect. `Session.Send(opcode, data)` sends any native opcode on the live connection and returns `micup.ErrGatewayClosed` while disconnected. `Session.ShardID()` returns the shard it runs.
 
@@ -83,11 +85,16 @@ Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)
 - `micup.ErrNotReady` before the session is ready,
 - `micup.ErrVoiceJoinPending` while another join for the same guild is waiting,
 - `micup.ErrVoiceGrant` when the update has no endpoint or token,
-- `micup.ErrVoiceMoved` when Micup grants a different channel.
+- `micup.ErrVoiceMoved` when Micup grants a different channel,
+- a `*micup.VoiceRefusedError` (matching `errors.Is(err, micup.ErrVoiceRefused)`) when Micup refuses the join with opcode 12. `Code` is `micup.VoiceChannelFull`, `micup.VoiceP2PConsentRequired` or `micup.VoiceP2PUnavailable`.
+
+Micup reports only those three refusals. Other refusals, such as a missing CONNECT permission, send nothing, so always bound `JoinVoice` with a context deadline. Opcode 12 carries no guild ID; when several joins are pending, the session assigns a refusal to the oldest one.
 
 `Session.Voice(guildID)` returns the current grant. `Session.LeaveVoice(guildID, connectionID)` sends the leave opcode only when the connection ID still matches the current grant, so a late leave cannot disconnect a newer connection.
 
-`OnVoiceLost(guildID, connectionID)` runs when the bot is moved or disconnected from its voice channel, or when Micup sends an unrequested `VOICE_SERVER_UPDATE` that replaces a grant. The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
+`OnVoiceLost(guildID, connectionID)` runs when the bot is disconnected from its voice channel, moved to a channel it holds no grant for, or loses its session (invalid session or a new READY). The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
+
+Micup sends a new grant without a request when the connection moves to another region or channel. With `OnVoiceGrant(grant)` set, the session stores that grant and passes it to the callback: reconnect the LiveKit room to `grant.Endpoint` with `grant.Token` and keep playing. Without `OnVoiceGrant`, an unrequested grant that replaces a stored one is reported through `OnVoiceLost`, as in earlier releases.
 
 ## Shard manager
 
@@ -117,7 +124,9 @@ if err := manager.Run(ctx); err != nil {
 
 The manager waits `IdentifyInterval` between new identifies, including re-identifies after an invalid session. RESUME is not delayed. Split shards across processes with `ShardIDs`, for example `{0, 1}` in one process and `{2, 3}` in another with `ShardCount: 4`; each process then paces only its own identifies.
 
-`Run` returns `nil` when the context ends. If any shard stops on a fatal close code, the manager stops every shard and returns that error wrapped with the shard ID; `errors.As(err, &closeErr)` still works. `Run` returns `micup.ErrShardManagerRunning` if it is already running.
+`Run` returns `nil` when the context ends.
+
+A handler error is a request to see the event again: the session does not acknowledge an event until its handler returns `nil`, so after the reconnect Micup replays it with RESUME. Return an error only for failures worth retrying, and log and return `nil` for events you want to skip. If any shard stops on a fatal close code, the manager stops every shard and returns that error wrapped with the shard ID; `errors.As(err, &closeErr)` still works. `Run` returns `micup.ErrShardManagerRunning` if it is already running.
 
 | Method | Behavior |
 |---|---|
