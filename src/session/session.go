@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -34,13 +35,16 @@ type Config struct {
 }
 
 type Options struct {
-	Handler      gateway.Handler
-	OnVoiceLost  func(guildID, connectionID string)
-	OnVoiceGrant func(grant model.VoiceServerUpdate)
-	UserAgent    string
-	Browser      string
-	MinBackoff   time.Duration
-	MaxBackoff   time.Duration
+	Handler       gateway.Handler
+	OnVoiceLost   func(guildID, connectionID string)
+	OnVoiceGrant  func(grant model.VoiceServerUpdate)
+	IgnoredEvents []string
+	Presence      *model.Presence
+	Flags         int
+	UserAgent     string
+	Browser       string
+	MinBackoff    time.Duration
+	MaxBackoff    time.Duration
 }
 
 type Session struct {
@@ -54,6 +58,7 @@ type Session struct {
 	grants    map[string]model.VoiceServerUpdate
 	pending   map[string]chan joinResult
 	joinOrder []string
+	presence  *model.Presence
 }
 
 func New(config Config, options Options) (*Session, error) {
@@ -66,6 +71,12 @@ func New(config Config, options Options) (*Session, error) {
 	if err := gateway.ValidateShard(config.ShardID, config.ShardCount); err != nil {
 		return nil, err
 	}
+	if err := gateway.ValidateIgnoredEvents(options.IgnoredEvents); err != nil {
+		return nil, err
+	}
+	if options.Presence != nil && !model.ValidStatus(options.Presence.Status) {
+		return nil, fmt.Errorf("invalid presence status %q", options.Presence.Status)
+	}
 	if options.MinBackoff <= 0 {
 		options.MinBackoff = DefaultMinBackoff
 	}
@@ -73,11 +84,12 @@ func New(config Config, options Options) (*Session, error) {
 		options.MaxBackoff = max(DefaultMaxBackoff, options.MinBackoff)
 	}
 	return &Session{
-		config:  config,
-		options: options,
-		cache:   state.New(config.BotID),
-		grants:  map[string]model.VoiceServerUpdate{},
-		pending: map[string]chan joinResult{},
+		config:   config,
+		options:  options,
+		cache:    state.New(config.BotID),
+		grants:   map[string]model.VoiceServerUpdate{},
+		pending:  map[string]chan joinResult{},
+		presence: options.Presence,
 	}, nil
 }
 
@@ -155,6 +167,9 @@ func (s *Session) gatewayOptions() gateway.Options {
 		},
 		OnGatewayError: s.handleGatewayError,
 		BeforeIdentify: s.config.BeforeIdentify,
+		IgnoredEvents:  s.options.IgnoredEvents,
+		PresenceFunc:   s.currentPresence,
+		Flags:          s.options.Flags,
 	}
 }
 
@@ -192,4 +207,24 @@ func sleep(ctx context.Context, wait time.Duration) error {
 	case <-timer.C:
 		return nil
 	}
+}
+
+func (s *Session) UpdatePresence(ctx context.Context, presence model.Presence) error {
+	if !model.ValidStatus(presence.Status) {
+		return fmt.Errorf("invalid presence status %q", presence.Status)
+	}
+	s.mu.Lock()
+	s.presence = &presence
+	s.mu.Unlock()
+	return s.Send(ctx, gateway.OpPresenceUpdate, presence)
+}
+
+func (s *Session) currentPresence() *model.Presence {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.presence == nil {
+		return nil
+	}
+	presence := *s.presence
+	return &presence
 }

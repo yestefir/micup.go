@@ -19,7 +19,7 @@ var allowed = map[string][]string{
 	"internal/httpx":   {},
 	"discovery":        {"internal/httpx"},
 	"rest":             {"model", "internal/httpx", "internal/version"},
-	"gateway":          {"internal/version"},
+	"gateway":          {"internal/version", "model"},
 	"state":            {"gateway", "model"},
 	"session":          {"gateway", "model", "state"},
 	"shard":            {"gateway", "model", "session"},

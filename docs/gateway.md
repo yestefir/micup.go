@@ -57,7 +57,19 @@ A handler error is a request to see the event again: the session does not acknow
 
 After a disconnect the session sends RESUME with the last session ID and the last sequence it finished processing. Heartbeats carry the same processed sequence, because Micup drops replayable events up to it. An invalid-session response (opcode 9) clears the resume state and the session identifies again on the same socket, paced by the shard manager's identify limiter. Close codes 4007 and 4009 (`CloseError.ResetsSession()`) clear it before the next connection.
 
-`Session.Ready()` is true between `READY`/`RESUMED` and the next disconnect. `Session.Send(opcode, data)` sends any native opcode on the live connection and returns `micup.ErrGatewayClosed` while disconnected. `Session.ShardID()` returns the shard it runs.
+### Identify options and presence
+
+| `SessionOptions` field | Effect |
+|---|---|
+| `IgnoredEvents` | Dispatch names Micup should not send this session (up to 256), for example `TYPING_START`, `MESSAGE_REACTION_ADD`, `MESSAGE_REACTION_REMOVE`, `PRESENCE_UPDATE`. Micup has no intents; this is the way to cut traffic. Ignored events use no sequence number. `MESSAGE_CREATE` still arrives for messages that mention the bot directly |
+| `Presence` | The status published when the session starts: `micup.Presence{Status: micup.StatusOnline, CustomStatus: &micup.CustomStatus{Text: "!help"}}` |
+| `Flags` | Session flags: `micup.FlagChannelThreads`, `micup.FlagDebounceMessageReactions`, `micup.FlagGuildVisits` |
+
+`Session.UpdatePresence(ctx, presence)` (or `ShardManager.UpdatePresence` for every shard) sends opcode 3 and remembers the presence, so a later IDENTIFY uses it too. Status is one of `online`, `idle`, `dnd`, `invisible` or `offline`.
+
+Micup limits each connection to 600 commands per 60 seconds and 5 presence updates per 20 seconds, and closes or drops over the limit. The connection queues commands at 540 per 60 seconds (heartbeats, IDENTIFY and RESUME are not counted against that) and presence updates at 5 per 20 seconds, so `Send` and `UpdatePresence` wait instead of being dropped; the wait ends with the context. A command over Micup's 16,384-byte limit returns an error instead of being sent.
+
+`Session.Ready()` is true between `READY`/`RESUMED` and the next disconnect. `Session.Send(ctx, opcode, data)` sends any native opcode on the live connection and returns `micup.ErrGatewayClosed` while disconnected. `Session.ShardID()` returns the shard it runs.
 
 The handler runs after the session updates its own state, so a handler that reads `Session.State()` sees the current event applied.
 

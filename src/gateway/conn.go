@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,16 +13,39 @@ import (
 const writeTimeout = 5 * time.Second
 
 type Conn struct {
-	ws *websocket.Conn
-	mu sync.Mutex
+	ws        *websocket.Conn
+	mu        sync.Mutex
+	commands  *windowLimiter
+	presences *windowLimiter
+}
+
+func newConn(ws *websocket.Conn) *Conn {
+	return &Conn{ws: ws, commands: newWindowLimiter(commandBudget, commandWindow), presences: newWindowLimiter(presenceBudget, presenceWindow)}
 }
 
 func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+	encoded, err := json.Marshal(map[string]any{"op": opcode, "d": data})
+	if err != nil {
+		return err
+	}
+	if len(encoded) > maxPayloadSize {
+		return fmt.Errorf("Micup Gateway payload is %d bytes, over the %d byte limit", len(encoded), maxPayloadSize)
+	}
+	if opcode != OpHeartbeat && opcode != OpIdentify && opcode != OpResume {
+		if err = c.commands.wait(ctx); err != nil {
+			return err
+		}
+	}
+	if opcode == OpPresenceUpdate {
+		if err = c.presences.wait(ctx); err != nil {
+			return err
+		}
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	_ = c.ws.SetWriteDeadline(time.Now().Add(writeTimeout))
-	return c.ws.WriteJSON(map[string]any{"op": opcode, "d": data})
+	return c.ws.WriteMessage(websocket.TextMessage, encoded)
 }

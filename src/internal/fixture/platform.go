@@ -36,6 +36,8 @@ type Platform struct {
 	conns             []*websocket.Conn
 	latest            *peer
 	identifyLog       []Identify
+	lastIdentify      map[string]json.RawMessage
+	presences         []json.RawMessage
 	CloseCode         int
 	CloseShard        int
 	RefuseVoice       string
@@ -169,6 +171,10 @@ func (p *Platform) serve(ws *websocket.Conn) {
 		switch packet.Op {
 		case gateway.OpHeartbeat:
 			c.send(map[string]any{"op": gateway.OpHeartbeatAck})
+		case gateway.OpPresenceUpdate:
+			p.mu.Lock()
+			p.presences = append(p.presences, append(json.RawMessage(nil), packet.D...))
+			p.mu.Unlock()
 		case gateway.OpIdentify:
 			if !p.identify(c, fields) {
 				return
@@ -209,6 +215,7 @@ func (p *Platform) identify(c *peer, fields map[string]json.RawMessage) bool {
 	p.Identifies.Add(1)
 	p.mu.Lock()
 	p.identifyLog = append(p.identifyLog, Identify{Shard: pair[0], At: time.Now()})
+	p.lastIdentify = fields
 	code := p.CloseCode
 	if p.CloseShard >= 0 && p.CloseShard != pair[0] {
 		code = 0
@@ -236,4 +243,16 @@ func Eventually(t testing.TB, check func() bool) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatal("condition was not met")
+}
+
+func (p *Platform) LastIdentify() map[string]json.RawMessage {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.lastIdentify
+}
+
+func (p *Platform) Presences() []json.RawMessage {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return append([]json.RawMessage(nil), p.presences...)
 }

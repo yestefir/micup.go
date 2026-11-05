@@ -3,9 +3,19 @@ package gateway
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/yestefir/micup.go/src/internal/version"
+	"github.com/yestefir/micup.go/src/model"
+)
+
+const (
+	FlagDebounceMessageReactions = 1 << 1
+	FlagChannelThreads           = 1 << 2
+	FlagGuildVisits              = 1 << 3
+	maxIgnoredEvents             = 256
 )
 
 type Options struct {
@@ -16,6 +26,10 @@ type Options struct {
 	UserAgent            string
 	Browser              string
 	Resume               *Resume
+	IgnoredEvents        []string
+	Presence             *model.Presence
+	PresenceFunc         func() *model.Presence
+	Flags                int
 	OnConnect            func(*Conn)
 	OnDisconnect         func()
 	OnSessionInvalidated func()
@@ -33,6 +47,15 @@ func ValidateShard(shardID, shardCount int) error {
 func (o Options) normalize() (Options, error) {
 	if o.Token == "" {
 		return o, errors.New("Gateway token is required")
+	}
+	if err := ValidateIgnoredEvents(o.IgnoredEvents); err != nil {
+		return o, err
+	}
+	if o.Flags < 0 {
+		return o, errors.New("Gateway session flags must not be negative")
+	}
+	if o.Presence != nil && !model.ValidStatus(o.Presence.Status) {
+		return o, fmt.Errorf("invalid presence status %q", o.Presence.Status)
 	}
 	if o.ShardCount == 0 {
 		o.ShardCount = 1
@@ -59,4 +82,25 @@ func (o Options) normalize() (Options, error) {
 		o.Resume = &Resume{}
 	}
 	return o, nil
+}
+
+func ValidateIgnoredEvents(events []string) error {
+	if len(events) > maxIgnoredEvents {
+		return fmt.Errorf("at most %d ignored events are allowed", maxIgnoredEvents)
+	}
+	for _, name := range events {
+		if name == "" || name != strings.ToUpper(name) || strings.ContainsAny(name, " \t\r\n") {
+			return fmt.Errorf("invalid ignored event name %q", name)
+		}
+	}
+	return nil
+}
+
+func (o Options) presence() *model.Presence {
+	if o.PresenceFunc != nil {
+		if presence := o.PresenceFunc(); presence != nil {
+			return presence
+		}
+	}
+	return o.Presence
 }

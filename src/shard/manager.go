@@ -193,3 +193,13 @@ func (m *Manager) ResolveGuild(ctx context.Context, channelID string) (string, e
 	}
 	return channel.GuildID, nil
 }
+
+func (m *Manager) UpdatePresence(ctx context.Context, presence model.Presence) error {
+	var errs []error
+	for _, id := range m.ids {
+		if err := m.sessions[id].UpdatePresence(ctx, presence); err != nil && !errors.Is(err, gateway.ErrClosed) {
+			errs = append(errs, fmt.Errorf("Micup shard %d: %w", id, err))
+		}
+	}
+	return errors.Join(errs...)
+}

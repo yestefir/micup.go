@@ -3,6 +3,7 @@ package session_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -228,5 +229,34 @@ func TestUnrequestedGrantRotatesWhenHandled(t *testing.T) {
 	}
 	if lost.count() != 0 {
 		t.Fatal("region change was reported as voice loss")
+	}
+}
+
+func TestSessionSendsIdentifyOptionsAndPresence(t *testing.T) {
+	p := fixture.New(t)
+	s := newSession(t, p, session.Options{MinBackoff: 10 * time.Millisecond, IgnoredEvents: []string{"TYPING_START"}, Presence: &model.Presence{Status: model.StatusIdle}})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	identify := p.LastIdentify()
+	if string(identify["ignored_events"]) != `["TYPING_START"]` || !strings.Contains(string(identify["presence"]), `"idle"`) {
+		t.Fatalf("identify options were not sent: %s %s", identify["ignored_events"], identify["presence"])
+	}
+	if err := s.UpdatePresence(context.Background(), model.Presence{Status: model.StatusDND, CustomStatus: &model.CustomStatus{Text: "playing"}}); err != nil {
+		t.Fatal(err)
+	}
+	fixture.Eventually(t, func() bool { return len(p.Presences()) == 1 })
+	if !strings.Contains(string(p.Presences()[0]), `"dnd"`) {
+		t.Fatalf("presence update was not sent: %s", p.Presences()[0])
+	}
+	p.Send(map[string]any{"op": gateway.OpInvalidSession, "d": false})
+	fixture.Eventually(t, func() bool { return p.Identifies.Load() == 2 })
+	if !strings.Contains(string(p.LastIdentify()["presence"]), `"dnd"`) {
+		t.Fatal("re-identify did not keep the updated presence")
+	}
+	if err := s.UpdatePresence(context.Background(), model.Presence{Status: "busy"}); err == nil {
+		t.Fatal("invalid status accepted")
+	}
+	if _, err := session.New(session.Config{Endpoint: "wss://micup.gg", Token: "t"}, session.Options{IgnoredEvents: []string{"typing start"}}); err == nil {
+		t.Fatal("invalid ignored event accepted")
 	}
 }

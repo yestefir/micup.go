@@ -48,7 +48,7 @@ func Run(parent context.Context, options Options, handler Handler) error {
 	stop := context.AfterFunc(ctx, func() { _ = ws.Close() })
 	defer stop()
 	defer ws.Close()
-	conn := &Conn{ws: ws}
+	conn := newConn(ws)
 	if options.OnConnect != nil {
 		options.OnConnect(conn)
 	}
@@ -177,11 +177,21 @@ func identify(conn *Conn, options Options, resume *Resume) error {
 	if sessionID, sequence := resume.snapshot(); sessionID != "" && sequence != nil {
 		return conn.Send(context.Background(), OpResume, map[string]any{"token": options.Token, "session_id": sessionID, "seq": *sequence})
 	}
-	return conn.Send(context.Background(), OpIdentify, map[string]any{
+	payload := map[string]any{
 		"token":      options.Token,
 		"properties": map[string]string{"os": "go", "browser": options.Browser, "device": options.Browser},
 		"shard":      []int{options.ShardID, options.ShardCount},
-	})
+	}
+	if len(options.IgnoredEvents) != 0 {
+		payload["ignored_events"] = options.IgnoredEvents
+	}
+	if presence := options.presence(); presence != nil {
+		payload["presence"] = presence
+	}
+	if options.Flags != 0 {
+		payload["flags"] = options.Flags
+	}
+	return conn.Send(context.Background(), OpIdentify, payload)
 }
 
 func heartbeat(ctx context.Context, cancel context.CancelFunc, conn *Conn, resume *Resume, acknowledged *atomic.Bool, interval time.Duration) {

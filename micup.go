@@ -95,6 +95,25 @@ var (
 )
 
 const (
+	FlagDebounceMessageReactions = gateway.FlagDebounceMessageReactions
+	FlagChannelThreads           = gateway.FlagChannelThreads
+	FlagGuildVisits              = gateway.FlagGuildVisits
+)
+
+type (
+	Presence     = model.Presence
+	CustomStatus = model.CustomStatus
+)
+
+const (
+	StatusOnline    = model.StatusOnline
+	StatusIdle      = model.StatusIdle
+	StatusDND       = model.StatusDND
+	StatusInvisible = model.StatusInvisible
+	StatusOffline   = model.StatusOffline
+)
+
+const (
 	VoiceChannelFull        = gateway.VoiceChannelFull
 	VoiceP2PConsentRequired = gateway.VoiceP2PConsentRequired
 	VoiceP2PUnavailable     = gateway.VoiceP2PUnavailable
