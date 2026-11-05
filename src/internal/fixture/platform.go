@@ -1,0 +1,231 @@
+package fixture
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/gorilla/websocket"
+
+	"github.com/yestefir/micup.go/src/gateway"
+)
+
+const (
+	Token      = "fixture"
+	BotID      = "bot"
+	GuildID    = "4194304"
+	VoiceID    = "voice"
+	TextID     = "text"
+	Connection = "conn-1"
+)
+
+type Identify struct {
+	Shard int
+	At    time.Time
+}
+
+type Platform struct {
+	server            *httptest.Server
+	mu                sync.Mutex
+	conns             []*websocket.Conn
+	latest            *peer
+	identifyLog       []Identify
+	CloseCode         int
+	CloseShard        int
+	Identifies        atomic.Int64
+	Resumes           atomic.Int64
+	Leaves            atomic.Int64
+	Connects          atomic.Int64
+	ChannelLookups    atomic.Int64
+	lastResumeSession atomic.Value
+}
+
+type peer struct {
+	ws    *websocket.Conn
+	write sync.Mutex
+	seq   int64
+}
+
+func New(t testing.TB) *Platform {
+	t.Helper()
+	p := &Platform{CloseShard: -1}
+	upgrader := websocket.Upgrader{}
+	p.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/.well-known/fluxer":
+			_ = json.NewEncoder(w).Encode(map[string]any{"endpoints": map[string]string{"api_public": p.APIURL(), "gateway": p.GatewayURL()}})
+		case "/api/v1/users/@me":
+			fmt.Fprintf(w, `{"id":%q,"bot":true}`, BotID)
+		case "/api/v1/channels/" + TextID:
+			p.ChannelLookups.Add(1)
+			fmt.Fprintf(w, `{"id":%q,"guild_id":%q,"type":0}`, TextID, GuildID)
+		case "/gateway":
+			ws, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				return
+			}
+			p.serve(ws)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(func() {
+		p.mu.Lock()
+		for _, c := range p.conns {
+			_ = c.Close()
+		}
+		p.mu.Unlock()
+		p.server.Close()
+	})
+	return p
+}
+
+func (p *Platform) URL() string    { return p.server.URL }
+func (p *Platform) APIURL() string { return p.server.URL + "/api" }
+func (p *Platform) GatewayURL() string {
+	return "ws" + strings.TrimPrefix(p.server.URL, "http") + "/gateway"
+}
+
+func (p *Platform) LastResumeSession() string {
+	v, _ := p.lastResumeSession.Load().(string)
+	return v
+}
+
+func (p *Platform) IdentifyLog() []Identify {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return append([]Identify(nil), p.identifyLog...)
+}
+
+func (p *Platform) Send(packet any) {
+	p.mu.Lock()
+	c := p.latest
+	p.mu.Unlock()
+	if c != nil {
+		c.send(packet)
+	}
+}
+
+func (p *Platform) Event(name string, data any) {
+	p.mu.Lock()
+	c := p.latest
+	p.mu.Unlock()
+	if c != nil {
+		c.event(name, data)
+	}
+}
+
+func (c *peer) send(packet any) {
+	c.write.Lock()
+	defer c.write.Unlock()
+	_ = c.ws.SetWriteDeadline(time.Now().Add(time.Second))
+	_ = c.ws.WriteJSON(packet)
+}
+
+func (c *peer) event(name string, data any) {
+	c.write.Lock()
+	c.seq++
+	seq := c.seq
+	c.write.Unlock()
+	c.send(map[string]any{"op": gateway.OpDispatch, "t": name, "s": seq, "d": data})
+}
+
+func (c *peer) close(code int) {
+	c.write.Lock()
+	defer c.write.Unlock()
+	_ = c.ws.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(code, "rejected"))
+}
+
+func (p *Platform) serve(ws *websocket.Conn) {
+	defer ws.Close()
+	c := &peer{ws: ws}
+	p.Connects.Add(1)
+	p.mu.Lock()
+	p.conns = append(p.conns, ws)
+	p.latest = c
+	p.mu.Unlock()
+	c.send(map[string]any{"op": gateway.OpHello, "d": map[string]int{"heartbeat_interval": 200}})
+	for {
+		_, data, err := ws.ReadMessage()
+		if err != nil {
+			return
+		}
+		var packet struct {
+			Op int             `json:"op"`
+			D  json.RawMessage `json:"d"`
+		}
+		if json.Unmarshal(data, &packet) != nil {
+			continue
+		}
+		var fields map[string]json.RawMessage
+		_ = json.Unmarshal(packet.D, &fields)
+		switch packet.Op {
+		case gateway.OpHeartbeat:
+			c.send(map[string]any{"op": gateway.OpHeartbeatAck})
+		case gateway.OpIdentify:
+			if !p.identify(c, fields) {
+				return
+			}
+		case gateway.OpResume:
+			p.Resumes.Add(1)
+			var session string
+			_ = json.Unmarshal(fields["session_id"], &session)
+			p.lastResumeSession.Store(session)
+			c.event(gateway.EventResumed, map[string]any{})
+		case gateway.OpVoiceStateUpdate:
+			var guild, channel string
+			_ = json.Unmarshal(fields["guild_id"], &guild)
+			_ = json.Unmarshal(fields["channel_id"], &channel)
+			if channel == "" {
+				p.Leaves.Add(1)
+				continue
+			}
+			c.event(gateway.EventVoiceServerUpdate, map[string]string{"guild_id": guild, "connection_id": Connection, "endpoint": "wss://voice.invalid", "token": "grant-token"})
+			c.event(gateway.EventVoiceStateUpdate, map[string]string{"guild_id": guild, "user_id": BotID, "channel_id": channel})
+		}
+	}
+}
+
+func (p *Platform) identify(c *peer, fields map[string]json.RawMessage) bool {
+	var pair []int
+	_ = json.Unmarshal(fields["shard"], &pair)
+	if len(pair) != 2 {
+		pair = []int{0, 1}
+	}
+	p.Identifies.Add(1)
+	p.mu.Lock()
+	p.identifyLog = append(p.identifyLog, Identify{Shard: pair[0], At: time.Now()})
+	code := p.CloseCode
+	if p.CloseShard >= 0 && p.CloseShard != pair[0] {
+		code = 0
+	}
+	p.mu.Unlock()
+	if code != 0 {
+		c.close(code)
+		return false
+	}
+	guilds := []any{}
+	if owner := (4194304 >> 22) % pair[1]; owner == pair[0] {
+		guilds = append(guilds, map[string]any{"id": GuildID, "channels": []map[string]string{{"id": VoiceID}}, "voice_states": []map[string]string{{"user_id": "listener", "channel_id": VoiceID}}})
+	}
+	c.event(gateway.EventReady, map[string]any{"session_id": fmt.Sprintf("session-%d", pair[0]+1), "guilds": guilds})
+	return true
+}
+
+func Eventually(t testing.TB, check func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if check() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("condition was not met")
+}

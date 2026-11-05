@@ -1,17 +1,50 @@
 # Architecture
 
-The root `micup` package owns Micup REST discovery and Gateway transport. The `voice` package owns the downstream LiveKit room and PCM-to-Opus encoder. Applications connect the two by handling Micup voice events, pairing the short-lived grant, and passing it to `voice.LiveKit.Connect`.
+All Go code lives under `src/`. Each directory is one domain with one job, and dependencies point downward:
 
-The module has no dependency on a bot framework, command router, database, NATS, media search provider, or queue. Application-specific policy stays in the caller. REST payloads remain available through raw JSON so Micup fields can be adopted without waiting for a library release.
+```text
+layer 4   bot
+layer 3   shard
+layer 2   session
+layer 1   state      rest       discovery
+layer 0   gateway    model      internal/*
 
-Both Gateway entry points share one connection loop. It handles HELLO, IDENTIFY, RESUME, heartbeat ACKs, heartbeat requests, dispatch events, reconnect requests, invalid-session responses and close codes. Shard IDs are explicit.
+voice     independent; imports no other micup.go package
+```
 
-`Client.Gateway` runs that loop once. `Session` supervises it: it reconnects with bounded backoff, resumes the last session, stops only on fatal close codes, and keeps a `State` cache of guild channels and voice states. `Session` also owns the voice join handshake (opcode 4 paired with `VOICE_SERVER_UPDATE`), the current grant per guild, and the voice-lost signal. Applications decide what a lost grant means for their own media connections.
+A package imports only packages in lower layers.
 
-`ShardManager` scales the same `Session` horizontally. It owns one `Session` per local shard, paces IDENTIFY through a shared limiter, routes guild-scoped calls with `ShardForGuild`, and stops all shards together on a fatal close. Shards never share connection or cache state, so a process can run any subset of the total shard count.
+| Package | Owns | May import |
+|---|---|---|
+| `model` | Plain payload types (users, channels, messages, embeds, interactions, voice) | nothing |
+| `discovery` | `/.well-known/fluxer`, origin and endpoint validation | `internal/httpx` |
+| `rest` | Authenticated HTTP, rate limits, channel/message/interaction/user resources | `model`, `internal/httpx`, `internal/version` |
+| `gateway` | Protocol: opcodes, close codes, events, resume state, one connection loop | `internal/version` |
+| `state` | Guild, channel and voice-state cache built from Gateway events | `gateway`, `model` |
+| `session` | One supervised shard: reconnect, backoff, resume, cache, voice join handshake | `gateway`, `model`, `state` |
+| `shard` | Guild→shard mapping, multi-shard `Manager`, IDENTIFY pacing | `gateway`, `model`, `session` |
+| `bot` | Composition root: discovery, identity, and wiring of the packages above | all of the above |
+| `voice` | LiveKit room and PCM→Opus publishing through FFmpeg | nothing internal |
+| `internal/*` | Version string, redirect-safe HTTP client, shared test fixture, layer test | — |
 
-Inside the root package, files follow responsibility: `client.go` (setup and discovery), `rest.go`, `messages.go`, `interactions.go`, `events.go`, `gateway.go`, `session.go`, `session_voice.go`, `shard.go`, `state.go` and `types.go`. A new REST resource gets its own file next to `messages.go`; a new Gateway behavior belongs in `session.go` or a `session_*.go` file.
+`src/internal/layers` contains a test that parses every package's imports and fails when a package imports something outside its row. Add a row there when you add a package.
 
-Command syntax, command routing, permissions, persistence and multi-process coordination stay in the application.
+## Flow
 
-The voice package is optional for applications that only need REST or Gateway events. Import it only when publishing PCM to Micup's LiveKit voice service.
+`bot.New` validates the config, discovers endpoints, builds a `rest.Client`, and reads the bot identity. `bot.SessionConfig()` turns that into a `session.Config` (endpoint, token, bot ID, shard pair, channel lookup). `session.New` and `shard.NewManager` take that config, so every lower package can be used and tested without `bot`.
+
+`gateway.Run` holds one WebSocket: HELLO, IDENTIFY or RESUME, heartbeats and ACKs, dispatch, reconnect requests, invalid sessions and close codes. It knows nothing about reconnecting or caching. `session.Session` wraps it in a backoff loop, owns a `gateway.Resume`, applies each event to its `state.Cache`, then calls the application handler. `shard.Manager` owns one `Session` per local shard, passes a shared IDENTIFY limiter as `BeforeIdentify`, routes guild-scoped calls with `shard.ForGuild`, and stops every shard together on a fatal close.
+
+`session` depends on `rest` only through the `session.ChannelLookup` interface, so the Gateway side never imports the HTTP side.
+
+## Boundaries
+
+The module has no dependency on a bot framework, command router, database, NATS, media search provider, or queue. Command syntax, routing, permissions, persistence and multi-process coordination stay in the application. Payloads remain available as raw JSON (`Event.Data`) so new Micup fields can be adopted without a library release.
+
+Applications connect Gateway and voice by handling voice events, pairing the short-lived grant, and passing it to `voice.LiveKit.Connect`. The voice package is optional.
+
+## Adding code
+
+- A new REST resource gets its own file in `rest/` next to `messages.go`, with request/response types in `model/` when they are shared.
+- A new Gateway behavior that needs connection state belongs in `session/`; protocol-only additions (opcodes, close codes, event names) belong in `gateway/`.
+- A new domain gets a new directory under `src/` and a row in the layer test.

@@ -2,6 +2,25 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.4.0] - Unreleased
+
+### Changed
+
+- Breaking: all code moved from the root `micup` package into domain packages under `src/`: `bot`, `discovery`, `rest`, `gateway`, `state`, `session`, `shard`, `model` and `voice`. See [the migration guide](docs/migration.md) for the full name mapping.
+- `bot.New` replaces `micup.New`; REST methods live on `bot.REST` (`*rest.Client`), and `Client.REST` is now `rest.Client.Do`.
+- `session.New`, `shard.NewManager` and `Bot.NewSession` return an error for invalid configuration.
+- `session` reaches REST only through the `session.ChannelLookup` interface.
+- The Gateway adds its own `v` and `encoding` query parameters instead of discovery.
+- The default User-Agent is `micup.go/0.4.0`.
+
+### Added
+
+- `rest.New`, `rest.Client.CurrentUser`, `rest.Client.CurrentApplication`, `rest.Application.MessageContentEnabled`.
+- `discovery.Discover`, `discovery.ParseOrigin`, `gateway.Run`, `gateway.Options`, `gateway.Resume`, `gateway.ValidateShard`, `CloseError.ResetsSession`.
+- `state.Cache.Remember` and `state.VoiceMove`.
+- A package layer test (`src/internal/layers`) and a shared Gateway test fixture (`src/internal/fixture`).
+- Tests for discovery, the state cache, Gateway option validation and bot wiring.
+
 ## [0.3.0] - 2026-11-05
 
 ### Added
