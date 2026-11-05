@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/yestefir/micup.go/src/internal/version"
+	"github.com/yestefir/micup.go/src/model"
 )
 
 const maxAuditReason = 512
@@ -25,12 +26,7 @@ func WithReason(reason string) RequestOption {
 	return func(r *request) { r.reason = reason }
 }
 
-type File struct {
-	Name        string
-	ContentType string
-	Description string
-	Reader      io.Reader
-}
+type File = model.File
 
 type request struct {
 	method     string

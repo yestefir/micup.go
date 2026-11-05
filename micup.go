@@ -27,14 +27,17 @@ const DefaultOrigin = discovery.DefaultOrigin
 type Endpoints = discovery.Endpoints
 
 type (
-	RESTClient  = rest.Client
-	RESTConfig  = rest.Config
+	RESTClient    = rest.Client
+	RESTConfig    = rest.Config
 	APIError      = rest.APIError
 	FieldError    = rest.FieldError
 	Application   = rest.Application
 	RequestOption = rest.RequestOption
 	File          = rest.File
+	Upload        = rest.Upload
 )
+
+func EmojiString(emoji Emoji) string { return rest.EmojiString(emoji) }
 
 func NewREST(config RESTConfig) (*RESTClient, error) { return rest.New(config) }
 
@@ -69,8 +72,8 @@ const (
 )
 
 const (
-	OpDispatch         = gateway.OpDispatch
-	OpHeartbeat        = gateway.OpHeartbeat
+	OpDispatch                   = gateway.OpDispatch
+	OpHeartbeat                  = gateway.OpHeartbeat
 	OpIdentify                   = gateway.OpIdentify
 	OpPresenceUpdate             = gateway.OpPresenceUpdate
 	OpVoiceStateUpdate           = gateway.OpVoiceStateUpdate
@@ -79,11 +82,11 @@ const (
 	OpLazyRequest                = gateway.OpLazyRequest
 	OpRequestGuildCounts         = gateway.OpRequestGuildCounts
 	OpRequestChannelMemberCounts = gateway.OpRequestChannelMemberCounts
-	OpResume           = gateway.OpResume
-	OpReconnect        = gateway.OpReconnect
-	OpInvalidSession   = gateway.OpInvalidSession
-	OpHello            = gateway.OpHello
-	OpHeartbeatAck     = gateway.OpHeartbeatAck
+	OpResume                     = gateway.OpResume
+	OpReconnect                  = gateway.OpReconnect
+	OpInvalidSession             = gateway.OpInvalidSession
+	OpHello                      = gateway.OpHello
+	OpHeartbeatAck               = gateway.OpHeartbeatAck
 )
 
 var (
@@ -98,12 +101,12 @@ const (
 )
 
 type (
-	Session        = session.Session
-	SessionConfig  = session.Config
-	SessionOptions = session.Options
+	Session           = session.Session
+	SessionConfig     = session.Config
+	SessionOptions    = session.Options
 	VoiceJoin         = session.VoiceJoin
 	VoiceRefusedError = session.VoiceRefusedError
-	ChannelLookup  = session.ChannelLookup
+	ChannelLookup     = session.ChannelLookup
 )
 
 func NewSession(config SessionConfig, options SessionOptions) (*Session, error) {
@@ -151,25 +154,67 @@ var (
 )
 
 type (
-	User              = model.User
-	Guild             = model.Guild
-	Channel           = model.Channel
-	Message           = model.Message
-	MessageCreate     = model.MessageCreate
-	MessageOptions    = model.MessageOptions
-	Embed             = model.Embed
-	EmbedFooter       = model.EmbedFooter
-	EmbedMedia        = model.EmbedMedia
-	EmbedAuthor       = model.EmbedAuthor
-	EmbedField        = model.EmbedField
-	Interaction       = model.Interaction
-	VoiceState        = model.VoiceState
-	VoiceServerUpdate = model.VoiceServerUpdate
+	User               = model.User
+	Guild              = model.Guild
+	Channel            = model.Channel
+	Message            = model.Message
+	MessageCreate      = model.MessageCreate
+	MessageUpdate      = model.MessageUpdate
+	MessageOptions     = model.MessageOptions
+	MessageEdit        = model.MessageEdit
+	MessageQuery       = model.MessageQuery
+	MessageReference   = model.MessageReference
+	Attachment         = model.Attachment
+	UploadedAttachment = model.UploadedAttachment
+	AllowedMentions    = model.AllowedMentions
+	Emoji              = model.Emoji
+	Reaction           = model.Reaction
+	Member             = model.Member
+	Pin                = model.Pin
+	PinsPage           = model.PinsPage
+	PinQuery           = model.PinQuery
+	Embed              = model.Embed
+	EmbedFooter        = model.EmbedFooter
+	EmbedMedia         = model.EmbedMedia
+	EmbedAuthor        = model.EmbedAuthor
+	EmbedField         = model.EmbedField
+	Interaction        = model.Interaction
+	VoiceState         = model.VoiceState
+	VoiceServerUpdate  = model.VoiceServerUpdate
 )
 
 const (
-	MessageTypeDefault   = model.MessageTypeDefault
-	MessageTypeReply     = model.MessageTypeReply
-	MessageFlagEphemeral = model.MessageFlagEphemeral
-	MaxEmbeds            = model.MaxEmbeds
+	MessageTypeDefault              = model.MessageTypeDefault
+	MessageTypeRecipientAdd         = model.MessageTypeRecipientAdd
+	MessageTypeRecipientRemove      = model.MessageTypeRecipientRemove
+	MessageTypeCall                 = model.MessageTypeCall
+	MessageTypeChannelNameChange    = model.MessageTypeChannelNameChange
+	MessageTypeChannelIconChange    = model.MessageTypeChannelIconChange
+	MessageTypeChannelPinnedMessage = model.MessageTypeChannelPinnedMessage
+	MessageTypeUserJoin             = model.MessageTypeUserJoin
+	MessageTypeChannelFollowAdd     = model.MessageTypeChannelFollowAdd
+	MessageTypeThreadCreated        = model.MessageTypeThreadCreated
+	MessageTypeReply                = model.MessageTypeReply
+	MessageTypeThreadStarterMessage = model.MessageTypeThreadStarterMessage
+)
+
+const (
+	MessageFlagCrossposted           = model.MessageFlagCrossposted
+	MessageFlagIsCrosspost           = model.MessageFlagIsCrosspost
+	MessageFlagSuppressEmbeds        = model.MessageFlagSuppressEmbeds
+	MessageFlagSourceMessageDeleted  = model.MessageFlagSourceMessageDeleted
+	MessageFlagHasThread             = model.MessageFlagHasThread
+	MessageFlagEphemeral             = model.MessageFlagEphemeral
+	MessageFlagSuppressNotifications = model.MessageFlagSuppressNotifications
+	MessageFlagVoiceMessage          = model.MessageFlagVoiceMessage
+)
+
+const (
+	MaxEmbeds          = model.MaxEmbeds
+	MaxAttachments     = model.MaxAttachments
+	MaxBulkDelete      = model.MaxBulkDelete
+	MaxMessagesPerPage = model.MaxMessagesPerPage
+	MentionUsers       = model.MentionUsers
+	MentionRoles       = model.MentionRoles
+	MentionEveryone    = model.MentionEveryone
 )

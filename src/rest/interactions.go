@@ -61,7 +61,10 @@ func validateInteraction(interaction model.Interaction) error {
 }
 
 func interactionMessageData(options model.MessageOptions, ephemeral bool) (map[string]any, error) {
-	data, err := messageBody(options, "interaction response")
+	if options.Content == "" && len(options.Embeds) == 0 {
+		return nil, errors.New("interaction response content or at least one embed is required")
+	}
+	data, err := messageBody(options.Content, options.Embeds, options.AllowedMentions, nil, nil, "interaction response")
 	if err != nil {
 		return nil, err
 	}

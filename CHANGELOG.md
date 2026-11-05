@@ -28,6 +28,9 @@ Notable changes to micup.go are recorded here.
 ### Added
 
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
+- Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
+- Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
+- `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
 - `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager`, `micup.NewState`, `Bot.SessionConfig`, `Bot.Endpoints`, `RESTClient.CurrentUser`, `RESTClient.CurrentApplication`, `CloseError.ResetsSession`, `State.Remember`.
 - Layer and facade tests in `src/internal/layers`, and a shared Gateway test fixture in `src/internal/fixture`.
@@ -38,6 +41,9 @@ Notable changes to micup.go are recorded here.
 ### Added
 
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
+- Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
+- Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
+- `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
 - `Session`: a supervised Gateway connection with bounded reconnect backoff, RESUME, fatal close-code detection, and a ready flag.
 - `State`: guild channel and voice state cache, plus `Session.ResolveGuild` with a cached REST fallback.
@@ -74,6 +80,9 @@ Initial public release.
 ### Added
 
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
+- Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
+- Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
+- `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
 - Micup endpoint discovery and bot-authenticated REST requests.
 - Native Gateway connection with explicit shard settings, heartbeats, and event callbacks.
