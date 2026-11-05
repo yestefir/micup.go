@@ -2,10 +2,19 @@
 
 Micup voice is a two-step handshake. The bot sends Gateway opcode 4 with a guild and voice channel. It then observes its matching `VOICE_STATE_UPDATE` and `VOICE_SERVER_UPDATE`. The server update supplies a LiveKit endpoint, short-lived token, and connection ID. Those values are ephemeral credentials: do not store them, log them, or include them in application command records.
 
+`Session.JoinVoice` performs this handshake (see [the Gateway guide](gateway.md#voice-channels)):
+
+```go
+update, err := session.JoinVoice(ctx, guildID, channelID, micup.VoiceJoin{SelfDeaf: true})
+if err != nil {
+	return err
+}
+```
+
 Connect to the grant and open an audio track:
 
 ```go
-room, err := (voice.LiveKit{FFmpeg: "ffmpeg"}).Connect(ctx, voice.Grant{
+room, err := (voice.LiveKit{FFmpeg: "ffmpeg", TrackName: "My Bot"}).Connect(ctx, voice.Grant{
 	Endpoint: update.Endpoint,
 	Token: update.Token,
 })
@@ -29,6 +38,10 @@ if err := track.Write(ctx, frame); err != nil {
 }
 ```
 
-The helper encodes PCM to Opus with FFmpeg and publishes an Opus microphone track. `Track.Close` stops the encoder and unpublishes that track. `Room.Close` disconnects LiveKit. The calling application remains responsible for Micup Gateway voice state, connection IDs, join/leave opcodes, retry, and ownership.
+The helper encodes PCM to Opus with FFmpeg and publishes an Opus microphone track named `TrackName` (default `micup.go`). `Track.Close` lets the encoder flush buffered audio for up to one second, then stops it and unpublishes the track. `Room.Close` disconnects LiveKit. On Windows the FFmpeg process starts without a console window.
+
+When the bot leaves, call `Session.LeaveVoice(guildID, update.ConnectionID)` and close the room. When `SessionOptions.OnVoiceLost` reports the same guild and connection, close the room as well. Retry and ownership across processes stay with the application.
+
+To verify delivery against a real local LiveKit server, set `LIVEKIT_TEST_BINARY` and `FFMPEG_TEST_BINARY` and run `go test ./voice`.
 
 This helper publishes outgoing audio only. It does not subscribe to or decode incoming participants. Install FFmpeg and verify `ffmpeg -encoders` lists `libopus`. The executable path can be set explicitly in `voice.LiveKit`.

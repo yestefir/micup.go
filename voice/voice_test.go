@@ -47,6 +47,7 @@ func TestPCMTrackEncodesOpus(t *testing.T) {
 	if err = track.Close(); err != nil {
 		t.Fatal(err)
 	}
+	_ = track.Close()
 	if packets.Load() == 0 || released.Load() != 1 {
 		t.Fatalf("encoder produced %d packets and released %d tracks", packets.Load(), released.Load())
 	}

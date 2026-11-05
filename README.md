@@ -1,6 +1,6 @@
 # micup.go
 
-`micup.go` is a standalone Go client for Micup bots. It discovers the public REST and Gateway endpoints, authenticates bot requests, delivers native Gateway events, sends messages with embeds, responds privately to interactions, and can publish stereo PCM to a LiveKit voice room.
+`micup.go` is a standalone Go client for Micup bots. It discovers the public REST and Gateway endpoints, authenticates bot requests, keeps a Gateway session connected and resumed, caches guild channels and voice states, joins voice channels, sends messages with embeds, responds privately to interactions, and can publish stereo PCM to a LiveKit voice room.
 
 The module keeps platform transport separate from application behavior. It does not implement music search, queues, command syntax, persistence, or worker coordination.
 
@@ -13,7 +13,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v0.2.1
+go get github.com/yestefir/micup.go@v0.3.0
 ```
 
 The public repository is [yestefir/micup.go](https://github.com/yestefir/micup.go). The Go module path matches that repository.
@@ -26,12 +26,12 @@ if err != nil {
 	log.Fatal(err)
 }
 
-err = client.Gateway(ctx, func(ctx context.Context, event micup.Event) error {
-	if event.Name != "MESSAGE_CREATE" {
+session := client.NewSession(micup.SessionOptions{Handler: func(ctx context.Context, event micup.Event) error {
+	if event.Name != micup.EventMessageCreate {
 		return nil
 	}
 	var message micup.MessageCreate
-	if err := json.Unmarshal(event.Data, &message); err != nil {
+	if err := event.Decode(&message); err != nil {
 		return err
 	}
 	if message.Author.Bot || message.Content != "!ping" {
@@ -39,8 +39,11 @@ err = client.Gateway(ctx, func(ctx context.Context, event micup.Event) error {
 	}
 	_, err := client.SendMessage(ctx, message.ChannelID, "pong", message.ID)
 	return err
-})
+}})
+err = session.Run(ctx)
 ```
+
+Bots in many guilds can replace `client.NewSession` with `client.NewShardManager(micup.ShardManagerOptions{ShardCount: 4, Session: options})`. See [Shards](docs/gateway.md#shard-manager).
 
 See [the guides](docs/README.md) for setup, Gateway events, voice publishing, security boundaries, and examples.
 
@@ -51,17 +54,28 @@ This project is free to use under the [MIT License](LICENSE), including in comme
 ## Repository layout
 
 ```text
-client.go          Discovery, bot authentication, and REST requests
-gateway.go         Native Gateway connection and event delivery
+client.go          Config, endpoint discovery, bot authentication
+rest.go            Authenticated REST requests and rate-limit retries
+messages.go        Channel lookup and channel messages
+interactions.go    Interaction responses, deferrals, follow-ups
+events.go          Event type and Gateway event name constants
+gateway.go         Opcodes, close codes, single-connection Gateway loop
+session.go         Reconnecting, resuming session for one shard
+session_voice.go   Voice join handshake, grants, voice-lost signal
+shard.go           Shard mapping and multi-shard ShardManager
+state.go           Guild channel and voice state cache
 types.go           Micup REST and Gateway payload types
+version.go         Module version and default User-Agent
 voice/             LiveKit room and PCM-to-Opus publishing
 docs/              User, API, architecture, and contributor guides
 ```
+
+Run `make check` before sending a change. CI runs the same checks on Linux, macOS and Windows.
 
 Go source files intentionally contain no comments. The documentation site is the source of user and API guidance.
 
 ## Current scope
 
-The first release target is the public REST/Gateway transport and the LiveKit PCM publishing helper. The Gateway runner holds one connection and returns on a disconnect; reconnect and resume policy belongs to the calling application. Identify uses the configured shard ID and count. It does not discover shard counts or redistribute shards.
+The module covers the public REST/Gateway transport, a supervised Gateway session with resume, a guild/voice state cache, the voice join handshake, the LiveKit PCM publishing helper, and a `ShardManager` that runs many shards in one process with paced IDENTIFY. Shard counts are configured by the application; the module does not discover them or move shards between processes.
 
-The current public release is `v0.2.1`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v0.3.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).

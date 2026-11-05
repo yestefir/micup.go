@@ -2,6 +2,11 @@ package micup
 
 import "encoding/json"
 
+const (
+	MessageTypeDefault = 0
+	MessageTypeReply   = 19
+)
+
 type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
@@ -25,6 +30,7 @@ type MessageCreate struct {
 	GuildID   string          `json:"guild_id"`
 	ChannelID string          `json:"channel_id"`
 	Content   string          `json:"content"`
+	Type      int             `json:"type"`
 	Author    User            `json:"author"`
 	Mentions  []User          `json:"mentions"`
 	Raw       json.RawMessage `json:"-"`
@@ -94,6 +100,7 @@ type VoiceState struct {
 
 type VoiceServerUpdate struct {
 	GuildID      string `json:"guild_id"`
+	ChannelID    string `json:"channel_id,omitempty"`
 	Endpoint     string `json:"endpoint"`
 	Token        string `json:"token"`
 	ConnectionID string `json:"connection_id"`

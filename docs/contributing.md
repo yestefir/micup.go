@@ -2,10 +2,10 @@
 
 Keep Go files free of comment lines. Put setup steps, API contracts, examples, security notes, and design explanations in Markdown under `docs/` and link them from the README.
 
-Format and verify changes from the repository root:
+Run `make check` from the repository root. It runs the same steps as CI (gofmt check, vet, build and the race-enabled test suite). The individual commands are:
 
 ```sh
-gofmt -w client.go client_test.go gateway.go types.go voice/voice.go
+gofmt -w .
 go test ./...
 go test -race ./...
 go vet ./...

@@ -2,6 +2,28 @@
 
 Notable changes to micup.go are recorded here.
 
+## [0.3.0] - 2026-11-05
+
+### Added
+
+- `Session`: a supervised Gateway connection with bounded reconnect backoff, RESUME, fatal close-code detection, and a ready flag.
+- `State`: guild channel and voice state cache, plus `Session.ResolveGuild` with a cached REST fallback.
+- `Session.JoinVoice`, `Session.LeaveVoice`, `Session.Voice`, and `SessionOptions.OnVoiceLost` for the voice join handshake.
+- `Client.Channel`, `ShardForGuild`, Gateway opcode constants, `CloseError`, and `MessageCreate.Type` with message type constants.
+- `VoiceServerUpdate.ChannelID`.
+- `voice.LiveKit.TrackName`.
+- `ShardManager` (`Client.NewShardManager`): runs many shards in one process with paced IDENTIFY, guild-to-shard routing for voice and channel lookup, and coordinated shutdown on a fatal close.
+- `Session.ShardID`, `Event.ShardID`, `Event.Decode`, Gateway event name constants (`EventReady`, `EventMessageCreate`, ...), and `Version`.
+- `Makefile` with `make check`, and a GitHub Actions CI workflow for Linux, macOS and Windows.
+
+### Changed
+
+- `voice` track close lets FFmpeg flush buffered audio for up to one second before stopping.
+- On Windows, the FFmpeg encoder starts without a console window.
+- The root package is split by responsibility (`rest.go`, `messages.go`, `interactions.go`, `events.go`, `session_voice.go`, `shard.go`, `version.go`). The public API is unchanged.
+- The default User-Agent is now `micup.go/0.3.0`, derived from `Version`.
+- `Client.Gateway` returns `*CloseError`, `ErrReconnectRequested`, or `ErrSessionInvalidated` for the matching disconnect causes, and times out a connection that sends no HELLO within 10 seconds.
+
 ## [0.2.1] - 2026-11-05
 
 - Support idempotent channel message creation with a nonce in `MessageOptions`.

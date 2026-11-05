@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -133,5 +134,106 @@ func TestGatewayIdentifiesAndDeliversEvents(t *testing.T) {
 	})
 	if !errors.Is(err, want) {
 		t.Fatalf("Gateway returned the wrong handler result: %v", err)
+	}
+}
+
+func TestNewDoesNotFollowRedirectsWithCredentials(t *testing.T) {
+	var leaked atomic.Bool
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { leaked.Store(r.Header.Get("Authorization") != "") }))
+	defer other.Close()
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/fluxer" {
+			_ = json.NewEncoder(w).Encode(map[string]any{"endpoints": map[string]string{"api_public": server.URL + "/api", "gateway": "ws" + server.URL[4:] + "/gateway"}})
+			return
+		}
+		http.Redirect(w, r, other.URL, http.StatusFound)
+	}))
+	defer server.Close()
+	if _, err := New(context.Background(), Config{Token: "secret", Origin: server.URL}); err == nil {
+		t.Fatal("redirected credential check accepted")
+	}
+	if leaked.Load() {
+		t.Fatal("credential leaked through redirect")
+	}
+}
+
+func TestNewRejectsUserCredential(t *testing.T) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/fluxer" {
+			_ = json.NewEncoder(w).Encode(map[string]any{"endpoints": map[string]string{"api_public": server.URL + "/api", "gateway": "ws" + server.URL[4:] + "/gateway"}})
+			return
+		}
+		fmt.Fprint(w, `{"id":"human","bot":false}`)
+	}))
+	defer server.Close()
+	if _, err := New(context.Background(), Config{Token: "secret", Origin: server.URL}); err == nil {
+		t.Fatal("user credential accepted")
+	}
+}
+
+func TestRateLimitHonorsCancellation(t *testing.T) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/.well-known/fluxer":
+			_ = json.NewEncoder(w).Encode(map[string]any{"endpoints": map[string]string{"api_public": server.URL + "/api", "gateway": "ws" + server.URL[4:] + "/gateway"}})
+		case "/api/v1/users/@me":
+			fmt.Fprint(w, `{"id":"bot","bot":true}`)
+		case "/api/v1/test":
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, `{"retry_after":3}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+	c, err := New(context.Background(), Config{Token: "token", Origin: server.URL})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	if err = c.REST(ctx, http.MethodGet, "/test", nil, nil); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("rate limit was not cancelled: %v", err)
+	}
+}
+
+func TestMessageContentGrantFlags(t *testing.T) {
+	for _, item := range []struct {
+		name, response string
+		enabled, known bool
+	}{
+		{"other-intents", `{"flags":40960}`, false, true},
+		{"limited", `{"flags":524288}`, true, true},
+		{"approved", `{"flags":262144}`, true, true},
+		{"unavailable", "", false, false},
+	} {
+		t.Run(item.name, func(t *testing.T) {
+			var server *httptest.Server
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/.well-known/fluxer":
+					_ = json.NewEncoder(w).Encode(map[string]any{"endpoints": map[string]string{"api_public": server.URL + "/api", "gateway": "ws" + server.URL[4:] + "/gateway"}})
+				case "/api/v1/users/@me":
+					fmt.Fprint(w, `{"id":"123","bot":true}`)
+				default:
+					if item.response == "" {
+						w.WriteHeader(http.StatusForbidden)
+					} else {
+						fmt.Fprint(w, item.response)
+					}
+				}
+			}))
+			defer server.Close()
+			c, err := New(context.Background(), Config{Token: "fixture", Origin: server.URL})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (c.MessageContentEnabled != nil) != item.known || (item.known && *c.MessageContentEnabled != item.enabled) {
+				t.Fatal("incorrect Message Content grant")
+			}
+		})
 	}
 }

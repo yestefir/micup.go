@@ -41,11 +41,15 @@ type Track interface {
 	Close() error
 }
 
-type LiveKit struct{ FFmpeg string }
+type LiveKit struct {
+	FFmpeg    string
+	TrackName string
+}
 
 type room struct {
 	client    *lksdk.Room
 	ffmpeg    string
+	trackName string
 	connected atomic.Bool
 	once      sync.Once
 }
@@ -66,7 +70,13 @@ func (l LiveKit) Connect(ctx context.Context, grant Grant) (Room, error) {
 	if timeout <= 0 {
 		return nil, context.DeadlineExceeded
 	}
-	r := &room{ffmpeg: l.FFmpeg}
+	if l.FFmpeg == "" {
+		l.FFmpeg = "ffmpeg"
+	}
+	if l.TrackName == "" {
+		l.TrackName = "micup.go"
+	}
+	r := &room{ffmpeg: l.FFmpeg, trackName: l.TrackName}
 	client, err := lksdk.ConnectToRoomWithToken(endpoint, grant.Token, &lksdk.RoomCallback{OnDisconnected: func() { r.connected.Store(false) }}, lksdk.WithAutoSubscribe(false), lksdk.WithConnectTimeout(timeout))
 	if err != nil {
 		return nil, errors.New("LiveKit join failed")
@@ -91,7 +101,7 @@ func (r *room) OpenTrack(parent context.Context) (Track, error) {
 	if err != nil {
 		return nil, err
 	}
-	publication, err := r.client.LocalParticipant.PublishTrack(track, &lksdk.TrackPublicationOptions{Name: "micup.go", Source: livekit.TrackSource_MICROPHONE, Stereo: true, DisableDTX: true})
+	publication, err := r.client.LocalParticipant.PublishTrack(track, &lksdk.TrackPublicationOptions{Name: r.trackName, Source: livekit.TrackSource_MICROPHONE, Stereo: true, DisableDTX: true})
 	if err != nil {
 		_ = track.Close()
 		return nil, errors.New("LiveKit track publish failed")
@@ -116,6 +126,7 @@ func (r *room) OpenTrack(parent context.Context) (Track, error) {
 func openEncoder(parent context.Context, binaryPath string, writePacket func([]byte) error, connected func() bool, release func()) (*pcmTrack, error) {
 	ctx, cancel := context.WithCancel(parent)
 	cmd := exec.CommandContext(ctx, binaryPath, "-hide_banner", "-loglevel", "error", "-nostdin", "-f", "s16le", "-ar", "48000", "-ac", "2", "-probesize", "32", "-analyzeduration", "0", "-i", "pipe:0", "-c:a", "libopus", "-application", "audio", "-b:a", "96k", "-frame_duration", "20", "-page_duration", "20000", "-flush_packets", "1", "-f", "ogg", "pipe:1")
+	configure(cmd)
 	cmd.WaitDelay = time.Second
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -210,8 +221,16 @@ func (t *pcmTrack) Write(ctx context.Context, frame []int16) error {
 
 func (t *pcmTrack) Close() error {
 	t.once.Do(func() {
-		t.cancel()
 		_ = t.stdin.Close()
+		if t.ctx.Err() == nil {
+			timer := time.NewTimer(time.Second)
+			select {
+			case <-t.done:
+				timer.Stop()
+			case <-timer.C:
+			}
+		}
+		t.cancel()
 		_ = t.stdout.Close()
 		_ = t.cmd.Wait()
 		<-t.done

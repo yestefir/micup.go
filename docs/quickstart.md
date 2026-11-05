@@ -7,7 +7,7 @@ Use Go 1.26.8 or newer. A bot token is required. The voice package also requires
 Install the module:
 
 ```sh
-go get github.com/yestefir/micup.go@v0.2.1
+go get github.com/yestefir/micup.go@v0.3.0
 ```
 
 ## Create a client
@@ -29,4 +29,4 @@ The HTTP client rejects redirects so a bot token is not forwarded to another ori
 
 ## Shards
 
-`ShardID` defaults to zero and `ShardCount` defaults to one. Configure both when connecting a shard. The library does not infer a shard count or move guilds between running connections.
+`ShardID` defaults to zero and `ShardCount` defaults to one. Configure both when connecting a shard. `micup.ShardForGuild(guildID, shardCount)` tells which shard owns a guild. The library does not infer a shard count or move guilds between running connections.

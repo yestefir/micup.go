@@ -19,4 +19,4 @@ Client discovery requires REST and Gateway endpoints to use the configured Micup
 4. Run the full test suite, `go vet ./...`, and `go test -race ./...`.
 5. Tag releases only after the exported API and docs agree.
 
-The public v0.2.1 release is available from the tagged commit.
+The current release is v0.3.0.
