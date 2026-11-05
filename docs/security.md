@@ -9,7 +9,7 @@
 
 ## Network boundaries
 
-Discovery (`src/discovery`) requires REST and Gateway endpoints to use the configured Micup origin. Redirects are disabled for discovery and REST (`src/internal/httpx`). Requests accept only API-relative paths. Contexts should have deadlines around application operations; rate-limit waits stop when their context is cancelled.
+Discovery requires REST and Gateway endpoints to use the configured Micup origin. Redirects are disabled for discovery and REST. Requests accept only API-relative paths. Contexts should have deadlines around application operations; rate-limit waits stop when their context is cancelled.
 
 ## Before publishing
 

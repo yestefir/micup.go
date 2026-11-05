@@ -19,23 +19,18 @@ go get github.com/yestefir/micup.go@v0.4.0
 ## Quick start
 
 ```go
-import (
-	"github.com/yestefir/micup.go/src/bot"
-	"github.com/yestefir/micup.go/src/gateway"
-	"github.com/yestefir/micup.go/src/model"
-	"github.com/yestefir/micup.go/src/session"
-)
+import micup "github.com/yestefir/micup.go"
 
-b, err := bot.New(ctx, bot.Config{Token: os.Getenv("MICUP_BOT_TOKEN")})
+b, err := micup.New(ctx, micup.Config{Token: os.Getenv("MICUP_BOT_TOKEN")})
 if err != nil {
 	log.Fatal(err)
 }
 
-s, err := b.NewSession(session.Options{Handler: func(ctx context.Context, event gateway.Event) error {
-	if event.Name != gateway.EventMessageCreate {
+s, err := b.NewSession(micup.SessionOptions{Handler: func(ctx context.Context, event micup.Event) error {
+	if event.Name != micup.EventMessageCreate {
 		return nil
 	}
-	var message model.MessageCreate
+	var message micup.MessageCreate
 	if err := event.Decode(&message); err != nil {
 		return err
 	}
@@ -51,15 +46,28 @@ if err != nil {
 err = s.Run(ctx)
 ```
 
-Bots in many guilds use `b.NewShardManager(shard.Options{ShardCount: 4, Session: options})` instead of `b.NewSession`. See [Shards](docs/gateway.md#shard-manager).
+Bots in many guilds use `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` instead of `b.NewSession`. See [Shards](docs/gateway.md#shard-manager).
+
+## Public API
+
+Applications import only two paths:
+
+| Import | Contains |
+|---|---|
+| `github.com/yestefir/micup.go` | Everything: bot setup, REST, Gateway events, sessions, shards, state cache, payload types, errors |
+| `github.com/yestefir/micup.go/voice` | LiveKit room and PCM→Opus publishing (separate so bots without voice skip LiveKit and WebRTC) |
+
+Both are thin facades over `src/`. Code under `src/` can be moved or split without changing these import paths or names; a test fails if a facade gains logic of its own.
 
 See [the guides](docs/README.md) for setup, Gateway events, voice publishing, security boundaries, and the [v0.3 → v0.4 migration](docs/migration.md).
 
 ## Repository layout
 
-All Go code lives under `src/`, one package per domain:
+The implementation lives under `src/`, one package per domain:
 
 ```text
+micup.go       Public facade: package micup
+voice/         Public facade: package voice
 src/
   bot/         Entry point: discovery, bot identity, wiring for sessions and shards
   discovery/   /.well-known endpoint discovery and origin checks
@@ -70,7 +78,7 @@ src/
   shard/       Guild-to-shard mapping and multi-shard Manager
   model/       Plain Micup payload types
   voice/       LiveKit room and PCM-to-Opus publishing
-  internal/    Version, HTTP safety, test fixtures, layer rules
+  internal/    Version, HTTP safety, test fixtures, layer and facade rules
 docs/          User, API, architecture, and contributor guides
 ```
 

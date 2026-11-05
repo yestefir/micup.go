@@ -6,20 +6,17 @@ Notable changes to micup.go are recorded here.
 
 ### Changed
 
-- Breaking: all code moved from the root `micup` package into domain packages under `src/`: `bot`, `discovery`, `rest`, `gateway`, `state`, `session`, `shard`, `model` and `voice`. See [the migration guide](docs/migration.md) for the full name mapping.
-- `bot.New` replaces `micup.New`; REST methods live on `bot.REST` (`*rest.Client`), and `Client.REST` is now `rest.Client.Do`.
-- `session.New`, `shard.NewManager` and `Bot.NewSession` return an error for invalid configuration.
-- `session` reaches REST only through the `session.ChannelLookup` interface.
-- The Gateway adds its own `v` and `encoding` query parameters instead of discovery.
+- The implementation moved into domain packages under `src/`: `bot`, `discovery`, `rest`, `gateway`, `state`, `session`, `shard`, `model` and `voice`. Applications keep importing `github.com/yestefir/micup.go` and `github.com/yestefir/micup.go/voice`, which are now thin facades over `src/`.
+- Breaking: `micup.Client` is `micup.Bot`; `BotID` is `ID`; REST methods live on `b.REST` and `Client.REST` is `b.REST.Do`. See [the migration guide](docs/migration.md).
+- Breaking: `Bot.NewSession` returns an error; `ShardManagerOptions` is `ShardOptions`; `State.Apply` takes the event name and data.
+- `session` reaches REST only through `micup.ChannelLookup`, and the Gateway adds its own `v` and `encoding` query parameters.
 - The default User-Agent is `micup.go/0.4.0`.
 
 ### Added
 
-- `rest.New`, `rest.Client.CurrentUser`, `rest.Client.CurrentApplication`, `rest.Application.MessageContentEnabled`.
-- `discovery.Discover`, `discovery.ParseOrigin`, `gateway.Run`, `gateway.Options`, `gateway.Resume`, `gateway.ValidateShard`, `CloseError.ResetsSession`.
-- `state.Cache.Remember` and `state.VoiceMove`.
-- A package layer test (`src/internal/layers`) and a shared Gateway test fixture (`src/internal/fixture`).
-- Tests for discovery, the state cache, Gateway option validation and bot wiring.
+- `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager`, `micup.NewState`, `Bot.SessionConfig`, `Bot.Endpoints`, `RESTClient.CurrentUser`, `RESTClient.CurrentApplication`, `CloseError.ResetsSession`, `State.Remember`.
+- Layer and facade tests in `src/internal/layers`, and a shared Gateway test fixture in `src/internal/fixture`.
+- Tests for discovery, the state cache, Gateway option validation, bot wiring and the facades.
 
 ## [0.3.0] - 2026-11-05
 

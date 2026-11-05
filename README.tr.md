@@ -17,16 +17,18 @@ go get github.com/yestefir/micup.go@v0.4.0
 ## Başlangıç
 
 ```go
-b, err := bot.New(ctx, bot.Config{Token: os.Getenv("MICUP_BOT_TOKEN")})
+import micup "github.com/yestefir/micup.go"
+
+b, err := micup.New(ctx, micup.Config{Token: os.Getenv("MICUP_BOT_TOKEN")})
 if err != nil {
 	return err
 }
 
-s, err := b.NewSession(session.Options{Handler: func(ctx context.Context, event gateway.Event) error {
-	if event.Name != gateway.EventMessageCreate {
+s, err := b.NewSession(micup.SessionOptions{Handler: func(ctx context.Context, event micup.Event) error {
+	if event.Name != micup.EventMessageCreate {
 		return nil
 	}
-	var message model.MessageCreate
+	var message micup.MessageCreate
 	if err := event.Decode(&message); err != nil {
 		return err
 	}
@@ -42,13 +44,26 @@ if err != nil {
 err = s.Run(ctx)
 ```
 
-Çok sayıda sunucuda çalışan botlar `b.NewSession` yerine `b.NewShardManager(shard.Options{ShardCount: 4, Session: options})` kullanır. Yönetici tüm shard'ları tek süreçte çalıştırır, IDENTIFY isteklerini sıraya koyar ve guild'leri doğru shard'a yönlendirir. Ayrıntılar [Gateway rehberinde](docs/gateway.md#shard-manager).
+Çok sayıda sunucuda çalışan botlar `b.NewSession` yerine `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` kullanır. Yönetici tüm shard'ları tek süreçte çalıştırır, IDENTIFY isteklerini sıraya koyar ve guild'leri doğru shard'a yönlendirir. Ayrıntılar [Gateway rehberinde](docs/gateway.md#shard-manager).
+
+## Public API
+
+Uygulamalar yalnızca iki yolu import eder:
+
+| Import | İçerik |
+|---|---|
+| `github.com/yestefir/micup.go` | Her şey: bot kurulumu, REST, Gateway olayları, session, shard, önbellek, veri tipleri, hatalar |
+| `github.com/yestefir/micup.go/voice` | LiveKit ve PCM→Opus yayını (ses kullanmayan botlar LiveKit/WebRTC derlemesin diye ayrı) |
+
+İkisi de `src/` üzerinde ince bir cephedir. `src/` içindeki dosyalar taşınsa veya bölünse de bu import yolları ve isimler değişmez; cephe kendi mantığını içerirse bir test başarısız olur.
 
 ## Klasör yapısı
 
-Tüm Go kodu `src/` altında, her domain kendi paketinde:
+Uygulama kodu `src/` altında, her domain kendi paketinde:
 
 ```text
+micup.go       Public cephe: micup paketi
+voice/         Public cephe: voice paketi
 src/
   bot/         Giriş noktası: keşif, bot kimliği, session ve shard bağlantıları
   discovery/   /.well-known keşfi ve origin doğrulaması
@@ -59,7 +74,7 @@ src/
   shard/       Guild→shard eşlemesi ve çoklu shard yöneticisi
   model/       Saf Micup veri tipleri
   voice/       LiveKit odası ve PCM→Opus yayını
-  internal/    Sürüm, HTTP güvenliği, test fixture'ları, katman kuralları
+  internal/    Sürüm, HTTP güvenliği, test fixture'ları, katman ve cephe kuralları
 ```
 
 Paket bağımlılıkları tek yönlüdür ve bir testle korunur ([Mimari](docs/architecture.md)). v0.3'ten geçiş için [geçiş rehberine](docs/migration.md) bakın.

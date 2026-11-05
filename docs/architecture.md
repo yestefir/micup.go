@@ -1,6 +1,14 @@
 # Architecture
 
-All Go code lives under `src/`. Each directory is one domain with one job, and dependencies point downward:
+## Public facades
+
+Applications import `github.com/yestefir/micup.go` (package `micup`) and, for voice, `github.com/yestefir/micup.go/voice`. These two facades contain only type aliases, constants, variables and one-line forwarding functions that point into `src/`. `TestFacadesOnlyForward` in `src/internal/layers` fails if a facade declares a non-alias type or a function with logic, so behavior always lives in `src/` and the public names stay stable while `src/` is reorganized.
+
+When a `src/` package gains a public name that applications need, add an alias or forwarding function to the facade in the same change.
+
+## Domain packages
+
+The implementation lives under `src/`. Each directory is one domain with one job, and dependencies point downward:
 
 ```text
 layer 4   bot
@@ -31,7 +39,7 @@ A package imports only packages in lower layers.
 
 ## Flow
 
-`bot.New` validates the config, discovers endpoints, builds a `rest.Client`, and reads the bot identity. `bot.SessionConfig()` turns that into a `session.Config` (endpoint, token, bot ID, shard pair, channel lookup). `session.New` and `shard.NewManager` take that config, so every lower package can be used and tested without `bot`.
+`micup.New` (`bot.New`) validates the config, discovers endpoints, builds a `rest.Client`, and reads the bot identity. `bot.SessionConfig()` turns that into a `session.Config` (endpoint, token, bot ID, shard pair, channel lookup). `session.New` and `shard.NewManager` take that config, so every lower package can be used and tested without `bot`.
 
 `gateway.Run` holds one WebSocket: HELLO, IDENTIFY or RESUME, heartbeats and ACKs, dispatch, reconnect requests, invalid sessions and close codes. It knows nothing about reconnecting or caching. `session.Session` wraps it in a backoff loop, owns a `gateway.Resume`, applies each event to its `state.Cache`, then calls the application handler. `shard.Manager` owns one `Session` per local shard, passes a shared IDENTIFY limiter as `BeforeIdentify`, routes guild-scoped calls with `shard.ForGuild`, and stops every shard together on a fatal close.
 
