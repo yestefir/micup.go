@@ -36,7 +36,10 @@ Notable changes to micup.go are recorded here.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
 - `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
 - Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
-- Event name constants for every Micup dispatch the module handles.
+- Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
+- Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
+- `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
+- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
@@ -57,7 +60,10 @@ Notable changes to micup.go are recorded here.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
 - `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
 - Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
-- Event name constants for every Micup dispatch the module handles.
+- Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
+- Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
+- `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
+- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
@@ -104,7 +110,10 @@ Initial public release.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
 - `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
 - Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
-- Event name constants for every Micup dispatch the module handles.
+- Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
+- Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
+- `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
+- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 

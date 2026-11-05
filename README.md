@@ -1,6 +1,11 @@
 # micup.go
 
-`micup.go` is a standalone Go client for Micup bots. It discovers the public REST and Gateway endpoints, authenticates bot requests, keeps Gateway sessions connected and resumed, runs many shards in one process, caches guild channels and voice states, joins voice channels, sends messages with embeds, responds privately to interactions, and can publish stereo PCM to a LiveKit voice room.
+`micup.go` is a standalone Go client for Micup bots, following the Fluxer API that Micup runs on. It covers:
+
+- **Gateway:** sessions that resume, replay unprocessed events and re-identify on the same socket; a shard manager for many shards in one process; optional zstd-stream compression; ignored events and presence; command pacing below Micup's limits.
+- **State:** guilds, channels with permission overwrites, roles, member roles and voice states, with permission computation.
+- **REST:** messages (send, edit, delete, bulk delete, list), reactions, pins, typing, DMs, files (multipart and presigned uploads), members, roles, moderation and webhooks, with Micup's error codes and rate limit rules.
+- **Voice:** the join handshake with fast refusal and permission checks, grant rotation, and Opus publishing to LiveKit.
 
 The module keeps platform transport separate from application behavior. It does not implement music search, queues, command syntax, persistence, or worker coordination.
 

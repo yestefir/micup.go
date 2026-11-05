@@ -53,6 +53,7 @@ Applications connect Gateway and voice by handling voice events, pairing the sho
 
 ## Adding code
 
-- A new REST resource gets its own file in `rest/` next to `messages.go`, with request/response types in `model/` when they are shared.
+- A new REST resource gets its own file in `rest/` (`messages.go`, `reactions.go`, `pins.go`, `attachments.go`, `members.go`, `guilds.go`, `webhooks.go`) and goes through `Client.call`, which applies rate limits, retries, audit reasons and multipart bodies. Shared request and response types live in `model/`.
+- Gateway protocol pieces live in `gateway/`: `run.go` (connection loop), `conn.go` (send pacing and size checks), `compress.go` (zstd-stream), `limiter.go`, `options.go`, `event.go`, `errors.go`. Session features live in `session/`: `voice.go` (join handshake, grants, refusals), `members.go` (opcode 8), `permissions.go`.
 - A new Gateway behavior that needs connection state belongs in `session/`; protocol-only additions (opcodes, close codes, event names) belong in `gateway/`.
 - A new domain gets a new directory under `src/` and a row in the layer test.

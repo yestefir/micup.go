@@ -1,6 +1,11 @@
 # micup.go
 
-`micup.go`, Micup botları için bağımsız bir Go istemcisidir. REST ve Gateway adreslerini keşfeder, bot isteklerini doğrular, Gateway oturumlarını bağlı tutup kaldığı yerden sürdürür, birden çok shard'ı tek süreçte çalıştırır, sunucu kanallarını ve ses durumlarını önbellekler, ses kanallarına katılır, embed içeren mesajlar gönderir, etkileşimlere özel yanıt verebilir ve PCM sesini LiveKit odasına yayımlar.
+`micup.go`, Micup botları için bağımsız bir Go istemcisidir ve Micup'ın üzerinde çalıştığı Fluxer API'sini izler:
+
+- **Gateway:** kaldığı yerden süren, işlenmemiş olayları yeniden alan ve aynı soketten yeniden IDENTIFY yapan oturumlar; tek süreçte çok shard; isteğe bağlı zstd-stream sıkıştırma; yok sayılan olaylar ve durum; Micup sınırlarının altında komut hızı.
+- **Önbellek:** guild'ler, izin geçersiz kılmalı kanallar, roller, üye rolleri, ses durumları ve izin hesabı.
+- **REST:** mesajlar (gönderme, düzenleme, silme, toplu silme, listeleme), tepkiler, sabitleme, yazıyor göstergesi, DM, dosyalar (multipart ve önceden yükleme), üyeler, roller, moderasyon ve webhook'lar; Micup hata kodları ve rate limit kurallarıyla.
+- **Ses:** hızlı ret ve izin kontrolüyle katılma, yetki yenileme ve LiveKit'e Opus yayını.
 
 Modül Micup taşımasını uygulama mantığından ayırır. Müzik arama ve kuyruğu, komut sözdizimi, veritabanı ve worker yönetimi kapsam dışındadır.
 

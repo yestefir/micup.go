@@ -86,3 +86,14 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 ## Gateway payloads
 
 `micup.MessageCreate` (and `micup.MessageUpdate`) embeds `micup.Message` and adds `ChannelType`, `MentionHere` and, in guild channels, the author's `Member` with role IDs. `Message` carries attachments, embeds, reactions, `MessageReference` and `ReferencedMessage` for replies.
+
+## Webhooks
+
+| Method | Effect |
+|---|---|
+| `CreateWebhook(ctx, channelID, name, ...)` | Creates a webhook and returns it with its token; needs `MANAGE_WEBHOOKS` |
+| `ChannelWebhooks(ctx, channelID)`, `GuildWebhooks(ctx, guildID)` | List webhooks |
+| `DeleteWebhook(ctx, webhookID, ...)` | Delete a webhook |
+| `ExecuteWebhook(ctx, id, token, micup.WebhookMessage{...})` | Post as the webhook; returns the message only when `Wait` is true |
+
+`WebhookMessage` embeds `MessageOptions` and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. The webhook token is a secret: anyone with the ID and token can post.

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -24,6 +25,12 @@ const SampleRate = 48000
 const Channels = 2
 const FrameDuration = 20 * time.Millisecond
 const FrameSamples = SampleRate * Channels / 50
+
+const (
+	DefaultBitrate = 96000
+	MinBitrate     = 8000
+	MaxBitrate     = 512000
+)
 
 type Grant struct {
 	Endpoint string
@@ -44,12 +51,14 @@ type Track interface {
 type LiveKit struct {
 	FFmpeg    string
 	TrackName string
+	Bitrate   int
 }
 
 type room struct {
 	client    *lksdk.Room
 	ffmpeg    string
 	trackName string
+	bitrate   int
 	connected atomic.Bool
 	once      sync.Once
 }
@@ -76,7 +85,7 @@ func (l LiveKit) Connect(ctx context.Context, grant Grant) (Room, error) {
 	if l.TrackName == "" {
 		l.TrackName = "micup.go"
 	}
-	r := &room{ffmpeg: l.FFmpeg, trackName: l.TrackName}
+	r := &room{ffmpeg: l.FFmpeg, trackName: l.TrackName, bitrate: clampBitrate(l.Bitrate)}
 	client, err := lksdk.ConnectToRoomWithToken(endpoint, grant.Token, &lksdk.RoomCallback{OnDisconnected: func() { r.connected.Store(false) }}, lksdk.WithAutoSubscribe(false), lksdk.WithConnectTimeout(timeout))
 	if err != nil {
 		return nil, errors.New("LiveKit join failed")
@@ -107,7 +116,7 @@ func (r *room) OpenTrack(parent context.Context) (Track, error) {
 		return nil, errors.New("LiveKit track publish failed")
 	}
 	first := true
-	t, err := openEncoder(parent, r.ffmpeg, func(packet []byte) error {
+	t, err := openEncoder(parent, r.ffmpeg, r.bitrate, func(packet []byte) error {
 		err := track.WriteSample(media.Sample{Data: packet, Duration: FrameDuration}, nil)
 		if err == nil && first {
 			first = false
@@ -123,9 +132,16 @@ func (r *room) OpenTrack(parent context.Context) (Track, error) {
 	return t, nil
 }
 
-func openEncoder(parent context.Context, binaryPath string, writePacket func([]byte) error, connected func() bool, release func()) (*pcmTrack, error) {
+func clampBitrate(bitrate int) int {
+	if bitrate <= 0 {
+		return DefaultBitrate
+	}
+	return min(max(bitrate, MinBitrate), MaxBitrate)
+}
+
+func openEncoder(parent context.Context, binaryPath string, bitrate int, writePacket func([]byte) error, connected func() bool, release func()) (*pcmTrack, error) {
 	ctx, cancel := context.WithCancel(parent)
-	cmd := exec.CommandContext(ctx, binaryPath, "-hide_banner", "-loglevel", "error", "-nostdin", "-f", "s16le", "-ar", "48000", "-ac", "2", "-probesize", "32", "-analyzeduration", "0", "-i", "pipe:0", "-c:a", "libopus", "-application", "audio", "-b:a", "96k", "-frame_duration", "20", "-page_duration", "20000", "-flush_packets", "1", "-f", "ogg", "pipe:1")
+	cmd := exec.CommandContext(ctx, binaryPath, "-hide_banner", "-loglevel", "error", "-nostdin", "-f", "s16le", "-ar", "48000", "-ac", "2", "-probesize", "32", "-analyzeduration", "0", "-i", "pipe:0", "-c:a", "libopus", "-application", "audio", "-b:a", strconv.Itoa(clampBitrate(bitrate)), "-frame_duration", "20", "-page_duration", "20000", "-flush_packets", "1", "-f", "ogg", "pipe:1")
 	configure(cmd)
 	cmd.WaitDelay = time.Second
 	stdin, err := cmd.StdinPipe()

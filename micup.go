@@ -204,6 +204,18 @@ var (
 )
 
 type (
+	MessageDelete     = model.MessageDelete
+	MessageDeleteBulk = model.MessageDeleteBulk
+	ReactionEvent     = model.ReactionEvent
+	TypingStart       = model.TypingStart
+	GuildMemberRemove = model.GuildMemberRemove
+	RoleEvent         = model.RoleEvent
+	RoleDelete        = model.RoleDelete
+	Webhook           = model.Webhook
+	WebhookMessage    = model.WebhookMessage
+)
+
+type (
 	Permissions         = model.Permissions
 	PermissionOverwrite = model.PermissionOverwrite
 	Role                = model.Role

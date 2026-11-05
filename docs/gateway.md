@@ -19,7 +19,22 @@ The `gateway` package defines `Event`, `Handler` and the event name constants: `
 | `Decode(&v)` | Unmarshals `Data` into a `model` type or your own struct |
 | `Send(ctx, opcode, data)` | Sends a native opcode on the connection that delivered the event |
 
-Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpInvalidSession`, `OpHello` and `OpHeartbeatAck`.
+Typed payloads for common events:
+
+| Event | Decode into |
+|---|---|
+| `EventMessageCreate`, `EventMessageUpdate` | `micup.MessageCreate` (alias `MessageUpdate`) |
+| `EventMessageDelete`, `EventMessageDeleteBulk` | `micup.MessageDelete`, `micup.MessageDeleteBulk` |
+| `EventReactionAdd`, `EventReactionRemove` | `micup.ReactionEvent` |
+| `EventTypingStart` | `micup.TypingStart` |
+| `EventGuildMemberAdd`, `EventGuildMemberUpdate` | `micup.GuildMember` |
+| `EventGuildMemberRemove` | `micup.GuildMemberRemove` |
+| `EventGuildRoleCreate`, `EventGuildRoleUpdate`, `EventGuildRoleDelete` | `micup.RoleEvent`, `micup.RoleDelete` |
+| `EventChannelCreate`, `EventChannelUpdate`, `EventChannelDelete` | `micup.Channel` |
+| `EventVoiceStateUpdate`, `EventVoiceServerUpdate` | `micup.VoiceState`, `micup.VoiceServerUpdate` |
+| `EventInteractionCreate` | `micup.Interaction` (official Micup apps only, see below) |
+
+Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpPresenceUpdate`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpRequestGuildMembers`, `OpInvalidSession`, `OpHello`, `OpHeartbeatAck`, `OpGatewayError`, `OpLazyRequest`, `OpRequestGuildCounts` and `OpRequestChannelMemberCounts`. Bots need no Lazy Request; Micup never treats bot sessions as passive.
 
 ## Session
 
@@ -143,6 +158,8 @@ if err := manager.Run(ctx); err != nil {
 | `IdentifyInterval` | `micup.DefaultIdentifyInterval` (5 s) | Minimum gap between IDENTIFY requests from this manager |
 | `Session` | | Options applied to every shard |
 
+Micup allows at most 2,500 guilds per bot shard and closes a shard with more with 4011 (`Sharding required`, fatal). Raise `ShardCount` until every shard is below that; Micup accepts 1 to 16,384 shards. `GET /v1/gateway/bot` always recommends 1 shard on Micup, so the module does not ask it for a count. Events without a guild (DMs, account events) arrive only on shard 0.
+
 The manager waits `IdentifyInterval` between new identifies, including re-identifies after an invalid session. RESUME is not delayed. Split shards across processes with `ShardIDs`, for example `{0, 1}` in one process and `{2, 3}` in another with `ShardCount: 4`; each process then paces only its own identifies.
 
 `Run` returns `nil` when the context ends.
@@ -177,6 +194,8 @@ It returns when the socket disconnects (`*micup.CloseError` when a close code is
 ## Messages and interactions
 
 Decode message payloads into `micup.MessageCreate`. `Type` is `micup.MessageTypeDefault` for a normal message and `micup.MessageTypeReply` for a reply. Ignore messages authored by bots and use `micup.RESTClient.SendMessage` for plain replies or `SendMessageWithOptions` for embeds. Automatic mentions are disabled for both methods.
+
+Micup delivers interactions and real message components only to its own official apps; the public Fluxer API has no interaction routes for other bots. `RespondToInteraction`, `DeferInteraction` and `SendInteractionFollowup` are for those apps. Other bots build menus from embeds and reactions (`AddReaction` plus `EventReactionAdd`).
 
 Ephemeral messages are interaction responses, not regular channel messages. Decode an `INTERACTION_CREATE` event as `micup.Interaction`, then answer it over REST with `RespondToInteraction`. Pass `true` for the `ephemeral` argument to make the response visible only to the user who invoked the interaction. Use `DeferInteraction` when work needs more time; the ephemeral choice is made when deferring and cannot be changed by later responses. A follow-up can be sent with `SendInteractionFollowup` while the interaction token remains valid.
 

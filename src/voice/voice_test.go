@@ -26,7 +26,7 @@ func TestPCMTrackEncodesOpus(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	var packets, released atomic.Int64
-	track, err := openEncoder(ctx, path, func(packet []byte) error {
+	track, err := openEncoder(ctx, path, 64000, func(packet []byte) error {
 		if len(packet) > 0 {
 			packets.Add(1)
 		}
@@ -57,5 +57,13 @@ func TestPCMTrackRejectsInvalidFrame(t *testing.T) {
 	track := &pcmTrack{ctx: context.Background(), connected: func() bool { return true }}
 	if err := track.Write(context.Background(), make([]int16, FrameSamples+1)); err == nil {
 		t.Fatal("oversized PCM frame accepted")
+	}
+}
+
+func TestClampBitrate(t *testing.T) {
+	for in, want := range map[int]int{0: DefaultBitrate, -5: DefaultBitrate, 1000: MinBitrate, 64000: 64000, 900000: MaxBitrate} {
+		if got := clampBitrate(in); got != want {
+			t.Fatalf("clampBitrate(%d) = %d, want %d", in, got, want)
+		}
 	}
 }
