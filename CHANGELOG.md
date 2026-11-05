@@ -2,7 +2,7 @@
 
 Notable changes to micup.go are recorded here.
 
-## [0.4.0] - Unreleased
+## [0.4.0] - 2026-11-05
 
 ### Fixed
 
@@ -42,7 +42,6 @@ Notable changes to micup.go are recorded here.
 - Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
 - Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
 - `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
-
 - `micup.NewREST`, `micup.RunGateway`, `micup.NewSession`, `micup.NewShardManager`, `micup.NewState`, `Bot.SessionConfig`, `Bot.Endpoints`, `RESTClient.CurrentUser`, `RESTClient.CurrentApplication`, `CloseError.ResetsSession`, `State.Remember`.
 - Layer and facade tests in `src/internal/layers`, and a shared Gateway test fixture in `src/internal/fixture`.
 - Tests for discovery, the state cache, Gateway option validation, bot wiring and the facades.
@@ -50,22 +49,6 @@ Notable changes to micup.go are recorded here.
 ## [0.3.0] - 2026-11-05
 
 ### Added
-
-- `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
-- Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
-- `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
-- `SessionOptions.Compress` and `GatewayOptions.Compress` turn on Micup's `zstd-stream` Gateway compression in both directions.
-- Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
-- The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
-- `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
-- `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
-- Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
-- Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
-- Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
-- `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
-- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
-- Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
-- `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
 - `Session`: a supervised Gateway connection with bounded reconnect backoff, RESUME, fatal close-code detection, and a ready flag.
 - `State`: guild channel and voice state cache, plus `Session.ResolveGuild` with a cached REST fallback.
@@ -100,22 +83,6 @@ Notable changes to micup.go are recorded here.
 Initial public release.
 
 ### Added
-
-- `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
-- Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
-- `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
-- `SessionOptions.Compress` and `GatewayOptions.Compress` turn on Micup's `zstd-stream` Gateway compression in both directions.
-- Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
-- The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
-- `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
-- `Session.RequestGuildMembers` and `ShardManager.RequestGuildMembers` (opcode 8) collect member chunks and report `RATE_LIMITED` as `MembersRateLimitedError`.
-- Guild REST: `Guild`, `GuildChannels`, `Roles`, `Member`, `Members`, `ModifyMember` (including voice move and disconnect), `AddMemberRole`, `RemoveMemberRole`, `KickMember`, `BanMember` and `UnbanMember`. See [Guilds](docs/guilds.md).
-- Event name constants for every Micup dispatch the module handles, and typed payloads: `MessageDelete`, `MessageDeleteBulk`, `ReactionEvent`, `TypingStart`, `GuildMemberRemove`, `RoleEvent`, `RoleDelete`.
-- Webhooks: `CreateWebhook`, `ChannelWebhooks`, `GuildWebhooks`, `DeleteWebhook` and `ExecuteWebhook` with per-message username and avatar.
-- `voice.LiveKit.Bitrate` with `DefaultBitrate`, `MinBitrate` and `MaxBitrate`.
-- Documented Micup limits the module does not work around: interactions and components are for official Micup apps only, 2,500 guilds per shard, no peer-to-peer or encrypted-media voice for this publisher, and 600-second voice grants.
-- Files: `MessageOptions.Files` sends multipart, and `UploadAttachment` runs Micup's presigned single- and multipart upload flow for large files.
-- `MessageOptions` gains `Flags`, `TTS`, `StickerIDs`, `AllowedMentions` and `Attachments`; `Message` gains the full Micup message fields; `MessageCreate` embeds `Message` and adds `ChannelType`, `MentionHere` and `Member`. New message type and flag constants.
 
 - Micup endpoint discovery and bot-authenticated REST requests.
 - Native Gateway connection with explicit shard settings, heartbeats, and event callbacks.
