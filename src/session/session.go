@@ -41,6 +41,7 @@ type Options struct {
 	IgnoredEvents []string
 	Presence      *model.Presence
 	Flags         int
+	Compress      bool
 	UserAgent     string
 	Browser       string
 	MinBackoff    time.Duration
@@ -172,6 +173,7 @@ func (s *Session) gatewayOptions() gateway.Options {
 		IgnoredEvents:  s.options.IgnoredEvents,
 		PresenceFunc:   s.currentPresence,
 		Flags:          s.options.Flags,
+		Compress:       s.options.Compress,
 	}
 }
 

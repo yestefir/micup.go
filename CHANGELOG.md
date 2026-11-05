@@ -30,6 +30,7 @@ Notable changes to micup.go are recorded here.
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
+- `SessionOptions.Compress` and `GatewayOptions.Compress` turn on Micup's `zstd-stream` Gateway compression in both directions.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
 - The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
@@ -50,6 +51,7 @@ Notable changes to micup.go are recorded here.
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
+- `SessionOptions.Compress` and `GatewayOptions.Compress` turn on Micup's `zstd-stream` Gateway compression in both directions.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
 - The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.
@@ -96,6 +98,7 @@ Initial public release.
 - `micup.WithReason` for audit log reasons, and `micup.File` for multipart uploads.
 - Message REST: `Message`, `Messages`, `EditMessage`, `DeleteMessage`, `BulkDeleteMessages`, `TriggerTyping`, `CreateDM`, reactions (`AddReaction`, `RemoveReaction`, `RemoveUserReaction`, `RemoveEmojiReactions`, `RemoveAllReactions`) and pins (`PinMessage`, `UnpinMessage`, `PinnedMessages`). See [Messages](docs/messages.md).
 - `SessionOptions.IgnoredEvents`, `Presence` and `Flags` for IDENTIFY; `Session.UpdatePresence` and `ShardManager.UpdatePresence` (opcode 3); `micup.Presence`, `CustomStatus` and status constants.
+- `SessionOptions.Compress` and `GatewayOptions.Compress` turn on Micup's `zstd-stream` Gateway compression in both directions.
 - Each Gateway connection paces commands below Micup's 600 per minute and presence updates at 5 per 20 seconds, and rejects payloads over 16,384 bytes before sending.
 - The state cache keeps roles, the guild owner, member roles and full channels with permission overwrites, handles `GUILD_SYNC`, `GUILD_UPDATE`, role, member, bulk channel and member chunk events, and computes permissions with `State.Permissions` and `State.BotPermissions`. `micup.Permissions`, every permission constant, `micup.ComputePermissions` and channel type constants.
 - `JoinVoice` returns `ErrVoicePermission` at once when the bot lacks `VIEW_CHANNEL` or `CONNECT`, which Micup would ignore silently.

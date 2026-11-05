@@ -30,6 +30,7 @@ type Options struct {
 	Presence             *model.Presence
 	PresenceFunc         func() *model.Presence
 	Flags                int
+	Compress             bool
 	OnConnect            func(*Conn)
 	OnDisconnect         func()
 	OnSessionInvalidated func()
@@ -70,6 +71,13 @@ func (o Options) normalize() (Options, error) {
 	q := endpoint.Query()
 	q.Set("v", ProtocolVersion)
 	q.Set("encoding", Encoding)
+	if o.Compress {
+		q.Set("compress", CompressionZstdStream)
+		q.Set("stream", "1")
+	} else {
+		q.Del("compress")
+		q.Del("stream")
+	}
 	endpoint.RawQuery = q.Encode()
 	o.URL = endpoint.String()
 	if o.UserAgent == "" {

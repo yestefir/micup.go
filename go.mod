@@ -4,6 +4,7 @@ go 1.26.8
 
 require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
+	github.com/klauspost/compress v1.19.2
 	github.com/livekit/protocol v1.51.1-0.20260910121219-271d9cde3897
 	github.com/livekit/server-sdk-go/v2 v2.19.0
 	github.com/pion/webrtc/v4 v4.2.19
@@ -29,7 +30,6 @@ require (
 	github.com/google/cel-go v0.29.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jxskiss/base62 v1.1.0 // indirect
-	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.2.0 // indirect
 	github.com/livekit/mageutil v0.0.0-20250511045019-0f1ff63f7731 // indirect

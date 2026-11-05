@@ -64,6 +64,7 @@ After a disconnect the session sends RESUME with the last session ID and the las
 | `IgnoredEvents` | Dispatch names Micup should not send this session (up to 256), for example `TYPING_START`, `MESSAGE_REACTION_ADD`, `MESSAGE_REACTION_REMOVE`, `PRESENCE_UPDATE`. Micup has no intents; this is the way to cut traffic. Ignored events use no sequence number. `MESSAGE_CREATE` still arrives for messages that mention the bot directly |
 | `Presence` | The status published when the session starts: `micup.Presence{Status: micup.StatusOnline, CustomStatus: &micup.CustomStatus{Text: "!help"}}` |
 | `Flags` | Session flags: `micup.FlagChannelThreads`, `micup.FlagDebounceMessageReactions`, `micup.FlagGuildVisits` |
+| `Compress` | Connects with `compress=zstd-stream&stream=1`. Every server frame is then one part of a single zstd stream, and every client message goes through one compressor for the whole connection, as Micup requires. Cuts Gateway bandwidth substantially for bots in many guilds; off by default |
 
 `Session.UpdatePresence(ctx, presence)` (or `ShardManager.UpdatePresence` for every shard) sends opcode 3 and remembers the presence, so a later IDENTIFY uses it too. Status is one of `online`, `idle`, `dnd`, `invisible` or `offline`.
 

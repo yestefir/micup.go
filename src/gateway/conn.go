@@ -17,6 +17,7 @@ type Conn struct {
 	mu        sync.Mutex
 	commands  *windowLimiter
 	presences *windowLimiter
+	zstd      *zstdWriter
 }
 
 func newConn(ws *websocket.Conn) *Conn {
@@ -46,6 +47,13 @@ func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	kind := websocket.TextMessage
+	if c.zstd != nil {
+		if encoded, err = c.zstd.frame(encoded); err != nil {
+			return err
+		}
+		kind = websocket.BinaryMessage
+	}
 	_ = c.ws.SetWriteDeadline(time.Now().Add(writeTimeout))
-	return c.ws.WriteMessage(websocket.TextMessage, encoded)
+	return c.ws.WriteMessage(kind, encoded)
 }

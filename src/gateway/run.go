@@ -49,6 +49,18 @@ func Run(parent context.Context, options Options, handler Handler) error {
 	defer stop()
 	defer ws.Close()
 	conn := newConn(ws)
+	var reader packetReader = plainReader{ws: ws}
+	if options.Compress {
+		zr, err := newZstdReader(ws)
+		if err != nil {
+			return err
+		}
+		defer zr.close()
+		reader = zr
+		if conn.zstd, err = newZstdWriter(); err != nil {
+			return err
+		}
+	}
 	if options.OnConnect != nil {
 		options.OnConnect(conn)
 	}
@@ -60,7 +72,7 @@ func Run(parent context.Context, options Options, handler Handler) error {
 	identified := false
 	for {
 		var p packet
-		if err = ws.ReadJSON(&p); err != nil {
+		if err = reader.next(&p); err != nil {
 			return readError(parent, resume, err)
 		}
 		switch p.Op {
