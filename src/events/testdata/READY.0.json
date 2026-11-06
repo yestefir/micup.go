@@ -1,0 +1,151 @@
+{
+  "application": {
+    "flags": 565248,
+    "id": "100000000000000011"
+  },
+  "country_code": "XX",
+  "favorite_memes": [],
+  "gateway_rollout": {
+    "game_activity_enabled": true,
+    "game_activity_epoch": 1,
+    "listening_activity": true
+  },
+  "guilds": [
+    {
+      "id": "100000000000000001",
+      "unavailable": true
+    }
+  ],
+  "latitude": "0",
+  "longitude": "0",
+  "notes": {},
+  "pinned_dms": [],
+  "presences": [],
+  "private_channels": [],
+  "read_states": [],
+  "relationships": [],
+  "resume_gateway_url": "redacted",
+  "rtc_regions": [
+    {
+      "emoji": "🌐",
+      "id": "automatic",
+      "name": "Automatic"
+    },
+    {
+      "emoji": "🇹🇷",
+      "id": "tr",
+      "name": "Türkiye"
+    },
+    {
+      "emoji": "🇺🇸",
+      "id": "us-east",
+      "name": "ABD Doğu"
+    }
+  ],
+  "session_id": "redacted",
+  "sessions": [
+    {
+      "afk": false,
+      "mobile": false,
+      "session_id": "redacted",
+      "status": "online"
+    },
+    {
+      "afk": false,
+      "mobile": false,
+      "session_id": "redacted",
+      "status": "online"
+    }
+  ],
+  "shard": [
+    0,
+    1
+  ],
+  "user": {
+    "accent_color": null,
+    "account_limited": false,
+    "acls": [],
+    "authenticator_types": [
+      0,
+      2
+    ],
+    "avatar": null,
+    "avatar_color": null,
+    "avatar_decoration_data": null,
+    "avatar_ultra_data": null,
+    "banner": null,
+    "banner_color": null,
+    "bio": null,
+    "bot": true,
+    "discriminator": "2914",
+    "email": null,
+    "email_bounced": false,
+    "flags": 0,
+    "global_name": null,
+    "has_dismissed_premium_onboarding": false,
+    "has_ever_purchased": false,
+    "has_unread_gift_inventory": false,
+    "has_verified_phone": false,
+    "id": "100000000000000011",
+    "identity_version": "0",
+    "is_staff": false,
+    "last_voice_activity_sharing_change_at": null,
+    "legal_set": null,
+    "legal_set_version": null,
+    "mfa_enabled": true,
+    "name_style": null,
+    "nameplate_data": null,
+    "nsfw_allowed": true,
+    "password_last_changed_at": null,
+    "pending_bulk_message_deletion": null,
+    "premium_badge_hidden": false,
+    "premium_badge_masked": false,
+    "premium_badge_sequence_hidden": false,
+    "premium_badge_timestamp_hidden": false,
+    "premium_billing_cycle": null,
+    "premium_discriminator": false,
+    "premium_enabled_override": false,
+    "premium_grace_ends_at": null,
+    "premium_lifetime_sequence": null,
+    "premium_perks_disabled": false,
+    "premium_purchase_disabled": false,
+    "premium_since": null,
+    "premium_type": 0,
+    "premium_until": null,
+    "premium_will_cancel": false,
+    "privacy_agreed_at": null,
+    "pronouns": null,
+    "public_profile_allowed": false,
+    "required_actions": [],
+    "tag_guild_id": null,
+    "terms_agreed_at": null,
+    "theme_colors": null,
+    "timezone": null,
+    "timezone_privacy_flags": 1,
+    "traits": [
+      "premium"
+    ],
+    "unread_gift_inventory_count": 0,
+    "username": "payload",
+    "username_state": "legacy",
+    "verified": false
+  },
+  "user_guild_settings": [],
+  "user_settings": null,
+  "username_migration": {
+    "epoch": 1,
+    "forced_at": "2026-10-27T08:39:50.872Z",
+    "preparing_at": "2026-10-20T08:36:09.590Z",
+    "started_at": "2026-10-20T08:39:50.872Z",
+    "state": "selecting"
+  },
+  "username_tiers": {
+    "1": "locked",
+    "2": "locked",
+    "3": "for_sale"
+  },
+  "users": [],
+  "v": 1,
+  "version": 1,
+  "webauthn_credentials": []
+}

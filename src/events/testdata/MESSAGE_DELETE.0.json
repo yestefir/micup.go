@@ -1,0 +1,22 @@
+{
+  "author_id": "100000000000000011",
+  "channel_id": "100000000000000004",
+  "content": "event capture: edited",
+  "guild_id": "100000000000000001",
+  "id": "100000000000000010",
+  "member": {
+    "accent_color": null,
+    "avatar": null,
+    "banner": null,
+    "communication_disabled_until": null,
+    "deaf": false,
+    "flags": 0,
+    "guild_id": "100000000000000001",
+    "joined_at": "2026-11-06T14:12:08.360Z",
+    "mute": false,
+    "nick": null,
+    "roles": [
+      "100000000000000018"
+    ]
+  }
+}

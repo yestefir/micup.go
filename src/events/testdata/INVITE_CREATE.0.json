@@ -1,0 +1,57 @@
+{
+  "channel": {
+    "id": "100000000000000002",
+    "name": "capture-channel",
+    "type": 0
+  },
+  "channel_id": "100000000000000002",
+  "code": "invitecode",
+  "created_at": "2026-11-06T14:18:07.397Z",
+  "expires_at": "2026-11-06T15:18:07.397Z",
+  "guild": {
+    "banner": null,
+    "banner_height": null,
+    "banner_width": null,
+    "embed_splash": null,
+    "embed_splash_height": null,
+    "embed_splash_width": null,
+    "features": [
+      "BANNER",
+      "INVITE_SPLASH"
+    ],
+    "guild_tag": null,
+    "guild_tag_badge": null,
+    "icon": null,
+    "id": "100000000000000001",
+    "name": "test",
+    "nsfw": false,
+    "nsfw_level": 0,
+    "splash": null,
+    "splash_card_alignment": 0,
+    "splash_height": null,
+    "splash_width": null
+  },
+  "guild_id": "100000000000000001",
+  "inviter": {
+    "avatar": null,
+    "avatar_color": null,
+    "avatar_decoration_data": null,
+    "avatar_ultra_data": null,
+    "bot": true,
+    "discriminator": "2914",
+    "flags": 0,
+    "global_name": null,
+    "id": "100000000000000011",
+    "name_style": null,
+    "nameplate_data": null,
+    "tag_guild_id": null,
+    "username": "payload"
+  },
+  "max_age": 3600,
+  "max_uses": 0,
+  "member_count": 2,
+  "presence_count": 2,
+  "temporary": false,
+  "type": 0,
+  "uses": 0
+}

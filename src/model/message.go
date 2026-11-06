@@ -69,15 +69,6 @@ type Message struct {
 	Nonce             json.RawMessage   `json:"nonce,omitempty"`
 }
 
-type MessageCreate struct {
-	Message
-	ChannelType int     `json:"channel_type"`
-	MentionHere bool    `json:"mention_here,omitempty"`
-	Member      *Member `json:"member,omitempty"`
-}
-
-type MessageUpdate = MessageCreate
-
 type MessageReference struct {
 	MessageID string `json:"message_id,omitempty"`
 	ChannelID string `json:"channel_id,omitempty"`

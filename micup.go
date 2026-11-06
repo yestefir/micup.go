@@ -53,53 +53,9 @@ type (
 	GatewayError   = gateway.GatewayError
 )
 
-func KnownEvents() []string { return gateway.KnownEvents() }
-
 func RunGateway(ctx context.Context, options GatewayOptions, handler EventHandler) error {
 	return gateway.Run(ctx, options, handler)
 }
-
-const (
-	EventReady               = gateway.EventReady
-	EventResumed             = gateway.EventResumed
-	EventGuildCreate         = gateway.EventGuildCreate
-	EventGuildSync           = gateway.EventGuildSync
-	EventGuildUpdate         = gateway.EventGuildUpdate
-	EventGuildDelete         = gateway.EventGuildDelete
-	EventGuildRoleCreate     = gateway.EventGuildRoleCreate
-	EventGuildRoleUpdate     = gateway.EventGuildRoleUpdate
-	EventGuildRoleUpdateBulk = gateway.EventGuildRoleUpdateBulk
-	EventGuildRoleDelete     = gateway.EventGuildRoleDelete
-	EventGuildMemberAdd      = gateway.EventGuildMemberAdd
-	EventGuildMemberUpdate   = gateway.EventGuildMemberUpdate
-	EventGuildMemberRemove   = gateway.EventGuildMemberRemove
-	EventGuildMembersChunk   = gateway.EventGuildMembersChunk
-	EventGuildBanAdd         = gateway.EventGuildBanAdd
-	EventGuildBanRemove      = gateway.EventGuildBanRemove
-	EventChannelUpdateBulk   = gateway.EventChannelUpdateBulk
-	EventChannelPinsUpdate   = gateway.EventChannelPinsUpdate
-	EventMessageUpdate       = gateway.EventMessageUpdate
-	EventMessageDelete       = gateway.EventMessageDelete
-	EventMessageDeleteBulk   = gateway.EventMessageDeleteBulk
-	EventReactionAdd         = gateway.EventReactionAdd
-	EventReactionRemove      = gateway.EventReactionRemove
-	EventReactionRemoveAll   = gateway.EventReactionRemoveAll
-	EventReactionRemoveEmoji = gateway.EventReactionRemoveEmoji
-	EventTypingStart         = gateway.EventTypingStart
-	EventPresenceUpdate      = gateway.EventPresenceUpdate
-	EventUserUpdate          = gateway.EventUserUpdate
-	EventWebhooksUpdate      = gateway.EventWebhooksUpdate
-	EventInviteCreate        = gateway.EventInviteCreate
-	EventInviteDelete        = gateway.EventInviteDelete
-	EventRateLimited         = gateway.EventRateLimited
-	EventChannelCreate       = gateway.EventChannelCreate
-	EventChannelUpdate       = gateway.EventChannelUpdate
-	EventChannelDelete       = gateway.EventChannelDelete
-	EventMessageCreate       = gateway.EventMessageCreate
-	EventInteractionCreate   = gateway.EventInteractionCreate
-	EventVoiceStateUpdate    = gateway.EventVoiceStateUpdate
-	EventVoiceServerUpdate   = gateway.EventVoiceServerUpdate
-)
 
 const (
 	OpDispatch                   = gateway.OpDispatch
@@ -211,22 +167,14 @@ var (
 )
 
 type (
-	MessageDelete     = model.MessageDelete
-	MessageDeleteBulk = model.MessageDeleteBulk
-	ReactionEvent     = model.ReactionEvent
-	TypingStart       = model.TypingStart
-	GuildMemberRemove = model.GuildMemberRemove
-	RoleEvent         = model.RoleEvent
-	RoleDelete        = model.RoleDelete
-	Webhook           = model.Webhook
-	WebhookMessage    = model.WebhookMessage
+	Webhook        = model.Webhook
+	WebhookMessage = model.WebhookMessage
 )
 
 type (
 	Permissions         = model.Permissions
 	PermissionOverwrite = model.PermissionOverwrite
 	Role                = model.Role
-	GuildMember         = model.GuildMember
 	MemberEdit          = model.MemberEdit
 	MemberQuery         = model.MemberQuery
 	Ban                 = model.Ban
@@ -307,8 +255,6 @@ type (
 	RoleColors         = model.RoleColors
 	Channel            = model.Channel
 	Message            = model.Message
-	MessageCreate      = model.MessageCreate
-	MessageUpdate      = model.MessageUpdate
 	MessageOptions     = model.MessageOptions
 	MessageEdit        = model.MessageEdit
 	MessageQuery       = model.MessageQuery

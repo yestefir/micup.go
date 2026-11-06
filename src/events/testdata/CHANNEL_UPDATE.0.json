@@ -1,0 +1,19 @@
+{
+  "content_warning_level": 0,
+  "content_warning_text": null,
+  "guild_id": "100000000000000001",
+  "icon_color": null,
+  "icon_key": null,
+  "id": "100000000000000002",
+  "last_message_id": null,
+  "last_pin_timestamp": null,
+  "name": "capture-channel",
+  "nsfw": false,
+  "nsfw_override": null,
+  "parent_id": null,
+  "permission_overwrites": [],
+  "position": 2,
+  "rate_limit_per_user": 0,
+  "topic": "capture topic",
+  "type": 0
+}

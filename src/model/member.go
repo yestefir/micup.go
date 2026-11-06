@@ -14,11 +14,6 @@ type Member struct {
 	CommunicationDisabledUntil *string  `json:"communication_disabled_until,omitempty"`
 }
 
-type GuildMember struct {
-	Member
-	GuildID string `json:"guild_id"`
-}
-
 type MemberEdit struct {
 	Nick                       *string
 	Roles                      *[]string

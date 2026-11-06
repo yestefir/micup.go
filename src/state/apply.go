@@ -3,6 +3,7 @@ package state
 import (
 	"encoding/json"
 
+	"github.com/yestefir/micup.go/src/events"
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/model"
 )
@@ -229,7 +230,7 @@ func (c *Cache) applyRoleDelete(data json.RawMessage) {
 }
 
 func (c *Cache) applyMember(data json.RawMessage) {
-	var payload model.GuildMember
+	var payload events.GuildMember
 	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" || payload.User == nil || payload.User.ID == "" {
 		return
 	}

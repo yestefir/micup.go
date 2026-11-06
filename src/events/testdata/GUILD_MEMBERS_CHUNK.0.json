@@ -1,0 +1,125 @@
+{
+  "chunk_count": 1,
+  "chunk_index": 0,
+  "guild_id": "100000000000000001",
+  "members": [
+    {
+      "accent_color": null,
+      "avatar": null,
+      "banner": null,
+      "communication_disabled_until": null,
+      "deaf": false,
+      "flags": 0,
+      "joined_at": "2026-11-06T14:11:53.893Z",
+      "mute": false,
+      "nick": null,
+      "roles": [],
+      "user": {
+        "avatar": "hash",
+        "avatar_color": 4671303,
+        "avatar_decoration_data": null,
+        "avatar_ultra_data": null,
+        "discriminator": "0000",
+        "flags": 1207959552,
+        "global_name": "user1",
+        "id": "100000000000000019",
+        "identity_version": "2",
+        "name_style": {
+          "colors": [
+            14013909,
+            14604761
+          ],
+          "font_id": 1
+        },
+        "nameplate_data": null,
+        "tag_guild_id": "100000000000000020",
+        "username": "user2"
+      }
+    },
+    {
+      "accent_color": null,
+      "avatar": null,
+      "banner": null,
+      "communication_disabled_until": null,
+      "deaf": false,
+      "flags": 0,
+      "guild_id": "100000000000000001",
+      "joined_at": "2026-11-06T14:12:08.360Z",
+      "mute": false,
+      "nick": null,
+      "roles": [
+        "100000000000000018"
+      ],
+      "user": {
+        "avatar": null,
+        "avatar_color": null,
+        "avatar_decoration_data": null,
+        "avatar_ultra_data": null,
+        "bot": true,
+        "discriminator": "2914",
+        "flags": 0,
+        "global_name": null,
+        "id": "100000000000000011",
+        "name_style": null,
+        "nameplate_data": null,
+        "tag_guild_id": null,
+        "username": "payload"
+      }
+    }
+  ],
+  "presences": [
+    {
+      "afk": false,
+      "custom_status": {
+        "emoji_animated": false,
+        "emoji_id": "100000000000000021",
+        "emoji_name": "emoji",
+        "text": null
+      },
+      "mobile": false,
+      "status": "online",
+      "user": {
+        "avatar": "hash",
+        "avatar_color": 4671303,
+        "avatar_decoration_data": null,
+        "avatar_ultra_data": null,
+        "discriminator": "0000",
+        "flags": 1207959552,
+        "global_name": "user1",
+        "id": "100000000000000019",
+        "identity_version": "2",
+        "name_style": {
+          "colors": [
+            14013909,
+            14604761
+          ],
+          "font_id": 1
+        },
+        "nameplate_data": null,
+        "tag_guild_id": "100000000000000020",
+        "username": "user2"
+      }
+    },
+    {
+      "afk": false,
+      "custom_status": null,
+      "mobile": false,
+      "status": "online",
+      "user": {
+        "avatar": null,
+        "avatar_color": null,
+        "avatar_decoration_data": null,
+        "avatar_ultra_data": null,
+        "bot": true,
+        "discriminator": "2914",
+        "flags": 0,
+        "global_name": null,
+        "id": "100000000000000011",
+        "name_style": null,
+        "nameplate_data": null,
+        "tag_guild_id": null,
+        "username": "payload"
+      }
+    }
+  ]
+}

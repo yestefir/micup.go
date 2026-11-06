@@ -1,0 +1,51 @@
+{
+  "channel_id": "100000000000000008",
+  "connection_id": "redacted",
+  "deaf": false,
+  "e2ee_capable": false,
+  "guild_id": "100000000000000001",
+  "is_mobile": false,
+  "member": {
+    "accent_color": null,
+    "avatar": null,
+    "banner": null,
+    "communication_disabled_until": null,
+    "deaf": false,
+    "joined_at": "2026-11-06T14:11:53.893Z",
+    "mute": false,
+    "nick": null,
+    "roles": [],
+    "user": {
+      "avatar": "hash",
+      "avatar_color": 4671303,
+      "avatar_decoration_data": null,
+      "avatar_ultra_data": null,
+      "discriminator": "0000",
+      "flags": 1207959552,
+      "global_name": "user1",
+      "id": "100000000000000019",
+      "identity_version": "2",
+      "name_style": {
+        "colors": [
+          14013909,
+          14604761
+        ],
+        "font_id": 1
+      },
+      "nameplate_data": null,
+      "tag_guild_id": "100000000000000020",
+      "username": "user2"
+    }
+  },
+  "mute": false,
+  "self_deaf": false,
+  "self_mute": false,
+  "self_stream": false,
+  "self_video": false,
+  "session_id": "redacted",
+  "soundboard_epoch": 1,
+  "suppress": false,
+  "user_id": "100000000000000019",
+  "version": 0,
+  "viewer_stream_keys": []
+}
