@@ -16,6 +16,10 @@ Notable changes to micup.go are recorded here.
 - `Interaction.CommandData` with `Path`, typed option readers, resolved users, members, roles, channels and attachments, `Focused`, `TargetUser` and `TargetMessage`. `IsCommand`, `IsAutocomplete` and `RespondAutocomplete`.
 - `Interaction.Channel`, `Guild`, `Context` and `AttachmentSizeLimit`; `Member.Permissions` and `Channel.Permissions` as resolved by Micup. `EventApplicationCommandsUpdate` and `ApplicationCommandsUpdate`.
 
+### Fixed
+
+- Concurrent `RequestGuildMembers` calls on one session could time out: Micup silently drops an opcode 8 request while two others are being answered, without a `RATE_LIMITED` event. A session now keeps at most two member requests in flight and queues the rest. Measured on Micup: 13 of 15 simultaneous requests were dropped before, none after.
+
 ### Changed
 
 - Payload types were checked against anonymized responses and events captured from Micup; those captures are part of the test suite.

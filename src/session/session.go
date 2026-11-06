@@ -64,6 +64,7 @@ type Session struct {
 	presence       *model.Presence
 	presenceMu     sync.Mutex
 	memberRequests map[string]chan memberChunk
+	memberSlots    chan struct{}
 }
 
 func New(config Config, options Options) (*Session, error) {
@@ -102,6 +103,7 @@ func New(config Config, options Options) (*Session, error) {
 		grants:         map[string]model.VoiceServerUpdate{},
 		pending:        map[string]chan joinResult{},
 		memberRequests: map[string]chan memberChunk{},
+		memberSlots:    make(chan struct{}, maxMemberRequestsInFlight),
 		presence:       options.Presence,
 	}, nil
 }

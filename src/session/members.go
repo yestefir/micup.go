@@ -16,8 +16,9 @@ import (
 var ErrMembersRateLimited = errors.New("Micup rate limited the member request")
 
 const (
-	maxMemberUserIDs = 100
-	maxMemberLimit   = 100
+	maxMemberUserIDs          = 100
+	maxMemberLimit            = 100
+	maxMemberRequestsInFlight = 2
 )
 
 type memberChunk struct {
@@ -47,6 +48,12 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 	if !s.Ready() {
 		return nil, ErrNotReady
 	}
+	select {
+	case s.memberSlots <- struct{}{}:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	defer func() { <-s.memberSlots }()
 	nonce, err := newNonce()
 	if err != nil {
 		return nil, err

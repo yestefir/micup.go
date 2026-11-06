@@ -367,6 +367,54 @@ func TestRequestGuildMembersCollectsChunks(t *testing.T) {
 	}
 }
 
+func TestRequestGuildMembersStaysUnderMicupsInFlightLimit(t *testing.T) {
+	p := fixture.New(t)
+	p.MemberDelay = 30 * time.Millisecond
+	s := newSession(t, p, session.Options{})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	errs := make(chan error, 8)
+	for range 8 {
+		go func() {
+			members, err := s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID})
+			if err == nil && len(members) != 2 {
+				err = errors.New("incomplete chunks")
+			}
+			errs <- err
+		}()
+	}
+	for range 8 {
+		if err := <-errs; err != nil {
+			t.Fatalf("concurrent request failed: %v", err)
+		}
+	}
+	if drops := p.MemberDrops.Load(); drops != 0 {
+		t.Fatalf("%d requests were sent over the in-flight limit", drops)
+	}
+}
+
+func TestRequestGuildMembersWaitsForSlotWithinContext(t *testing.T) {
+	p := fixture.New(t)
+	p.MemberDelay = time.Second
+	s := newSession(t, p, session.Options{})
+	run(t, s)
+	fixture.Eventually(t, s.Ready)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	for range 2 {
+		go s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID})
+	}
+	time.Sleep(20 * time.Millisecond)
+	if _, err := s.RequestGuildMembers(ctx, model.MembersRequest{GuildID: fixture.GuildID}); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("queued request did not end with its context: %v", err)
+	}
+	if drops := p.MemberDrops.Load(); drops != 0 {
+		t.Fatalf("%d requests were sent over the in-flight limit", drops)
+	}
+}
+
 type inventoryLookup struct {
 	entered chan struct{}
 	stopped chan struct{}

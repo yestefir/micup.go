@@ -24,6 +24,8 @@ const (
 	LockedID   = "locked"
 	TextID     = "text"
 	Connection = "conn-1"
+
+	maxMemberInFlight = 2
 )
 
 type Identify struct {
@@ -43,6 +45,9 @@ type Platform struct {
 	CloseShard        int
 	RefuseVoice       string
 	RateLimitMembers  bool
+	MemberDelay       time.Duration
+	MemberInFlight    atomic.Int64
+	MemberDrops       atomic.Int64
 	Identifies        atomic.Int64
 	Resumes           atomic.Int64
 	Leaves            atomic.Int64
@@ -184,9 +189,21 @@ func (p *Platform) serve(ws *websocket.Conn) {
 				c.event(gateway.EventRateLimited, map[string]any{"opcode": gateway.OpRequestGuildMembers, "retry_after": 12.5, "meta": map[string]string{"guild_id": guild, "nonce": nonce}})
 				continue
 			}
-			for i, user := range []string{"listener", "dj"} {
-				c.event(gateway.EventGuildMembersChunk, map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}})
+			if p.MemberInFlight.Add(1) > maxMemberInFlight {
+				p.MemberInFlight.Add(-1)
+				p.MemberDrops.Add(1)
+				continue
 			}
+			p.mu.Lock()
+			delay := p.MemberDelay
+			p.mu.Unlock()
+			go func() {
+				defer p.MemberInFlight.Add(-1)
+				time.Sleep(delay)
+				for i, user := range []string{"listener", "dj"} {
+					c.event(gateway.EventGuildMembersChunk, map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}})
+				}
+			}()
 		case gateway.OpPresenceUpdate:
 			p.mu.Lock()
 			p.presences = append(p.presences, append(json.RawMessage(nil), packet.D...))
