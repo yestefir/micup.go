@@ -31,25 +31,23 @@ if err != nil {
 	log.Fatal(err)
 }
 
-s, err := b.NewSession(micup.SessionOptions{Handler: func(ctx context.Context, event micup.Event) error {
-	if event.Name != micup.EventMessageCreate {
-		return nil
-	}
-	var message micup.MessageCreate
-	if err := event.Decode(&message); err != nil {
-		return err
-	}
+mux := micup.NewEventMux()
+mux.On(micup.EventMessageCreate, micup.Listen(func(ctx context.Context, message micup.MessageCreate) error {
 	if message.Author.Bot || message.Content != "!ping" {
 		return nil
 	}
 	_, err := b.REST.SendMessage(ctx, message.ChannelID, "pong", message.ID)
 	return err
-}})
+}))
+
+s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
 if err != nil {
 	log.Fatal(err)
 }
 err = s.Run(ctx)
 ```
+
+Every event has a typed payload; see [Events and typed payloads](docs/events.md).
 
 Bots in many guilds use `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` instead of `b.NewSession`. See [Shards](docs/gateway.md#shard-manager).
 
@@ -72,16 +70,18 @@ The implementation lives under `src/`, one package per domain:
 
 ```text
 micup.go       Public facade: package micup
+events.go      Public facade: event names, payload types, event mux
 voice/         Public facade: package voice
 src/
   bot/         Entry point: discovery, bot identity, wiring for sessions and shards
   discovery/   /.well-known endpoint discovery and origin checks
   rest/        Authenticated REST client: channels, messages, interactions, users
-  gateway/     Opcodes, close codes, events, single-connection Gateway loop
+  gateway/     Opcodes, close codes, event names, single-connection Gateway loop
+  events/      Payload type per Gateway event, registry, typed decoding, event mux
   state/       Guild channel and voice state cache
   session/     Reconnecting, resuming session for one shard; voice join handshake
   shard/       Guild-to-shard mapping and multi-shard Manager
-  model/       Plain Micup payload types
+  model/       Domain types shared by REST and Gateway
   voice/       LiveKit room and PCM-to-Opus publishing
   internal/    Version, HTTP safety, test fixtures, layer and facade rules
 docs/          User, API, architecture, and contributor guides

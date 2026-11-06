@@ -8,7 +8,7 @@ micup.go offers three ways to read Gateway events, from most to least managed:
 
 ## Events
 
-The `gateway` package defines `Event`, `Handler` and the event name constants: `EventReady`, `EventResumed`, `EventGuildCreate`, `EventGuildDelete`, `EventChannelCreate`, `EventChannelUpdate`, `EventChannelDelete`, `EventMessageCreate`, `EventInteractionCreate`, `EventVoiceStateUpdate`, `EventVoiceServerUpdate`. Any other name Micup sends is delivered as is.
+Handlers receive a `micup.Event`. Every event name, its payload type, typed decoding and the event mux are described in [Events and typed payloads](events.md). Any name Micup sends is delivered, including names the module does not know yet.
 
 | Field or method | Meaning |
 |---|---|
@@ -19,20 +19,7 @@ The `gateway` package defines `Event`, `Handler` and the event name constants: `
 | `Decode(&v)` | Unmarshals `Data` into a `model` type or your own struct |
 | `Send(ctx, opcode, data)` | Sends a native opcode on the connection that delivered the event |
 
-Typed payloads for common events:
-
-| Event | Decode into |
-|---|---|
-| `EventMessageCreate`, `EventMessageUpdate` | `micup.MessageCreate` (alias `MessageUpdate`) |
-| `EventMessageDelete`, `EventMessageDeleteBulk` | `micup.MessageDelete`, `micup.MessageDeleteBulk` |
-| `EventReactionAdd`, `EventReactionRemove` | `micup.ReactionEvent` |
-| `EventTypingStart` | `micup.TypingStart` |
-| `EventGuildMemberAdd`, `EventGuildMemberUpdate` | `micup.GuildMember` |
-| `EventGuildMemberRemove` | `micup.GuildMemberRemove` |
-| `EventGuildRoleCreate`, `EventGuildRoleUpdate`, `EventGuildRoleDelete` | `micup.RoleEvent`, `micup.RoleDelete` |
-| `EventChannelCreate`, `EventChannelUpdate`, `EventChannelDelete` | `micup.Channel` |
-| `EventVoiceStateUpdate`, `EventVoiceServerUpdate` | `micup.VoiceState`, `micup.VoiceServerUpdate` |
-| `EventInteractionCreate` | `micup.Interaction`; button clicks, see [Buttons](components.md) |
+Use `micup.EventAs[T](event)` or a `micup.NewEventMux()` for typed payloads; see [Events and typed payloads](events.md).
 
 Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpPresenceUpdate`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpRequestGuildMembers`, `OpInvalidSession`, `OpHello`, `OpHeartbeatAck`, `OpGatewayError`, `OpLazyRequest`, `OpRequestGuildCounts` and `OpRequestChannelMemberCounts`. Bots need no Lazy Request; Micup never treats bot sessions as passive.
 

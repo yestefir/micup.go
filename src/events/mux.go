@@ -36,7 +36,6 @@ type Mux struct {
 
 func NewMux() *Mux { return &Mux{byName: map[string][]gateway.Handler{}} }
 
-// On panics when the listener's type is not the payload type of name, so a mismatch fails at startup.
 func (m *Mux) On(name string, listener Listener) {
 	if listener.handle == nil {
 		panic("events: Listener must be built with Listen")

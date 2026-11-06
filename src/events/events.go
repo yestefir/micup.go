@@ -26,7 +26,6 @@ func of[T any]() payload {
 	}
 }
 
-// Decode returns the typed payload for a known event and the raw JSON for any other name.
 func Decode(event gateway.Event) (any, error) {
 	p, ok := registry[event.Name]
 	if !ok {
@@ -50,7 +49,6 @@ func As[T any](event gateway.Event) (T, error) {
 	return value, nil
 }
 
-// Parse decodes like json.Unmarshal but keeps the fields it could decode when a value has an unexpected type.
 func Parse[T any](data json.RawMessage) (T, bool) {
 	var value T
 	err := json.Unmarshal(data, &value)

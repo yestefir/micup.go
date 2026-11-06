@@ -4,6 +4,7 @@ The guides describe the supported public API and its operational limits.
 
 - [Installation and first request](quickstart.md)
 - [Gateway events, sessions and shards](gateway.md)
+- [Events and typed payloads](events.md)
 - [Messages, reactions and files](messages.md)
 - [Buttons and click handling](components.md)
 - [Guilds, members and moderation](guilds.md)

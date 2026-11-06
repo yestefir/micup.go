@@ -29,25 +29,23 @@ if err != nil {
 	return err
 }
 
-s, err := b.NewSession(micup.SessionOptions{Handler: func(ctx context.Context, event micup.Event) error {
-	if event.Name != micup.EventMessageCreate {
-		return nil
-	}
-	var message micup.MessageCreate
-	if err := event.Decode(&message); err != nil {
-		return err
-	}
+mux := micup.NewEventMux()
+mux.On(micup.EventMessageCreate, micup.Listen(func(ctx context.Context, message micup.MessageCreate) error {
 	if message.Author.Bot || message.Content != "!ping" {
 		return nil
 	}
 	_, err := b.REST.SendMessage(ctx, message.ChannelID, "pong", message.ID)
 	return err
-}})
+}))
+
+s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
 if err != nil {
 	return err
 }
 err = s.Run(ctx)
 ```
+
+Her olayın tipli bir veri yapısı vardır; liste ve olay yönlendiricisi için [Olaylar ve tipli veriler](docs/events.md).
 
 Çok sayıda sunucuda çalışan botlar `b.NewSession` yerine `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` kullanır. Yönetici tüm shard'ları tek süreçte çalıştırır, IDENTIFY isteklerini sıraya koyar ve guild'leri doğru shard'a yönlendirir. Ayrıntılar [Gateway rehberinde](docs/gateway.md#shard-manager).
 
@@ -68,16 +66,18 @@ Uygulama kodu `src/` altında, her domain kendi paketinde:
 
 ```text
 micup.go       Public cephe: micup paketi
+events.go      Public cephe: olay adları, veri tipleri, olay yönlendiricisi
 voice/         Public cephe: voice paketi
 src/
   bot/         Giriş noktası: keşif, bot kimliği, session ve shard bağlantıları
   discovery/   /.well-known keşfi ve origin doğrulaması
   rest/        Kimlik doğrulamalı REST: kanallar, mesajlar, etkileşimler, kullanıcılar
-  gateway/     Opcode'lar, kapanma kodları, olaylar, tek bağlantı döngüsü
+  gateway/     Opcode'lar, kapanma kodları, olay adları, tek bağlantı döngüsü
+  events/      Her Gateway olayının veri tipi, kayıt tablosu, tipli çözme, olay yönlendiricisi
   state/       Guild kanal ve ses durumu önbelleği
   session/     Tek shard için yeniden bağlanan oturum ve ses katılımı
   shard/       Guild→shard eşlemesi ve çoklu shard yöneticisi
-  model/       Saf Micup veri tipleri
+  model/       REST ve Gateway'in ortak domain tipleri
   voice/       LiveKit odası ve PCM→Opus yayını
   internal/    Sürüm, HTTP güvenliği, test fixture'ları, katman ve cephe kuralları
 ```
