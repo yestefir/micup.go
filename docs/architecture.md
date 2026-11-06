@@ -35,7 +35,7 @@ A package imports only packages in lower layers.
 | `shard` | Guild→shard mapping, multi-shard `Manager`, IDENTIFY pacing | `gateway`, `model`, `session` |
 | `bot` | Composition root: discovery, identity, and wiring of the packages above | all of the above |
 | `voice` | LiveKit room and PCM→Opus publishing through FFmpeg | nothing internal |
-| `internal/*` | Version string, redirect-safe HTTP client, shared test fixture, layer test | — |
+| `internal/*` | Version string, redirect-safe HTTP client, shared test fixture, layer test, payload anonymizer | — |
 
 `src/internal/layers` contains a test that parses every package's imports and fails when a package imports something outside its row. Add a row there when you add a package.
 

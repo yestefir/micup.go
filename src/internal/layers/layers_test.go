@@ -14,18 +14,19 @@ import (
 const module = "github.com/yestefir/micup.go/src/"
 
 var allowed = map[string][]string{
-	"model":            {},
-	"internal/version": {},
-	"internal/httpx":   {},
-	"discovery":        {"internal/httpx"},
-	"rest":             {"model", "internal/httpx", "internal/version"},
-	"gateway":          {"internal/version", "model"},
-	"events":           {"gateway", "model"},
-	"state":            {"events", "gateway", "model"},
-	"session":          {"events", "gateway", "model", "state"},
-	"shard":            {"gateway", "model", "session"},
-	"voice":            {},
-	"bot":              {"discovery", "gateway", "internal/httpx", "internal/version", "rest", "session", "shard"},
+	"model":              {},
+	"internal/version":   {},
+	"internal/httpx":     {},
+	"internal/anonymize": {},
+	"discovery":          {"internal/httpx"},
+	"rest":               {"model", "internal/httpx", "internal/version"},
+	"gateway":            {"internal/version", "model"},
+	"events":             {"gateway", "model"},
+	"state":              {"events", "gateway", "model"},
+	"session":            {"events", "gateway", "model", "state"},
+	"shard":              {"gateway", "model", "session"},
+	"voice":              {},
+	"bot":                {"discovery", "gateway", "internal/httpx", "internal/version", "rest", "session", "shard"},
 }
 
 func TestPackageLayers(t *testing.T) {

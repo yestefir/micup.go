@@ -116,4 +116,4 @@ Payload types live in `src/events`, one file per domain (`guild.go`, `member.go`
 
 The session cache and member inventories decode with the same types through `events.Parse`, which keeps the fields it could read when Micup sends a value of an unexpected type, so one changed field does not drop an event.
 
-To add an event: add the name to `src/gateway/names.go` and `knownEvents`, add the payload type to the right file in `src/events`, register it in `registry.go`, add an alias to the root `events.go`, add a captured payload to `src/events/testdata` (named `EVENT_NAME.N.json`, with IDs, names, tokens and locations replaced), then run `go test -run 'TestPublicAPIIsStable|TestEventDocsAreCurrent' -update-api -update-docs .`.
+To add an event: add the name to `src/gateway/names.go` and `knownEvents`, add the payload type to the right file in `src/events`, register it in `registry.go`, add an alias to the root `events.go`, add a captured payload to `src/events/testdata` (see [Captured Micup payloads](contributing.md#captured-micup-payloads)), then run `go test -run 'TestPublicAPIIsStable|TestEventDocsAreCurrent' -update-api -update-docs .`.
