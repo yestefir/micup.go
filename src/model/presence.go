@@ -39,7 +39,8 @@ type CustomStatus struct {
 	// EmojiID is a custom emoji; Micup ignores EmojiName when it is set.
 	EmojiID string `json:"emoji_id,omitempty"`
 	// EmojiName is a single Unicode emoji.
-	EmojiName string `json:"emoji_name,omitempty"`
+	EmojiName     string `json:"emoji_name,omitempty"`
+	EmojiAnimated bool   `json:"emoji_animated,omitempty"`
 }
 
 // Until returns a copy of the custom status that Micup clears at t.

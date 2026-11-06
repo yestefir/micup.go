@@ -1,0 +1,47 @@
+{
+  "bot": {
+    "authenticator_types": [
+      0,
+      2
+    ],
+    "avatar": null,
+    "banner": null,
+    "bio": null,
+    "bio_localizations": null,
+    "discriminator": "2914",
+    "flags": 0,
+    "id": "100000000000000003",
+    "mfa_enabled": true,
+    "username": "payload"
+  },
+  "bot_public": true,
+  "bot_require_code_grant": false,
+  "description": null,
+  "flags": 565248,
+  "icon": null,
+  "id": "100000000000000003",
+  "name": "payload",
+  "owner": {
+    "avatar": "hash",
+    "avatar_color": 4671303,
+    "avatar_decoration_data": null,
+    "avatar_ultra_data": null,
+    "discriminator": "0000",
+    "flags": 1207959552,
+    "global_name": "user1",
+    "id": "100000000000000005",
+    "identity_version": "2",
+    "name_style": {
+      "colors": [
+        14013909,
+        14604761
+      ],
+      "font_id": 1
+    },
+    "nameplate_data": null,
+    "tag_guild_id": "100000000000000006",
+    "username": "user2"
+  },
+  "redirect_uris": [],
+  "verify_key": "0000000000000000000000000000000000000000000000000000000000000000"
+}

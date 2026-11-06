@@ -38,12 +38,12 @@ func platform(t *testing.T, user, application string) string {
 }
 
 func TestNewDiscoversBotAndReadsIntent(t *testing.T) {
-	origin := platform(t, `{"id":"bot-id","bot":true}`, `{"flags":262144}`)
+	origin := platform(t, `{"id":"bot-id","bot":true}`, `{"id":"app-id","flags":262144}`)
 	b, err := bot.New(context.Background(), bot.Config{Token: "fixture", Origin: origin})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if b.ID != "bot-id" || b.MessageContentEnabled == nil || !*b.MessageContentEnabled {
+	if b.ID != "bot-id" || b.ApplicationID != "app-id" || b.MessageContentEnabled == nil || !*b.MessageContentEnabled {
 		t.Fatal("bot identity or intent was not read")
 	}
 	if b.Endpoints().API != origin+"/api" || b.SessionConfig().BotID != "bot-id" {
@@ -53,7 +53,7 @@ func TestNewDiscoversBotAndReadsIntent(t *testing.T) {
 
 func TestNewToleratesMissingApplication(t *testing.T) {
 	b, err := bot.New(context.Background(), bot.Config{Token: "fixture", Origin: platform(t, `{"id":"bot-id","bot":true}`, "")})
-	if err != nil || b.MessageContentEnabled != nil {
+	if err != nil || b.MessageContentEnabled != nil || b.ApplicationID != "bot-id" {
 		t.Fatalf("missing application was not tolerated: %v", err)
 	}
 }

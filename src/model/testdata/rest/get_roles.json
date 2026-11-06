@@ -1,0 +1,62 @@
+[
+  {
+    "color": 0,
+    "color_secondary": null,
+    "colors": {
+      "primary_color": 0,
+      "secondary_color": null,
+      "tertiary_color": null
+    },
+    "hoist": false,
+    "hoist_position": null,
+    "icon_emoji_id": null,
+    "id": "100000000000000013",
+    "managed": false,
+    "managed_kind": null,
+    "mentionable": false,
+    "name": "payload",
+    "permissions": "8",
+    "position": 2,
+    "unicode_emoji": null
+  },
+  {
+    "color": 3368703,
+    "color_secondary": null,
+    "colors": {
+      "primary_color": 3368703,
+      "secondary_color": null,
+      "tertiary_color": null
+    },
+    "hoist": false,
+    "hoist_position": null,
+    "icon_emoji_id": null,
+    "id": "100000000000000004",
+    "managed": false,
+    "managed_kind": null,
+    "mentionable": false,
+    "name": "capture-role-2",
+    "permissions": "18014914009747009",
+    "position": 1,
+    "unicode_emoji": null
+  },
+  {
+    "color": 0,
+    "color_secondary": null,
+    "colors": {
+      "primary_color": 0,
+      "secondary_color": null,
+      "tertiary_color": null
+    },
+    "hoist": false,
+    "hoist_position": null,
+    "icon_emoji_id": null,
+    "id": "100000000000000001",
+    "managed": false,
+    "managed_kind": null,
+    "mentionable": false,
+    "name": "@everyone",
+    "permissions": "18014914009747009",
+    "position": 0,
+    "unicode_emoji": null
+  }
+]

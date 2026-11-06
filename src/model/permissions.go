@@ -94,13 +94,24 @@ type PermissionOverwrite struct {
 }
 
 type Role struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name"`
-	Color       int         `json:"color"`
-	Position    int         `json:"position"`
-	Permissions Permissions `json:"permissions"`
-	Hoist       bool        `json:"hoist"`
-	Mentionable bool        `json:"mentionable"`
+	ID            string      `json:"id"`
+	Name          string      `json:"name"`
+	Color         int         `json:"color"`
+	Colors        *RoleColors `json:"colors,omitempty"`
+	Position      int         `json:"position"`
+	HoistPosition *int        `json:"hoist_position,omitempty"`
+	Permissions   Permissions `json:"permissions"`
+	Hoist         bool        `json:"hoist"`
+	Mentionable   bool        `json:"mentionable"`
+	Managed       bool        `json:"managed"`
+	UnicodeEmoji  *string     `json:"unicode_emoji,omitempty"`
+	IconEmojiID   *string     `json:"icon_emoji_id,omitempty"`
+}
+
+type RoleColors struct {
+	PrimaryColor   int  `json:"primary_color"`
+	SecondaryColor *int `json:"secondary_color"`
+	TertiaryColor  *int `json:"tertiary_color"`
 }
 
 func ComputePermissions(guildID, ownerID, userID string, roles map[string]Role, memberRoles []string, overwrites []PermissionOverwrite) Permissions {

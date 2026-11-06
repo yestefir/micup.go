@@ -30,6 +30,7 @@ type Channel struct {
 	NSFW                 bool                  `json:"nsfw,omitempty"`
 	RateLimitPerUser     int                   `json:"rate_limit_per_user,omitempty"`
 	LastMessageID        string                `json:"last_message_id,omitempty"`
+	LastPinTimestamp     *string               `json:"last_pin_timestamp,omitempty"`
 	PermissionOverwrites []PermissionOverwrite `json:"permission_overwrites,omitempty"`
 	Recipients           []User                `json:"recipients,omitempty"`
 }

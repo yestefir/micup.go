@@ -3,10 +3,14 @@ package model
 type Member struct {
 	User                       *User    `json:"user,omitempty"`
 	Nick                       *string  `json:"nick,omitempty"`
+	Avatar                     *string  `json:"avatar,omitempty"`
+	Banner                     *string  `json:"banner,omitempty"`
+	AccentColor                *int     `json:"accent_color,omitempty"`
 	Roles                      []string `json:"roles"`
 	JoinedAt                   string   `json:"joined_at,omitempty"`
 	Mute                       bool     `json:"mute,omitempty"`
 	Deaf                       bool     `json:"deaf,omitempty"`
+	Flags                      int      `json:"flags,omitempty"`
 	CommunicationDisabledUntil *string  `json:"communication_disabled_until,omitempty"`
 }
 

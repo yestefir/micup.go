@@ -11,6 +11,8 @@ import (
 const messageContentIntent = (1 << 18) | (1 << 19)
 
 type Application struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
 	Flags *uint64 `json:"flags"`
 }
 

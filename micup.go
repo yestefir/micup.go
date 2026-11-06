@@ -303,6 +303,8 @@ const (
 type (
 	User               = model.User
 	Guild              = model.Guild
+	Invite             = model.Invite
+	RoleColors         = model.RoleColors
 	Channel            = model.Channel
 	Message            = model.Message
 	MessageCreate      = model.MessageCreate

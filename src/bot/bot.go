@@ -27,6 +27,7 @@ type Config struct {
 type Bot struct {
 	REST                  *rest.Client
 	ID                    string
+	ApplicationID         string
 	MessageContentEnabled *bool
 	endpoints             discovery.Endpoints
 	config                Config
@@ -71,8 +72,12 @@ func (b *Bot) identify(ctx context.Context) error {
 		return errors.New("credential must belong to a Micup bot")
 	}
 	b.ID = user.ID
+	b.ApplicationID = user.ID
 	if app, err := b.REST.CurrentApplication(ctx); err == nil {
 		b.MessageContentEnabled = app.MessageContentEnabled()
+		if app.ID != "" {
+			b.ApplicationID = app.ID
+		}
 	}
 	return nil
 }

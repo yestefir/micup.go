@@ -221,6 +221,7 @@ micup.type.GuildMember
 micup.type.GuildMemberRemove
 micup.type.GuildMembers
 micup.type.Interaction
+micup.type.Invite
 micup.type.Member
 micup.type.MemberEdit
 micup.type.MemberLookup
@@ -249,6 +250,7 @@ micup.type.ReactionEvent
 micup.type.RequestOption
 micup.type.Resume
 micup.type.Role
+micup.type.RoleColors
 micup.type.RoleDelete
 micup.type.RoleEvent
 micup.type.Session
