@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -47,6 +48,14 @@ func As[T any](event gateway.Event) (T, error) {
 		return value, fmt.Errorf("decode %s: %w", event.Name, err)
 	}
 	return value, nil
+}
+
+// Parse decodes like json.Unmarshal but keeps the fields it could decode when a value has an unexpected type.
+func Parse[T any](data json.RawMessage) (T, bool) {
+	var value T
+	err := json.Unmarshal(data, &value)
+	var typeErr *json.UnmarshalTypeError
+	return value, err == nil || errors.As(err, &typeErr)
 }
 
 func PayloadType(name string) (reflect.Type, bool) {

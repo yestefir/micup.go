@@ -239,3 +239,13 @@ func TestAsRejectsWrongType(t *testing.T) {
 		t.Fatal("malformed payload accepted")
 	}
 }
+
+func TestParseKeepsFieldsAroundTypeMismatch(t *testing.T) {
+	guild, ok := Parse[GuildCreate](json.RawMessage(`{"id":"g","member_count":"many","properties":{"owner_id":"o"}}`))
+	if !ok || guild.ID != "g" || guild.OwnerID != "o" {
+		t.Fatalf("type mismatch dropped the payload: %v %+v", ok, guild.Guild)
+	}
+	if _, ok := Parse[GuildCreate](json.RawMessage(`{"id":`)); ok {
+		t.Fatal("malformed JSON accepted")
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/yestefir/micup.go/src/events"
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/model"
 )
@@ -49,78 +50,53 @@ func (s *memberInventory) observe(name string, data json.RawMessage) {
 	if s.guilds == nil {
 		s.guilds = map[string]*inventoryGuild{}
 	}
-	if name == gateway.EventReady {
-		s.guilds = map[string]*inventoryGuild{}
-		var r struct {
-			Guilds []json.RawMessage `json:"guilds"`
-		}
-		if json.Unmarshal(data, &r) == nil {
-			for _, raw := range r.Guilds {
-				s.guild(raw)
-			}
-		}
-		return
-	}
-	if name == gateway.EventGuildCreate || name == gateway.EventGuildSync {
-		s.guild(data)
-		return
-	}
-	var e struct {
-		ID          string        `json:"id"`
-		GuildID     string        `json:"guild_id"`
-		Unavailable bool          `json:"unavailable"`
-		User        *model.User   `json:"user"`
-		Member      *model.Member `json:"member"`
-	}
-	if json.Unmarshal(data, &e) != nil {
-		return
-	}
-	if name == gateway.EventGuildDelete {
-		id := e.ID
-		if id == "" {
-			id = e.GuildID
-		}
-		if e.Unavailable {
-			if g := s.guilds[id]; g != nil {
-				g.available = false
-			}
-		} else {
-			delete(s.guilds, id)
-		}
-		return
-	}
-	g := s.guilds[e.GuildID]
-	if g == nil {
-		return
-	}
 	switch name {
+	case gateway.EventReady:
+		s.guilds = map[string]*inventoryGuild{}
+		ready, _ := events.Parse[events.Ready](data)
+		for _, g := range ready.Guilds {
+			s.guild(g)
+		}
+	case gateway.EventGuildCreate, gateway.EventGuildSync:
+		if g, ok := events.Parse[events.GuildCreate](data); ok {
+			s.guild(g)
+		}
+	case gateway.EventGuildDelete:
+		e, ok := events.Parse[events.GuildDelete](data)
+		if !ok {
+			return
+		}
+		if !e.Unavailable {
+			delete(s.guilds, e.ID)
+		} else if g := s.guilds[e.ID]; g != nil {
+			g.available = false
+		}
 	case gateway.EventGuildMemberAdd, gateway.EventGuildMemberUpdate:
-		if e.User != nil {
-			bot := e.User.Bot
-			s.member(g, e.User.ID, &bot)
+		if e, ok := events.Parse[events.GuildMember](data); ok && e.User != nil {
+			s.observeMember(e.GuildID, e.User)
 		}
 	case gateway.EventGuildMemberRemove:
-		if e.User != nil {
-			s.member(g, e.User.ID, nil)
+		if e, ok := events.Parse[events.GuildMemberRemove](data); ok {
+			if g := s.guilds[e.GuildID]; g != nil {
+				s.member(g, e.User.ID, nil)
+			}
 		}
 	case gateway.EventVoiceStateUpdate:
-		if e.Member != nil && e.Member.User != nil {
-			bot := e.Member.User.Bot
-			s.member(g, e.Member.User.ID, &bot)
+		if e, ok := events.Parse[model.VoiceState](data); ok && e.Member != nil && e.Member.User != nil {
+			s.observeMember(e.GuildID, e.Member.User)
 		}
 	}
 }
 
-func (s *memberInventory) guild(data json.RawMessage) {
-	var e struct {
-		ID          string         `json:"id"`
-		Unavailable bool           `json:"unavailable"`
-		Members     []model.Member `json:"members"`
-		VoiceStates []struct {
-			Member *model.Member `json:"member"`
-		} `json:"voice_states"`
+func (s *memberInventory) observeMember(guildID string, user *model.User) {
+	if g := s.guilds[guildID]; g != nil {
+		bot := user.Bot
+		s.member(g, user.ID, &bot)
 	}
-	if json.Unmarshal(data, &e) != nil || e.ID == "" {
+}
+
+func (s *memberInventory) guild(e events.GuildCreate) {
+	if e.ID == "" {
 		return
 	}
 	if e.Unavailable {

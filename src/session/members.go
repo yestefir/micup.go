@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/yestefir/micup.go/src/events"
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/model"
 )
@@ -84,28 +85,16 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 }
 
 func (s *Session) handleMembersChunk(event gateway.Event) {
-	var chunk struct {
-		Members    []model.Member `json:"members"`
-		ChunkIndex int            `json:"chunk_index"`
-		ChunkCount int            `json:"chunk_count"`
-		Nonce      string         `json:"nonce"`
-	}
-	if event.Decode(&chunk) != nil || chunk.Nonce == "" {
+	chunk, ok := events.Parse[events.MembersChunk](event.Data)
+	if !ok || chunk.Nonce == "" {
 		return
 	}
 	s.deliverChunk(chunk.Nonce, memberChunk{members: chunk.Members, last: chunk.ChunkIndex >= chunk.ChunkCount-1})
 }
 
 func (s *Session) handleRateLimited(event gateway.Event) {
-	var limited struct {
-		Opcode     int     `json:"opcode"`
-		RetryAfter float64 `json:"retry_after"`
-		Meta       struct {
-			GuildID string `json:"guild_id"`
-			Nonce   string `json:"nonce"`
-		} `json:"meta"`
-	}
-	if event.Decode(&limited) != nil || limited.Opcode != gateway.OpRequestGuildMembers || limited.Meta.Nonce == "" {
+	limited, ok := events.Parse[events.RateLimited](event.Data)
+	if !ok || limited.Opcode != gateway.OpRequestGuildMembers || limited.Meta.Nonce == "" {
 		return
 	}
 	s.deliverChunk(limited.Meta.Nonce, memberChunk{err: &MembersRateLimitedError{GuildID: limited.Meta.GuildID, RetryAfter: time.Duration(limited.RetryAfter * float64(time.Second))}})

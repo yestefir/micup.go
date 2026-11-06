@@ -20,11 +20,9 @@ type GuildCreate struct {
 
 func (g *GuildCreate) UnmarshalJSON(data []byte) error {
 	type plain GuildCreate
-	if err := json.Unmarshal(data, (*plain)(g)); err != nil {
-		return err
-	}
+	err := json.Unmarshal(data, (*plain)(g))
 	g.Guild = withProperties(g.Guild, g.Properties)
-	return nil
+	return err
 }
 
 type GuildUpdate struct {
@@ -35,14 +33,12 @@ type GuildUpdate struct {
 
 func (g *GuildUpdate) UnmarshalJSON(data []byte) error {
 	type plain GuildUpdate
-	if err := json.Unmarshal(data, (*plain)(g)); err != nil {
-		return err
-	}
+	err := json.Unmarshal(data, (*plain)(g))
 	if g.ID == "" {
 		g.ID = g.GuildID
 	}
 	g.Guild = withProperties(g.Guild, g.Properties)
-	return nil
+	return err
 }
 
 type GuildDelete struct {

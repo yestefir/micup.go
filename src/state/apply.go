@@ -8,24 +8,6 @@ import (
 	"github.com/yestefir/micup.go/src/model"
 )
 
-type guildPayload struct {
-	ID          string `json:"id"`
-	Unavailable bool   `json:"unavailable"`
-	Properties  struct {
-		OwnerID string `json:"owner_id"`
-	} `json:"properties"`
-	OwnerID     string              `json:"owner_id"`
-	Roles       []model.Role        `json:"roles"`
-	Channels    []model.Channel     `json:"channels"`
-	Members     []model.Member      `json:"members"`
-	VoiceStates []voiceStatePayload `json:"voice_states"`
-}
-
-type voiceStatePayload struct {
-	model.VoiceState
-	Member *model.Member `json:"member"`
-}
-
 func (c *Cache) Apply(name string, data json.RawMessage) *VoiceMove {
 	switch name {
 	case gateway.EventReady:
@@ -61,22 +43,24 @@ func (c *Cache) Apply(name string, data json.RawMessage) *VoiceMove {
 }
 
 func (c *Cache) applyReady(data json.RawMessage) {
-	var ready struct {
-		Guilds []json.RawMessage `json:"guilds"`
-	}
-	_ = json.Unmarshal(data, &ready)
+	ready, _ := events.Parse[events.Ready](data)
 	c.mu.Lock()
 	c.guilds = map[string]*guild{}
 	c.channels = map[string]model.Channel{}
 	c.mu.Unlock()
 	for _, g := range ready.Guilds {
-		c.applyGuild(g)
+		c.applyGuildCreate(g)
 	}
 }
 
 func (c *Cache) applyGuild(data json.RawMessage) {
-	var payload guildPayload
-	if json.Unmarshal(data, &payload) != nil || payload.ID == "" {
+	if payload, ok := events.Parse[events.GuildCreate](data); ok {
+		c.applyGuildCreate(payload)
+	}
+}
+
+func (c *Cache) applyGuildCreate(payload events.GuildCreate) {
+	if payload.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -96,10 +80,7 @@ func (c *Cache) applyGuild(data json.RawMessage) {
 	if previous != nil {
 		g.members = previous.members
 	}
-	g.ownerID = payload.Properties.OwnerID
-	if g.ownerID == "" {
-		g.ownerID = payload.OwnerID
-	}
+	g.ownerID = payload.OwnerID
 	for _, role := range payload.Roles {
 		g.roles[role.ID] = role
 	}
@@ -131,31 +112,20 @@ func (c *Cache) applyGuild(data json.RawMessage) {
 }
 
 func (c *Cache) applyGuildUpdate(data json.RawMessage) {
-	var payload struct {
-		ID      string `json:"id"`
-		GuildID string `json:"guild_id"`
-		OwnerID string `json:"owner_id"`
-	}
-	if json.Unmarshal(data, &payload) != nil {
+	payload, ok := events.Parse[events.GuildUpdate](data)
+	if !ok {
 		return
-	}
-	id := payload.GuildID
-	if id == "" {
-		id = payload.ID
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if g := c.guilds[id]; g != nil && payload.OwnerID != "" {
+	if g := c.guilds[payload.ID]; g != nil && payload.OwnerID != "" {
 		g.ownerID = payload.OwnerID
 	}
 }
 
 func (c *Cache) applyGuildDelete(data json.RawMessage) {
-	var payload struct {
-		ID          string `json:"id"`
-		Unavailable bool   `json:"unavailable"`
-	}
-	if json.Unmarshal(data, &payload) != nil || payload.ID == "" {
+	payload, ok := events.Parse[events.GuildDelete](data)
+	if !ok || payload.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -184,11 +154,8 @@ func (c *Cache) guildLocked(id string) *guild {
 }
 
 func (c *Cache) applyRole(data json.RawMessage) {
-	var payload struct {
-		GuildID string     `json:"guild_id"`
-		Role    model.Role `json:"role"`
-	}
-	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" || payload.Role.ID == "" {
+	payload, ok := events.Parse[events.RoleEvent](data)
+	if !ok || payload.GuildID == "" || payload.Role.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -197,11 +164,8 @@ func (c *Cache) applyRole(data json.RawMessage) {
 }
 
 func (c *Cache) applyRoles(data json.RawMessage) {
-	var payload struct {
-		GuildID string       `json:"guild_id"`
-		Roles   []model.Role `json:"roles"`
-	}
-	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" {
+	payload, ok := events.Parse[events.RoleUpdateBulk](data)
+	if !ok || payload.GuildID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -215,11 +179,8 @@ func (c *Cache) applyRoles(data json.RawMessage) {
 }
 
 func (c *Cache) applyRoleDelete(data json.RawMessage) {
-	var payload struct {
-		GuildID string `json:"guild_id"`
-		RoleID  string `json:"role_id"`
-	}
-	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" {
+	payload, ok := events.Parse[events.RoleDelete](data)
+	if !ok || payload.GuildID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -230,8 +191,8 @@ func (c *Cache) applyRoleDelete(data json.RawMessage) {
 }
 
 func (c *Cache) applyMember(data json.RawMessage) {
-	var payload events.GuildMember
-	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" || payload.User == nil || payload.User.ID == "" {
+	payload, ok := events.Parse[events.GuildMember](data)
+	if !ok || payload.GuildID == "" || payload.User == nil || payload.User.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -240,13 +201,8 @@ func (c *Cache) applyMember(data json.RawMessage) {
 }
 
 func (c *Cache) applyMemberRemove(data json.RawMessage) {
-	var payload struct {
-		GuildID string `json:"guild_id"`
-		User    struct {
-			ID string `json:"id"`
-		} `json:"user"`
-	}
-	if json.Unmarshal(data, &payload) != nil || payload.GuildID == "" {
+	payload, ok := events.Parse[events.GuildMemberRemove](data)
+	if !ok || payload.GuildID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -258,8 +214,8 @@ func (c *Cache) applyMemberRemove(data json.RawMessage) {
 }
 
 func (c *Cache) applyChannel(name string, data json.RawMessage) {
-	var channel model.Channel
-	if json.Unmarshal(data, &channel) != nil || channel.ID == "" {
+	channel, ok := events.Parse[model.Channel](data)
+	if !ok || channel.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -272,11 +228,8 @@ func (c *Cache) applyChannel(name string, data json.RawMessage) {
 }
 
 func (c *Cache) applyChannels(data json.RawMessage) {
-	var payload struct {
-		GuildID  string          `json:"guild_id"`
-		Channels []model.Channel `json:"channels"`
-	}
-	if json.Unmarshal(data, &payload) != nil {
+	payload, ok := events.Parse[events.ChannelUpdateBulk](data)
+	if !ok {
 		return
 	}
 	c.mu.Lock()
@@ -293,14 +246,8 @@ func (c *Cache) applyChannels(data json.RawMessage) {
 }
 
 func (c *Cache) applyMessage(data json.RawMessage) {
-	var message struct {
-		GuildID string `json:"guild_id"`
-		Author  struct {
-			ID string `json:"id"`
-		} `json:"author"`
-		Member *model.Member `json:"member"`
-	}
-	if json.Unmarshal(data, &message) != nil || message.GuildID == "" || message.Member == nil || message.Author.ID == "" {
+	message, ok := events.Parse[events.MessageCreate](data)
+	if !ok || message.GuildID == "" || message.Member == nil || message.Author.ID == "" {
 		return
 	}
 	c.mu.Lock()
@@ -311,8 +258,8 @@ func (c *Cache) applyMessage(data json.RawMessage) {
 }
 
 func (c *Cache) applyVoiceState(data json.RawMessage) *VoiceMove {
-	var voice voiceStatePayload
-	if json.Unmarshal(data, &voice) != nil || voice.GuildID == "" || voice.UserID == "" {
+	voice, ok := events.Parse[model.VoiceState](data)
+	if !ok || voice.GuildID == "" || voice.UserID == "" {
 		return nil
 	}
 	c.mu.Lock()
@@ -334,11 +281,8 @@ func (c *Cache) applyVoiceState(data json.RawMessage) *VoiceMove {
 }
 
 func (c *Cache) applyMembersChunk(data json.RawMessage) {
-	var chunk struct {
-		GuildID string         `json:"guild_id"`
-		Members []model.Member `json:"members"`
-	}
-	if json.Unmarshal(data, &chunk) != nil || chunk.GuildID == "" {
+	chunk, ok := events.Parse[events.MembersChunk](data)
+	if !ok || chunk.GuildID == "" {
 		return
 	}
 	c.mu.Lock()
