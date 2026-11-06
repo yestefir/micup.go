@@ -1,0 +1,129 @@
+{
+  "app_permissions": "100000000000000025",
+  "application_id": "100000000000000011",
+  "attachment_size_limit": 52428800,
+  "authorizing_integration_owners": {
+    "0": "100000000000000001"
+  },
+  "channel": {
+    "content_warning_level": 0,
+    "content_warning_text": null,
+    "guild_id": "100000000000000001",
+    "icon_color": null,
+    "icon_key": null,
+    "id": "100000000000000004",
+    "last_message_id": "100000000000000026",
+    "last_pin_timestamp": "2026-11-06T14:17:44.335Z",
+    "name": "genel",
+    "nsfw": false,
+    "nsfw_override": null,
+    "parent_id": "100000000000000005",
+    "permissions": "18446744073709551615",
+    "position": 3,
+    "rate_limit_per_user": 0,
+    "topic": null,
+    "type": 0
+  },
+  "channel_id": "100000000000000004",
+  "context": 0,
+  "data": {
+    "component_type": 2,
+    "custom_id": "capture:click"
+  },
+  "entitlements": [],
+  "guild": {
+    "features": [
+      "BANNER",
+      "INVITE_SPLASH"
+    ],
+    "id": "100000000000000001",
+    "locale": "en-US"
+  },
+  "guild_id": "100000000000000001",
+  "guild_locale": "en-US",
+  "id": "100000000000000027",
+  "locale": "tr",
+  "member": {
+    "accent_color": null,
+    "avatar": null,
+    "banner": null,
+    "communication_disabled_until": null,
+    "deaf": false,
+    "flags": 0,
+    "joined_at": "2026-11-06T14:11:53.893Z",
+    "mute": false,
+    "nick": null,
+    "permissions": "18446744073709551615",
+    "roles": [],
+    "user": {
+      "avatar": "hash",
+      "avatar_color": 4671303,
+      "avatar_decoration_data": null,
+      "avatar_ultra_data": null,
+      "discriminator": "0000",
+      "flags": 1207959552,
+      "global_name": "user1",
+      "id": "100000000000000019",
+      "identity_version": "2",
+      "name_style": {
+        "colors": [
+          14013909,
+          14604761
+        ],
+        "font_id": 1
+      },
+      "nameplate_data": null,
+      "tag_guild_id": "100000000000000020",
+      "username": "user2"
+    }
+  },
+  "message": {
+    "attachments": [],
+    "author": {
+      "avatar": null,
+      "avatar_color": null,
+      "avatar_decoration_data": null,
+      "avatar_ultra_data": null,
+      "bot": true,
+      "discriminator": "2914",
+      "flags": 0,
+      "global_name": null,
+      "id": "100000000000000011",
+      "name_style": null,
+      "nameplate_data": null,
+      "tag_guild_id": null,
+      "username": "payload"
+    },
+    "channel_id": "100000000000000004",
+    "components": [
+      {
+        "components": [
+          {
+            "custom_id": "capture:click",
+            "disabled": false,
+            "label": "Tıkla",
+            "style": 1,
+            "type": 2
+          }
+        ],
+        "type": 1
+      }
+    ],
+    "content": "Bu butona tıkla (event capture)",
+    "edited_timestamp": null,
+    "embeds": [],
+    "flags": 0,
+    "id": "100000000000000026",
+    "mention_everyone": false,
+    "mention_roles": [],
+    "mentions": [],
+    "pinned": false,
+    "stickers": [],
+    "timestamp": "2026-11-06T14:18:14.233Z",
+    "tts": false,
+    "type": 0
+  },
+  "token": "redacted",
+  "type": 3,
+  "version": 1
+}

@@ -53,7 +53,8 @@ var registry = map[string]payload{
 	gateway.EventInviteDelete:   of[InviteDelete](),
 	gateway.EventWebhooksUpdate: of[WebhooksUpdate](),
 
-	gateway.EventInteractionCreate: of[model.Interaction](),
+	gateway.EventInteractionCreate:         of[model.Interaction](),
+	gateway.EventApplicationCommandsUpdate: of[ApplicationCommandsUpdate](),
 
 	gateway.EventVoiceStateUpdate:  of[model.VoiceState](),
 	gateway.EventVoiceServerUpdate: of[model.VoiceServerUpdate](),

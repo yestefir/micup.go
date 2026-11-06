@@ -66,7 +66,8 @@ const (
 )
 
 const (
-	EventInteractionCreate = "INTERACTION_CREATE"
+	EventInteractionCreate         = "INTERACTION_CREATE"
+	EventApplicationCommandsUpdate = "APPLICATION_COMMANDS_UPDATE"
 )
 
 const (
@@ -85,7 +86,7 @@ var knownEvents = []string{
 	EventReactionAdd, EventReactionRemove, EventReactionRemoveAll, EventReactionRemoveEmoji,
 	EventUserUpdate, EventPresenceUpdate, EventTypingStart,
 	EventInviteCreate, EventInviteDelete, EventWebhooksUpdate,
-	EventInteractionCreate,
+	EventInteractionCreate, EventApplicationCommandsUpdate,
 	EventVoiceStateUpdate, EventVoiceServerUpdate,
 }
 

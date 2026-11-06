@@ -23,7 +23,6 @@ var uncaptured = map[string]bool{
 	gateway.EventGuildBanRemove:    true,
 	gateway.EventUserUpdate:        true,
 	gateway.EventPresenceUpdate:    true,
-	gateway.EventInteractionCreate: true,
 }
 
 func fixtures(t *testing.T) map[string][]string {
@@ -194,6 +193,40 @@ func TestCapturedPayloadFields(t *testing.T) {
 	sessions := decodeFirst[SessionsReplace](t, gateway.EventSessionsReplace)
 	if len(sessions) == 0 || sessions[0].Status == "" {
 		t.Errorf("sessions: %+v", sessions)
+	}
+
+	commands := decodeFirst[ApplicationCommandsUpdate](t, gateway.EventApplicationCommandsUpdate)
+	if commands.ApplicationID == "" || commands.Version == "" {
+		t.Errorf("commands update: %+v", commands)
+	}
+
+	click := decodeFirst[model.Interaction](t, gateway.EventInteractionCreate)
+	if !click.IsButton() || click.CustomID() == "" || click.Message == nil || click.Channel == nil || click.Guild == nil || click.Invoker() == nil || click.Member.Permissions == nil {
+		t.Errorf("button interaction: %+v", click)
+	}
+	command, err := As[model.Interaction](load(t, filepath.Join("testdata", gateway.EventInteractionCreate+".2.json")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, ok := command.CommandData()
+	if !ok || !command.IsCommand() || command.Context == nil || command.AttachmentSizeLimit == 0 {
+		t.Fatalf("command interaction: %+v", command)
+	}
+	if role, ok := data.Role("role"); !ok || role.Name == "" || strings.Join(data.Path(), " ") != "admin role add" {
+		t.Errorf("command data: %+v", data)
+	}
+	command, _ = As[model.Interaction](load(t, filepath.Join("testdata", gateway.EventInteractionCreate+".3.json")))
+	data, _ = command.CommandData()
+	if channel, ok := data.Channel("where"); !ok || channel.Permissions == nil {
+		t.Errorf("channel option: %+v", data)
+	}
+	command, _ = As[model.Interaction](load(t, filepath.Join("testdata", gateway.EventInteractionCreate+".4.json")))
+	data, _ = command.CommandData()
+	if text, _ := data.String("text"); text == "" {
+		t.Errorf("string option: %+v", data)
+	}
+	if times, ok := data.Int("times"); !ok || times != 1 {
+		t.Errorf("integer option: %+v", data)
 	}
 
 	voice := decodeFirst[model.VoiceState](t, gateway.EventVoiceStateUpdate)

@@ -108,6 +108,27 @@ func TestRESTFixturesDecode(t *testing.T) {
 		t.Errorf("application ID is not the bot user ID: %+v", app)
 	}
 
+	var command ApplicationCommand
+	decodeFixture(t, "create_guild_command", &command)
+	if command.ID == "" || command.Version == "" || len(command.Options) != 4 || command.Options[1].MaxValue == nil || len(command.Options[1].Choices) != 2 || !command.Options[3].Autocomplete {
+		t.Errorf("guild command: %+v", command)
+	}
+	var global ApplicationCommand
+	decodeFixture(t, "create_global_command", &global)
+	if global.ID == "" || global.GuildID != "" || global.DMPermission == nil {
+		t.Errorf("global command: %+v", global)
+	}
+	var commands []ApplicationCommand
+	decodeFixture(t, "bulk_guild_commands", &commands)
+	if len(commands) != 4 || commands[1].DefaultMemberPermissions == nil || !commands[1].DefaultMemberPermissions.Has(PermissionAdministrator) || commands[1].NameLocalizations["tr"] == "" || commands[2].Type != CommandTypeUser || commands[3].Type != CommandTypeMessage {
+		t.Errorf("bulk commands: %+v", commands)
+	}
+	for _, c := range commands {
+		if err := c.Validate(); err != nil {
+			t.Errorf("Micup accepted %s but Validate refuses it: %v", c.Name, err)
+		}
+	}
+
 	var user User
 	decodeFixture(t, "get_user_me", &user)
 	if user.ID == "" || !user.Bot || user.Discriminator == "" {

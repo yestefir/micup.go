@@ -98,7 +98,8 @@ The table is generated from the registry. Captured means the payload type is tes
 | `INVITE_CREATE` | `micup.EventInviteCreate` | `micup.Invite` | yes |
 | `INVITE_DELETE` | `micup.EventInviteDelete` | `micup.InviteDelete` | yes |
 | `WEBHOOKS_UPDATE` | `micup.EventWebhooksUpdate` | `micup.WebhooksUpdate` | yes |
-| `INTERACTION_CREATE` | `micup.EventInteractionCreate` | `micup.Interaction` | no |
+| `INTERACTION_CREATE` | `micup.EventInteractionCreate` | `micup.Interaction` | yes |
+| `APPLICATION_COMMANDS_UPDATE` | `micup.EventApplicationCommandsUpdate` | `micup.ApplicationCommandsUpdate` | yes |
 | `VOICE_STATE_UPDATE` | `micup.EventVoiceStateUpdate` | `micup.VoiceState` | yes |
 | `VOICE_SERVER_UPDATE` | `micup.EventVoiceServerUpdate` | `micup.VoiceServerUpdate` | yes |
 <!-- events:end -->

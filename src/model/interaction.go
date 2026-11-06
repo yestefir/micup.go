@@ -10,21 +10,38 @@ const (
 	InteractionTypeModalSubmit        = 5
 )
 
+const (
+	InteractionContextGuild          = 0
+	InteractionContextBotDM          = 1
+	InteractionContextPrivateChannel = 2
+)
+
 type Interaction struct {
-	ID             string          `json:"id"`
-	ApplicationID  string          `json:"application_id"`
-	Type           int             `json:"type"`
-	Data           json.RawMessage `json:"data,omitempty"`
-	GuildID        string          `json:"guild_id,omitempty"`
-	ChannelID      string          `json:"channel_id,omitempty"`
-	Token          string          `json:"token"`
-	Version        int             `json:"version,omitempty"`
-	Member         *Member         `json:"member,omitempty"`
-	User           *User           `json:"user,omitempty"`
-	Message        *Message        `json:"message,omitempty"`
-	AppPermissions *Permissions    `json:"app_permissions,omitempty"`
-	Locale         string          `json:"locale,omitempty"`
-	GuildLocale    string          `json:"guild_locale,omitempty"`
+	ID                           string            `json:"id"`
+	ApplicationID                string            `json:"application_id"`
+	Type                         int               `json:"type"`
+	Data                         json.RawMessage   `json:"data,omitempty"`
+	GuildID                      string            `json:"guild_id,omitempty"`
+	ChannelID                    string            `json:"channel_id,omitempty"`
+	Token                        string            `json:"token"`
+	Version                      int               `json:"version,omitempty"`
+	Member                       *Member           `json:"member,omitempty"`
+	User                         *User             `json:"user,omitempty"`
+	Message                      *Message          `json:"message,omitempty"`
+	AppPermissions               *Permissions      `json:"app_permissions,omitempty"`
+	Locale                       string            `json:"locale,omitempty"`
+	GuildLocale                  string            `json:"guild_locale,omitempty"`
+	Channel                      *Channel          `json:"channel,omitempty"`
+	Guild                        *InteractionGuild `json:"guild,omitempty"`
+	Context                      *int              `json:"context,omitempty"`
+	AttachmentSizeLimit          int64             `json:"attachment_size_limit,omitempty"`
+	AuthorizingIntegrationOwners map[string]string `json:"authorizing_integration_owners,omitempty"`
+}
+
+type InteractionGuild struct {
+	ID       string   `json:"id"`
+	Locale   string   `json:"locale,omitempty"`
+	Features []string `json:"features,omitempty"`
 }
 
 type ComponentData struct {

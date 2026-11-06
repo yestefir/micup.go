@@ -1,0 +1,51 @@
+{
+  "application_id": "100000000000000001",
+  "default_member_permissions": null,
+  "description": "Repeat text",
+  "dm_permission": false,
+  "guild_id": "100000000000000002",
+  "id": "100000000000000003",
+  "name": "echo",
+  "options": [
+    {
+      "description": "What to say",
+      "max_length": 100,
+      "name": "text",
+      "required": true,
+      "type": 3
+    },
+    {
+      "choices": [
+        {
+          "name": "one",
+          "value": 1
+        },
+        {
+          "name": "two",
+          "value": 2
+        }
+      ],
+      "description": "How many",
+      "max_value": 3,
+      "min_value": 1,
+      "name": "times",
+      "required": false,
+      "type": 4
+    },
+    {
+      "description": "Who",
+      "name": "user",
+      "required": false,
+      "type": 6
+    },
+    {
+      "autocomplete": true,
+      "description": "Autocomplete",
+      "name": "fruit",
+      "required": false,
+      "type": 3
+    }
+  ],
+  "type": 1,
+  "version": "100000000000000003"
+}

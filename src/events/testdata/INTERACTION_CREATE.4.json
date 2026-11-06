@@ -1,0 +1,97 @@
+{
+  "app_permissions": "100000000000000025",
+  "application_id": "100000000000000011",
+  "attachment_size_limit": 52428800,
+  "authorizing_integration_owners": {
+    "0": "100000000000000001"
+  },
+  "channel": {
+    "content_warning_level": 0,
+    "content_warning_text": null,
+    "guild_id": "100000000000000001",
+    "icon_color": null,
+    "icon_key": null,
+    "id": "100000000000000004",
+    "last_message_id": "100000000000000026",
+    "last_pin_timestamp": "2026-11-06T14:17:44.335Z",
+    "name": "genel",
+    "nsfw": false,
+    "nsfw_override": null,
+    "parent_id": "100000000000000005",
+    "permissions": "18446744073709551615",
+    "position": 3,
+    "rate_limit_per_user": 0,
+    "topic": null,
+    "type": 0
+  },
+  "channel_id": "100000000000000004",
+  "context": 0,
+  "data": {
+    "guild_id": "100000000000000001",
+    "id": "100000000000000032",
+    "name": "echo",
+    "options": [
+      {
+        "name": "text",
+        "type": 3,
+        "value": "test"
+      },
+      {
+        "name": "times",
+        "type": 4,
+        "value": 1
+      }
+    ],
+    "type": 1
+  },
+  "entitlements": [],
+  "guild": {
+    "features": [
+      "BANNER",
+      "INVITE_SPLASH"
+    ],
+    "id": "100000000000000001",
+    "locale": "en-US"
+  },
+  "guild_id": "100000000000000001",
+  "guild_locale": "en-US",
+  "id": "100000000000000033",
+  "locale": "tr",
+  "member": {
+    "accent_color": null,
+    "avatar": null,
+    "banner": null,
+    "communication_disabled_until": null,
+    "deaf": false,
+    "flags": 0,
+    "joined_at": "2026-11-06T14:11:53.893Z",
+    "mute": false,
+    "nick": null,
+    "permissions": "18446744073709551615",
+    "roles": [],
+    "user": {
+      "avatar": "hash",
+      "avatar_color": 4671303,
+      "avatar_decoration_data": null,
+      "avatar_ultra_data": null,
+      "discriminator": "0000",
+      "flags": 1207959552,
+      "global_name": "user1",
+      "id": "100000000000000019",
+      "identity_version": "2",
+      "name_style": {
+        "colors": [
+          14013909,
+          14604761
+        ],
+        "font_id": 1
+      },
+      "nameplate_data": null,
+      "tag_guild_id": "100000000000000020",
+      "username": "user2"
+    }
+  },
+  "token": "redacted",
+  "type": 2,
+  "version": 1
+}

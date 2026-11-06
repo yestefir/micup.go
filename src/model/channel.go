@@ -32,5 +32,6 @@ type Channel struct {
 	LastMessageID        string                `json:"last_message_id,omitempty"`
 	LastPinTimestamp     *string               `json:"last_pin_timestamp,omitempty"`
 	PermissionOverwrites []PermissionOverwrite `json:"permission_overwrites,omitempty"`
+	Permissions          *Permissions          `json:"permissions,omitempty"`
 	Recipients           []User                `json:"recipients,omitempty"`
 }

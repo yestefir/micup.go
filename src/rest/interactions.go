@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -14,6 +15,7 @@ const (
 	interactionResponseDeferred      = 5
 	interactionResponseDeferUpdate   = 6
 	interactionResponseUpdateMessage = 7
+	interactionResponseAutocomplete  = 8
 )
 
 func (c *Client) RespondToInteraction(ctx context.Context, interaction model.Interaction, options model.MessageOptions, ephemeral bool) error {
@@ -89,6 +91,22 @@ func (c *Client) SendInteractionFollowup(ctx context.Context, interaction model.
 	var message model.Message
 	err = c.Do(ctx, http.MethodPost, path("webhooks", url.PathEscape(interaction.ApplicationID), url.PathEscape(interaction.Token)), data, &message)
 	return message, err
+}
+
+func (c *Client) RespondAutocomplete(ctx context.Context, interaction model.Interaction, choices []model.CommandChoice) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	if interaction.Type != model.InteractionTypeAutocomplete {
+		return errors.New("only an autocomplete interaction takes choices")
+	}
+	if len(choices) > model.MaxCommandChoices {
+		return fmt.Errorf("at most %d autocomplete choices are allowed", model.MaxCommandChoices)
+	}
+	if choices == nil {
+		choices = []model.CommandChoice{}
+	}
+	return c.callback(ctx, interaction, interactionResponseAutocomplete, map[string]any{"choices": choices})
 }
 
 func (c *Client) callback(ctx context.Context, interaction model.Interaction, kind int, data map[string]any) error {

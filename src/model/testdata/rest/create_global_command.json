@@ -1,0 +1,11 @@
+{
+  "application_id": "100000000000000001",
+  "default_member_permissions": null,
+  "description": "Ping the bot",
+  "dm_permission": false,
+  "id": "100000000000000008",
+  "name": "ping",
+  "options": [],
+  "type": 1,
+  "version": "100000000000000008"
+}

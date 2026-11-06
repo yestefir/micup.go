@@ -274,6 +274,13 @@ type (
 	EmbedAuthor        = model.EmbedAuthor
 	EmbedField         = model.EmbedField
 	Interaction        = model.Interaction
+	InteractionGuild   = model.InteractionGuild
+	ApplicationCommand = model.ApplicationCommand
+	CommandOption      = model.CommandOption
+	CommandChoice      = model.CommandChoice
+	CommandData        = model.CommandData
+	CommandDataOption  = model.CommandDataOption
+	Resolved           = model.Resolved
 	ComponentData      = model.ComponentData
 	ActionRow          = model.ActionRow
 	Button             = model.Button
@@ -337,6 +344,27 @@ const (
 	InteractionTypeMessageComponent   = model.InteractionTypeMessageComponent
 	InteractionTypeAutocomplete       = model.InteractionTypeAutocomplete
 	InteractionTypeModalSubmit        = model.InteractionTypeModalSubmit
+	InteractionContextGuild           = model.InteractionContextGuild
+	InteractionContextBotDM           = model.InteractionContextBotDM
+	InteractionContextPrivateChannel  = model.InteractionContextPrivateChannel
+	CommandTypeChatInput              = model.CommandTypeChatInput
+	CommandTypeUser                   = model.CommandTypeUser
+	CommandTypeMessage                = model.CommandTypeMessage
+	OptionTypeSubcommand              = model.OptionTypeSubcommand
+	OptionTypeSubcommandGroup         = model.OptionTypeSubcommandGroup
+	OptionTypeString                  = model.OptionTypeString
+	OptionTypeInteger                 = model.OptionTypeInteger
+	OptionTypeBoolean                 = model.OptionTypeBoolean
+	OptionTypeUser                    = model.OptionTypeUser
+	OptionTypeChannel                 = model.OptionTypeChannel
+	OptionTypeRole                    = model.OptionTypeRole
+	OptionTypeMentionable             = model.OptionTypeMentionable
+	OptionTypeNumber                  = model.OptionTypeNumber
+	OptionTypeAttachment              = model.OptionTypeAttachment
+	MaxCommandOptions                 = model.MaxCommandOptions
+	MaxCommandChoices                 = model.MaxCommandChoices
+	MaxCommandName                    = model.MaxCommandName
+	MaxCommandDescription             = model.MaxCommandDescription
 )
 
 func NewActionRow(buttons ...Button) ActionRow { return model.NewActionRow(buttons...) }
