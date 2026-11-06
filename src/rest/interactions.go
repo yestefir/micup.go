@@ -33,9 +33,9 @@ func (c *Client) DeferInteraction(ctx context.Context, interaction model.Interac
 	if err := validateInteraction(interaction); err != nil {
 		return err
 	}
-	data := map[string]any{}
+	var data map[string]any
 	if ephemeral {
-		data["flags"] = model.MessageFlagEphemeral
+		data = map[string]any{"flags": model.MessageFlagEphemeral}
 	}
 	return c.callback(ctx, interaction, interactionResponseDeferred, data)
 }

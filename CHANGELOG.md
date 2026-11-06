@@ -18,6 +18,8 @@ Notable changes to micup.go are recorded here.
 
 ### Fixed
 
+- `DeferInteraction` without `ephemeral` sent `"data":{}`, which Micup rejects with `400 INVALID_FORM_BODY`, so every visible deferred reply failed and the user saw the interaction time out. It now sends `{"type":5}`.
+- `APIError.Error()` includes Micup's message and field errors, for example `…(INVALID_FORM_BODY): Invalid form body.; data: The provided value is in an invalid format.`
 - Concurrent `RequestGuildMembers` calls on one session could time out: Micup silently drops an opcode 8 request while two others are being answered, without a `RATE_LIMITED` event. A session now keeps at most two member requests in flight and queues the rest. Measured on Micup: 13 of 15 simultaneous requests were dropped before, none after.
 
 ### Changed

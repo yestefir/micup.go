@@ -21,7 +21,7 @@ func TestAPIErrorCarriesCodeFieldsAndRequestID(t *testing.T) {
 	if !errors.As(err, &apiErr) || apiErr.Code != "INVALID_FORM_BODY" || apiErr.RequestID != "req-1" || len(apiErr.Errors) != 1 || apiErr.Errors[0].Path != "embeds.0.title" {
 		t.Fatalf("error details were lost: %#v", err)
 	}
-	if apiErr.Error() != "Micup API returned HTTP 400 (INVALID_FORM_BODY) request req-1" {
+	if apiErr.Error() != "Micup API returned HTTP 400 (INVALID_FORM_BODY): Invalid form body.; embeds.0.title: too long request req-1" {
 		t.Fatalf("unexpected error text: %s", apiErr.Error())
 	}
 }

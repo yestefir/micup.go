@@ -131,3 +131,21 @@ func TestRespondAutocomplete(t *testing.T) {
 		t.Fatal("too many choices accepted")
 	}
 }
+
+func TestDeferInteractionOmitsEmptyData(t *testing.T) {
+	c, rec := recordingClient(t, nil)
+	ctx := context.Background()
+	i := model.Interaction{ID: "i", Token: "t", Type: model.InteractionTypeApplicationCommand}
+	if err := c.DeferInteraction(ctx, i, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(rec.last().raw); got != `{"type":5}` {
+		t.Fatalf("visible defer sent %s; Micup rejects an empty data object", got)
+	}
+	if err := c.DeferInteraction(ctx, i, true); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(rec.last().raw); got != `{"data":{"flags":64},"type":5}` {
+		t.Fatalf("ephemeral defer sent %s", got)
+	}
+}

@@ -30,6 +30,12 @@ func (e *APIError) Error() string {
 	if e.Code != "" {
 		text += " (" + e.Code + ")"
 	}
+	if e.Message != "" {
+		text += ": " + e.Message
+	}
+	for _, field := range e.Errors {
+		text += "; " + field.Path + ": " + field.Message
+	}
 	if e.RequestID != "" {
 		text += " request " + e.RequestID
 	}
