@@ -12,6 +12,7 @@ const (
 	EventResumed                   = gateway.EventResumed
 	EventRateLimited               = gateway.EventRateLimited
 	EventSessionsReplace           = gateway.EventSessionsReplace
+	EventGatewayRolloutUpdate      = gateway.EventGatewayRolloutUpdate
 	EventGuildCreate               = gateway.EventGuildCreate
 	EventGuildSync                 = gateway.EventGuildSync
 	EventGuildUpdate               = gateway.EventGuildUpdate
@@ -58,6 +59,7 @@ type (
 	Resumed                   = events.Resumed
 	ClientSession             = events.ClientSession
 	SessionsReplace           = events.SessionsReplace
+	GatewayRollout            = events.GatewayRollout
 	RateLimited               = events.RateLimited
 	RateLimitedMeta           = events.RateLimitedMeta
 	GuildCreate               = events.GuildCreate

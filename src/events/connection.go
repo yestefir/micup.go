@@ -13,6 +13,13 @@ type Ready struct {
 	Sessions         []ClientSession  `json:"sessions,omitempty"`
 	Presences        []PresenceUpdate `json:"presences,omitempty"`
 	PrivateChannels  []model.Channel  `json:"private_channels,omitempty"`
+	GatewayRollout   *GatewayRollout  `json:"gateway_rollout,omitempty"`
+}
+
+type GatewayRollout struct {
+	GameActivityEnabled bool `json:"game_activity_enabled"`
+	GameActivityEpoch   int  `json:"game_activity_epoch"`
+	ListeningActivity   bool `json:"listening_activity"`
 }
 
 type ReadyApplication struct {

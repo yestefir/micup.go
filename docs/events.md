@@ -61,9 +61,10 @@ The table is generated from the registry. Captured means the payload type is tes
 | Event | Constant | Payload | Captured |
 |---|---|---|---|
 | `READY` | `micup.EventReady` | `micup.Ready` | yes |
-| `RESUMED` | `micup.EventResumed` | `micup.Resumed` | no |
+| `RESUMED` | `micup.EventResumed` | `micup.Resumed` | yes |
 | `RATE_LIMITED` | `micup.EventRateLimited` | `micup.RateLimited` | no |
 | `SESSIONS_REPLACE` | `micup.EventSessionsReplace` | `micup.SessionsReplace` | yes |
+| `GATEWAY_ROLLOUT_UPDATE` | `micup.EventGatewayRolloutUpdate` | `micup.GatewayRollout` | yes |
 | `GUILD_CREATE` | `micup.EventGuildCreate` | `micup.GuildCreate` | yes |
 | `GUILD_SYNC` | `micup.EventGuildSync` | `micup.GuildCreate` | no |
 | `GUILD_UPDATE` | `micup.EventGuildUpdate` | `micup.GuildUpdate` | yes |

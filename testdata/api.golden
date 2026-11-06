@@ -31,6 +31,7 @@ micup.const.EventChannelDelete
 micup.const.EventChannelPinsUpdate
 micup.const.EventChannelUpdate
 micup.const.EventChannelUpdateBulk
+micup.const.EventGatewayRolloutUpdate
 micup.const.EventGuildAuditLogEntryCreate
 micup.const.EventGuildBanAdd
 micup.const.EventGuildBanRemove
@@ -258,6 +259,7 @@ micup.type.File
 micup.type.GatewayConn
 micup.type.GatewayError
 micup.type.GatewayOptions
+micup.type.GatewayRollout
 micup.type.Guild
 micup.type.GuildBan
 micup.type.GuildCreate

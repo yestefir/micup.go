@@ -1,10 +1,11 @@
 package gateway
 
 const (
-	EventReady           = "READY"
-	EventResumed         = "RESUMED"
-	EventRateLimited     = "RATE_LIMITED"
-	EventSessionsReplace = "SESSIONS_REPLACE"
+	EventReady                = "READY"
+	EventResumed              = "RESUMED"
+	EventRateLimited          = "RATE_LIMITED"
+	EventSessionsReplace      = "SESSIONS_REPLACE"
+	EventGatewayRolloutUpdate = "GATEWAY_ROLLOUT_UPDATE"
 )
 
 const (
@@ -76,7 +77,7 @@ const (
 )
 
 var knownEvents = []string{
-	EventReady, EventResumed, EventRateLimited, EventSessionsReplace,
+	EventReady, EventResumed, EventRateLimited, EventSessionsReplace, EventGatewayRolloutUpdate,
 	EventGuildCreate, EventGuildSync, EventGuildUpdate, EventGuildDelete, EventGuildAuditLogEntryCreate,
 	EventGuildRoleCreate, EventGuildRoleUpdate, EventGuildRoleUpdateBulk, EventGuildRoleDelete,
 	EventGuildMemberAdd, EventGuildMemberUpdate, EventGuildMemberRemove, EventGuildMembersChunk,

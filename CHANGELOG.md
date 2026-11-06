@@ -9,7 +9,7 @@ Notable changes to micup.go are recorded here.
 - `src/events`: a payload type for every known Gateway event, grouped by domain, with a name→type registry. `micup.EventAs[T]` decodes an event and rejects the wrong type; `micup.DecodeEvent` returns the payload as `any` and raw JSON for unknown names.
 - `micup.NewEventMux` with `On(name, micup.Listen(fn))`, `HandleRaw` and `HandleAll`. A listener whose type does not match the event panics at registration.
 - New payload types: `Ready`, `GuildCreate`, `GuildUpdate`, `GuildDelete`, `RoleUpdateBulk`, `MembersChunk`, `GuildBan`, `ChannelUpdateBulk`, `ChannelPinsUpdate`, `ReactionRemoveAll`, `ReactionRemoveEmoji`, `PresenceUpdate`, `InviteDelete`, `WebhooksUpdate`, `RateLimited`, `SessionsReplace`, `AuditLogEntryCreate`.
-- Event names seen on Micup: `EventGuildAuditLogEntryCreate` and `EventSessionsReplace`. `micup.KnownEvents()` lists every name.
+- Event names seen on Micup: `EventGuildAuditLogEntryCreate`, `EventSessionsReplace` and `EventGatewayRolloutUpdate` (`GatewayRollout`, also `Ready.GatewayRollout`). `micup.KnownEvents()` lists every name.
 - Model fields Micup returns: guild settings and counts, member avatar, banner and flags, role colors, emoji and `managed`, channel `last_pin_timestamp`, user discriminator and flags, voice state mute, deaf, stream and member. New `Invite` and `RoleColors` types. `Bot.ApplicationID`.
 - [Events and typed payloads](docs/events.md), with an event table generated from the registry.
 - Application commands: `GlobalCommands`, `GuildCommands`, `Create…`, `Edit…`, `Delete…` and `Set…Commands` for global and guild scopes, with `ApplicationCommand.Validate` checking Micup's rules before a request is sent. See [Slash and context menu commands](docs/commands.md).

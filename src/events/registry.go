@@ -6,10 +6,11 @@ import (
 )
 
 var registry = map[string]payload{
-	gateway.EventReady:           of[Ready](),
-	gateway.EventResumed:         of[Resumed](),
-	gateway.EventRateLimited:     of[RateLimited](),
-	gateway.EventSessionsReplace: of[SessionsReplace](),
+	gateway.EventReady:                of[Ready](),
+	gateway.EventResumed:              of[Resumed](),
+	gateway.EventRateLimited:          of[RateLimited](),
+	gateway.EventSessionsReplace:      of[SessionsReplace](),
+	gateway.EventGatewayRolloutUpdate: of[GatewayRollout](),
 
 	gateway.EventGuildCreate:              of[GuildCreate](),
 	gateway.EventGuildSync:                of[GuildCreate](),

@@ -13,7 +13,6 @@ import (
 )
 
 var uncaptured = map[string]bool{
-	gateway.EventResumed:           true,
 	gateway.EventRateLimited:       true,
 	gateway.EventGuildSync:         true,
 	gateway.EventGuildDelete:       true,
@@ -88,7 +87,7 @@ func TestCapturedPayloadsDecode(t *testing.T) {
 				t.Errorf("%s: %v", file, err)
 				continue
 			}
-			if reflect.ValueOf(value).IsZero() {
+			if v := reflect.ValueOf(value); v.IsZero() && !(v.Kind() == reflect.Struct && v.NumField() == 0) {
 				t.Errorf("%s decoded to a zero value", file)
 			}
 		}
@@ -108,6 +107,13 @@ func TestCapturedPayloadFields(t *testing.T) {
 	ready := decodeFirst[Ready](t, gateway.EventReady)
 	if ready.User.ID == "" || ready.SessionID == "" || len(ready.Guilds) == 0 || ready.Application.ID == "" || len(ready.Shard) != 2 {
 		t.Errorf("ready: %+v", ready)
+	}
+
+	if ready.GatewayRollout == nil || ready.GatewayRollout.GameActivityEpoch == 0 {
+		t.Errorf("ready rollout: %+v", ready.GatewayRollout)
+	}
+	if rollout := decodeFirst[GatewayRollout](t, gateway.EventGatewayRolloutUpdate); rollout.GameActivityEpoch == 0 {
+		t.Errorf("rollout update: %+v", rollout)
 	}
 
 	guild := decodeFirst[GuildCreate](t, gateway.EventGuildCreate)
