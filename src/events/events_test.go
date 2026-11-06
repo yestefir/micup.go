@@ -21,7 +21,6 @@ var uncaptured = map[string]bool{
 	gateway.EventGuildMemberRemove: true,
 	gateway.EventGuildBanAdd:       true,
 	gateway.EventGuildBanRemove:    true,
-	gateway.EventUserUpdate:        true,
 	gateway.EventPresenceUpdate:    true,
 }
 
@@ -193,6 +192,11 @@ func TestCapturedPayloadFields(t *testing.T) {
 	sessions := decodeFirst[SessionsReplace](t, gateway.EventSessionsReplace)
 	if len(sessions) == 0 || sessions[0].Status == "" {
 		t.Errorf("sessions: %+v", sessions)
+	}
+
+	self := decodeFirst[model.User](t, gateway.EventUserUpdate)
+	if self.ID == "" || !self.Bot || self.Discriminator == "" {
+		t.Errorf("user update: %+v", self)
 	}
 
 	commands := decodeFirst[ApplicationCommandsUpdate](t, gateway.EventApplicationCommandsUpdate)

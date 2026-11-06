@@ -92,7 +92,7 @@ The table is generated from the registry. Captured means the payload type is tes
 | `MESSAGE_REACTION_REMOVE` | `micup.EventReactionRemove` | `micup.ReactionEvent` | yes |
 | `MESSAGE_REACTION_REMOVE_ALL` | `micup.EventReactionRemoveAll` | `micup.ReactionRemoveAll` | yes |
 | `MESSAGE_REACTION_REMOVE_EMOJI` | `micup.EventReactionRemoveEmoji` | `micup.ReactionRemoveEmoji` | yes |
-| `USER_UPDATE` | `micup.EventUserUpdate` | `micup.User` | no |
+| `USER_UPDATE` | `micup.EventUserUpdate` | `micup.User` | yes |
 | `PRESENCE_UPDATE` | `micup.EventPresenceUpdate` | `micup.PresenceUpdate` | no |
 | `TYPING_START` | `micup.EventTypingStart` | `micup.TypingStart` | yes |
 | `INVITE_CREATE` | `micup.EventInviteCreate` | `micup.Invite` | yes |
