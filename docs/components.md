@@ -1,6 +1,6 @@
 # Buttons
 
-Bots can put buttons under their messages and receive a click as an `INTERACTION_CREATE` event. This works for ordinary bot applications, not only official Micup apps. The payloads follow the Fluxer (Discord-compatible) component format.
+Bots can put buttons under their messages and receive a click as an `INTERACTION_CREATE` event. This works for ordinary bot applications, not only official Micup apps. The payloads follow the Fluxer (Discord-compatible) component format. Slash and context menu commands arrive the same way; see [Slash and context menu commands](commands.md).
 
 ## Sending buttons
 

@@ -45,7 +45,7 @@ if err != nil {
 err = s.Run(ctx)
 ```
 
-Her olayın tipli bir veri yapısı vardır; liste ve olay yönlendiricisi için [Olaylar ve tipli veriler](docs/events.md).
+Her olayın tipli bir veri yapısı vardır; liste ve olay yönlendiricisi için [Olaylar ve tipli veriler](docs/events.md). Slash ve sağ tık komutları REST ile kaydedilir; bkz. [Komutlar](docs/commands.md).
 
 Çok sayıda sunucuda çalışan botlar `b.NewSession` yerine `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` kullanır. Yönetici tüm shard'ları tek süreçte çalıştırır, IDENTIFY isteklerini sıraya koyar ve guild'leri doğru shard'a yönlendirir. Ayrıntılar [Gateway rehberinde](docs/gateway.md#shard-manager).
 

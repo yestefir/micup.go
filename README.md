@@ -47,7 +47,7 @@ if err != nil {
 err = s.Run(ctx)
 ```
 
-Every event has a typed payload; see [Events and typed payloads](docs/events.md).
+Every event has a typed payload; see [Events and typed payloads](docs/events.md). Slash and context menu commands are registered over REST; see [Commands](docs/commands.md).
 
 Bots in many guilds use `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` instead of `b.NewSession`. See [Shards](docs/gateway.md#shard-manager).
 
