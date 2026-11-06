@@ -99,3 +99,5 @@ A command is answered with the same calls as a button, except that it has no mes
 | `RespondAutocomplete(ctx, i, choices)` | Up to 25 suggestions for an autocomplete interaction; `nil` shows none |
 
 `UpdateInteractionMessage` and `DeferInteractionUpdate` are only for buttons. Answer every command promptly, or the user sees it fail.
+
+Micup expires an interaction about three seconds after sending it: measured on Micup, an autocomplete answer sent after 2.5 seconds was accepted and one sent after 3.5 seconds returned `410 INTERACTION_EXPIRED`. Autocomplete cannot be deferred, so a slow lookup (a web search, for example) should answer from a cache or with a placeholder choice before that limit and finish in the background. A command can be acknowledged with `DeferInteraction` first and edited later.
