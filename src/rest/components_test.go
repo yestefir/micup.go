@@ -112,7 +112,7 @@ func TestInteractionUpdateCallbacks(t *testing.T) {
 	ctx := context.Background()
 	content := "Paused"
 	rows := model.DisableButtons([]model.ActionRow{model.NewActionRow(model.PrimaryButton("a", "A"))})
-	if err := c.UpdateInteractionMessage(ctx, click(), model.MessageEdit{Content: &content, Components: &rows}); err != nil {
+	if err := c.UpdateInteractionMessage(ctx, click(), model.MessageEdit{Content: &content, Components: &rows, AllowedMentions: &model.AllowedMentions{}}); err != nil {
 		t.Fatal(err)
 	}
 	got := rec.last()
@@ -121,6 +121,11 @@ func TestInteractionUpdateCallbacks(t *testing.T) {
 	}
 	if got.body["type"] != float64(7) || !strings.Contains(string(got.raw), `"content":"Paused"`) || !strings.Contains(string(got.raw), `"disabled":true`) {
 		t.Fatalf("update body = %s", got.raw)
+	}
+	data := got.body["data"].(map[string]any)
+	mentions := data["allowed_mentions"].(map[string]any)
+	if parse, ok := mentions["parse"].([]any); !ok || len(parse) != 0 {
+		t.Fatalf("update mention policy = %s, want an explicit empty parse array", got.raw)
 	}
 	if err := c.DeferInteractionUpdate(ctx, click()); err != nil {
 		t.Fatal(err)

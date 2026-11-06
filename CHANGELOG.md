@@ -27,6 +27,12 @@ Notable changes to micup.go are recorded here.
 - Payload types were checked against anonymized responses and events captured from Micup; those captures are part of the test suite.
 - The session cache and member inventories decode payloads with the shared types and keep the readable fields when Micup sends an unexpected value type.
 
+## [0.6.1] - 2026-11-07
+
+### Fixed
+
+- Empty `AllowedMentions` serializes with an explicit `parse: []` in messages and interaction updates, avoiding Micup's `400 INVALID_FORM_BODY` rejection of `data.allowed_mentions` during button navigation.
+
 ## [0.6.0] - 2026-11-05
 
 ### Added
