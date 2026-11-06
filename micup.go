@@ -53,6 +53,8 @@ type (
 	GatewayError   = gateway.GatewayError
 )
 
+func KnownEvents() []string { return gateway.KnownEvents() }
+
 func RunGateway(ctx context.Context, options GatewayOptions, handler EventHandler) error {
 	return gateway.Run(ctx, options, handler)
 }
