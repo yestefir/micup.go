@@ -101,3 +101,26 @@ A command is answered with the same calls as a button, except that it has no mes
 `UpdateInteractionMessage` and `DeferInteractionUpdate` are only for buttons. Answer every command promptly, or the user sees it fail.
 
 Micup expires an interaction about three seconds after sending it: measured on Micup, an autocomplete answer sent after 2.5 seconds was accepted and one sent after 3.5 seconds returned `410 INTERACTION_EXPIRED`. Autocomplete cannot be deferred, so a slow lookup (a web search, for example) should answer from a cache or with a placeholder choice before that limit and finish in the background. A command can be acknowledged with `DeferInteraction` first and edited later.
+
+## Modals
+
+A command or a button can answer with a form. Each text input gets its own row; a modal holds 1–5 inputs.
+
+```go
+modal := micup.Modal{CustomID: "song-request", Title: "Request a song", Inputs: []micup.TextInput{
+	micup.ShortInput("query", "Song").WithLength(2, 100).WithPlaceholder("Artist and title"),
+	micup.ParagraphInput("note", "Note").WithRequired(false),
+}}
+err := b.REST.RespondWithModal(ctx, i, modal)
+```
+
+The submitted form arrives as another `INTERACTION_CREATE` with `i.IsModalSubmit()`:
+
+```go
+if data, ok := i.ModalData(); ok && data.CustomID == "song-request" {
+	query, _ := data.Value("query")
+	return b.REST.RespondToInteraction(ctx, i, micup.MessageOptions{Content: "Requested " + query}, false)
+}
+```
+
+`Modal.Validate` rejects a title over 45 characters, a missing or duplicate custom ID, more than 5 inputs, a label over 45 characters, an unknown style and lengths outside 0–4000. `RespondWithModal` refuses autocomplete and modal submit interactions, which cannot open another modal. A modal submit is answered with `RespondToInteraction`, `DeferInteraction` or `SendInteractionFollowup`.

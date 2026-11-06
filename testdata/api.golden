@@ -21,6 +21,7 @@ micup.const.CommandTypeMessage
 micup.const.CommandTypeUser
 micup.const.ComponentTypeActionRow
 micup.const.ComponentTypeButton
+micup.const.ComponentTypeTextInput
 micup.const.DefaultIdentifyInterval
 micup.const.DefaultMaxBackoff
 micup.const.DefaultMinBackoff
@@ -93,6 +94,10 @@ micup.const.MaxCustomStatusEmoji
 micup.const.MaxCustomStatusText
 micup.const.MaxEmbeds
 micup.const.MaxMessagesPerPage
+micup.const.MaxModalInputs
+micup.const.MaxModalTitle
+micup.const.MaxTextInputLabel
+micup.const.MaxTextInputLength
 micup.const.MentionEveryone
 micup.const.MentionRoles
 micup.const.MentionUsers
@@ -191,6 +196,8 @@ micup.const.StatusIdle
 micup.const.StatusInvisible
 micup.const.StatusOffline
 micup.const.StatusOnline
+micup.const.TextInputStyleParagraph
+micup.const.TextInputStyleShort
 micup.const.Version
 micup.const.VoiceChannelFull
 micup.const.VoiceP2PConsentRequired
@@ -211,10 +218,12 @@ micup.func.NewREST
 micup.func.NewSession
 micup.func.NewShardManager
 micup.func.NewState
+micup.func.ParagraphInput
 micup.func.PrimaryButton
 micup.func.RunGateway
 micup.func.SecondaryButton
 micup.func.ShardForGuild
+micup.func.ShortInput
 micup.func.SuccessButton
 micup.func.WithReason
 micup.type.APIError
@@ -288,6 +297,8 @@ micup.type.MessageOptions
 micup.type.MessageQuery
 micup.type.MessageReference
 micup.type.MessageUpdate
+micup.type.Modal
+micup.type.ModalData
 micup.type.PermissionOverwrite
 micup.type.Permissions
 micup.type.Pin
@@ -321,6 +332,7 @@ micup.type.SessionsReplace
 micup.type.ShardManager
 micup.type.ShardOptions
 micup.type.State
+micup.type.TextInput
 micup.type.TypingStart
 micup.type.Upload
 micup.type.UploadedAttachment

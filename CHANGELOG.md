@@ -14,6 +14,7 @@ Notable changes to micup.go are recorded here.
 - [Events and typed payloads](docs/events.md), with an event table generated from the registry.
 - Application commands: `GlobalCommands`, `GuildCommands`, `Create…`, `Edit…`, `Delete…` and `Set…Commands` for global and guild scopes, with `ApplicationCommand.Validate` checking Micup's rules before a request is sent. See [Slash and context menu commands](docs/commands.md).
 - `Interaction.CommandData` with `Path`, typed option readers, resolved users, members, roles, channels and attachments, `Focused`, `TargetUser` and `TargetMessage`. `IsCommand`, `IsAutocomplete` and `RespondAutocomplete`.
+- Modals: `Modal`, `TextInput` (`ShortInput`, `ParagraphInput` with `WithLength`, `WithRequired`, `WithValue`, `WithPlaceholder`), `RespondWithModal` for command and button interactions, and `Interaction.ModalData` / `IsModalSubmit` to read submitted values. `Modal.Validate` checks Micup's limits before sending.
 - `Interaction.Channel`, `Guild`, `Context` and `AttachmentSizeLimit`; `Member.Permissions` and `Channel.Permissions` as resolved by Micup. `EventApplicationCommandsUpdate` and `ApplicationCommandsUpdate`.
 
 ### Fixed

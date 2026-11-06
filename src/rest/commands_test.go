@@ -149,3 +149,36 @@ func TestDeferInteractionOmitsEmptyData(t *testing.T) {
 		t.Fatalf("ephemeral defer sent %s", got)
 	}
 }
+
+func TestRespondWithModal(t *testing.T) {
+	c, rec := recordingClient(t, nil)
+	ctx := context.Background()
+	modal := model.Modal{CustomID: "song", Title: "Song", Inputs: []model.TextInput{model.ShortInput("query", "Query")}}
+	command := model.Interaction{ID: "i", Token: "t", Type: model.InteractionTypeApplicationCommand}
+	if err := c.RespondWithModal(ctx, command, modal); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(rec.last().raw); got != `{"data":{"components":[{"components":[{"custom_id":"query","label":"Query","style":1,"type":4}],"type":1}],"custom_id":"song","title":"Song"},"type":9}` {
+		t.Fatalf("modal response = %s", got)
+	}
+	click := model.Interaction{ID: "i", Token: "t", Type: model.InteractionTypeMessageComponent}
+	if err := c.RespondWithModal(ctx, click, modal); err != nil {
+		t.Fatalf("a button could not open a modal: %v", err)
+	}
+	before := len(rec.requests)
+	for name, i := range map[string]model.Interaction{
+		"autocomplete": {ID: "i", Token: "t", Type: model.InteractionTypeAutocomplete},
+		"modal submit": {ID: "i", Token: "t", Type: model.InteractionTypeModalSubmit},
+		"no token":     {ID: "i", Type: model.InteractionTypeApplicationCommand},
+	} {
+		if err := c.RespondWithModal(ctx, i, modal); err == nil {
+			t.Errorf("%s opened a modal", name)
+		}
+	}
+	if err := c.RespondWithModal(ctx, command, model.Modal{CustomID: "m"}); err == nil {
+		t.Error("invalid modal accepted")
+	}
+	if len(rec.requests) != before {
+		t.Fatal("a rejected modal reached Micup")
+	}
+}

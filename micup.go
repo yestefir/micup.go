@@ -275,6 +275,9 @@ type (
 	EmbedField         = model.EmbedField
 	Interaction        = model.Interaction
 	InteractionGuild   = model.InteractionGuild
+	Modal              = model.Modal
+	TextInput          = model.TextInput
+	ModalData          = model.ModalData
 	ApplicationCommand = model.ApplicationCommand
 	CommandOption      = model.CommandOption
 	CommandChoice      = model.CommandChoice
@@ -365,6 +368,13 @@ const (
 	MaxCommandChoices                 = model.MaxCommandChoices
 	MaxCommandName                    = model.MaxCommandName
 	MaxCommandDescription             = model.MaxCommandDescription
+	ComponentTypeTextInput            = model.ComponentTypeTextInput
+	TextInputStyleShort               = model.TextInputStyleShort
+	TextInputStyleParagraph           = model.TextInputStyleParagraph
+	MaxModalInputs                    = model.MaxModalInputs
+	MaxModalTitle                     = model.MaxModalTitle
+	MaxTextInputLabel                 = model.MaxTextInputLabel
+	MaxTextInputLength                = model.MaxTextInputLength
 )
 
 func NewActionRow(buttons ...Button) ActionRow { return model.NewActionRow(buttons...) }
@@ -380,3 +390,7 @@ func DangerButton(customID, label string) Button { return model.DangerButton(cus
 func LinkButton(url, label string) Button { return model.LinkButton(url, label) }
 
 func DisableButtons(rows []ActionRow) []ActionRow { return model.DisableButtons(rows) }
+
+func ShortInput(customID, label string) TextInput { return model.ShortInput(customID, label) }
+
+func ParagraphInput(customID, label string) TextInput { return model.ParagraphInput(customID, label) }

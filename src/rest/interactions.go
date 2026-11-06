@@ -16,6 +16,7 @@ const (
 	interactionResponseDeferUpdate   = 6
 	interactionResponseUpdateMessage = 7
 	interactionResponseAutocomplete  = 8
+	interactionResponseModal         = 9
 )
 
 func (c *Client) RespondToInteraction(ctx context.Context, interaction model.Interaction, options model.MessageOptions, ephemeral bool) error {
@@ -107,6 +108,20 @@ func (c *Client) RespondAutocomplete(ctx context.Context, interaction model.Inte
 		choices = []model.CommandChoice{}
 	}
 	return c.callback(ctx, interaction, interactionResponseAutocomplete, map[string]any{"choices": choices})
+}
+
+func (c *Client) RespondWithModal(ctx context.Context, interaction model.Interaction, modal model.Modal) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	if err := model.ValidateModalTarget(interaction); err != nil {
+		return err
+	}
+	if err := modal.Validate(); err != nil {
+		return err
+	}
+	body := map[string]any{"type": interactionResponseModal, "data": modal}
+	return c.Do(ctx, http.MethodPost, path("interactions", url.PathEscape(interaction.ID), url.PathEscape(interaction.Token), "callback"), body, nil)
 }
 
 func (c *Client) callback(ctx context.Context, interaction model.Interaction, kind int, data map[string]any) error {
