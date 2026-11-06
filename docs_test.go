@@ -64,7 +64,7 @@ func TestEventDocsAreCurrent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc := string(data)
+	doc := strings.ReplaceAll(string(data), "\r\n", "\n")
 	start := strings.Index(doc, eventsStart)
 	end := strings.Index(doc, eventsEnd)
 	if start < 0 || end < start {
