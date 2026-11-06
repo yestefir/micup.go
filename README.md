@@ -53,6 +53,8 @@ Bots in many guilds use `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Ses
 
 ## Public API
 
+For a complete program with token validation and Ctrl+C shutdown, see the [runnable ping bot](examples/README.md).
+
 Applications import only two paths:
 
 | Import | Contains |

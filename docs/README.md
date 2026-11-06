@@ -3,6 +3,7 @@
 The guides describe the supported public API and its operational limits.
 
 - [Installation and first request](quickstart.md)
+- [Runnable example bots](../examples/README.md)
 - [Gateway events, sessions and shards](gateway.md)
 - [Events and typed payloads](events.md)
 - [Messages, reactions and files](messages.md)
