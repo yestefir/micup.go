@@ -23,8 +23,9 @@ const (
 )
 
 type ActionRow struct {
-	Type       int      `json:"type"`
-	Components []Button `json:"components"`
+	Type       int
+	Components []Button
+	Select     *SelectMenu
 }
 
 type Button struct {
@@ -38,14 +39,53 @@ type Button struct {
 }
 
 func (r ActionRow) MarshalJSON() ([]byte, error) {
-	type plain ActionRow
 	if r.Type == 0 {
 		r.Type = ComponentTypeActionRow
 	}
-	if r.Components == nil {
-		r.Components = []Button{}
+	components := []any{}
+	for _, button := range r.Components {
+		components = append(components, button)
 	}
-	return json.Marshal(plain(r))
+	if r.Select != nil {
+		components = append(components, *r.Select)
+	}
+	return json.Marshal(struct {
+		Type       int   `json:"type"`
+		Components []any `json:"components"`
+	}{r.Type, components})
+}
+
+func (r *ActionRow) UnmarshalJSON(raw []byte) error {
+	var row struct {
+		Type       int               `json:"type"`
+		Components []json.RawMessage `json:"components"`
+	}
+	if err := json.Unmarshal(raw, &row); err != nil {
+		return err
+	}
+	*r = ActionRow{Type: row.Type}
+	for _, component := range row.Components {
+		var head struct {
+			Type int `json:"type"`
+		}
+		if err := json.Unmarshal(component, &head); err != nil {
+			return err
+		}
+		if IsSelectType(head.Type) {
+			var menu SelectMenu
+			if err := json.Unmarshal(component, &menu); err != nil {
+				return err
+			}
+			r.Select = &menu
+			continue
+		}
+		var button Button
+		if err := json.Unmarshal(component, &button); err != nil {
+			return err
+		}
+		r.Components = append(r.Components, button)
+	}
+	return nil
 }
 
 func (b Button) MarshalJSON() ([]byte, error) {
@@ -93,12 +133,24 @@ func (b Button) WithDisabled(disabled bool) Button {
 func DisableButtons(rows []ActionRow) []ActionRow {
 	out := make([]ActionRow, len(rows))
 	for i, row := range rows {
-		out[i] = ActionRow{Type: row.Type, Components: make([]Button, len(row.Components))}
+		out[i] = ActionRow{Type: row.Type, Components: make([]Button, len(row.Components)), Select: row.Select}
 		for j, button := range row.Components {
 			if button.Style != ButtonStyleLink {
 				button.Disabled = true
 			}
 			out[i].Components[j] = button
+		}
+	}
+	return out
+}
+
+func DisableComponents(rows []ActionRow) []ActionRow {
+	out := DisableButtons(rows)
+	for i := range out {
+		if out[i].Select != nil {
+			menu := *out[i].Select
+			menu.Disabled = true
+			out[i].Select = &menu
 		}
 	}
 	return out

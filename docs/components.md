@@ -1,6 +1,6 @@
-# Buttons
+# Buttons and select menus
 
-Bots can put buttons under their messages and receive a click as an `INTERACTION_CREATE` event. This works for ordinary bot applications, not only official Micup apps. The payloads follow the Fluxer (Discord-compatible) component format. Slash and context menu commands arrive the same way; see [Slash and context menu commands](commands.md).
+Bots can put buttons and select menus under their messages and receive a click or a selection as an `INTERACTION_CREATE` event. This works for ordinary bot applications, not only official Micup apps. The payloads follow the Fluxer (Discord-compatible) component format. Slash and context menu commands arrive the same way; see [Slash and context menu commands](commands.md).
 
 ## Sending buttons
 
@@ -45,7 +45,44 @@ none := []micup.ActionRow{}
 _, err = b.REST.EditMessage(ctx, channelID, msg.ID, micup.MessageEdit{Components: &none})
 ```
 
-`DisableButtons` returns a copy with every non-link button disabled, which suits a panel that has timed out. An empty list removes all buttons. Received messages carry their buttons in `Message.Components`.
+`DisableButtons` returns a copy with every non-link button disabled; `DisableComponents` also disables select menus, which suits a panel that has timed out. An empty list removes all buttons. Received messages carry their buttons in `Message.Components`.
+
+## Select menus
+
+A select menu fills a whole action row, so it cannot share a row with buttons. Up to 5 menus fit in a message, one per row, mixed with button rows.
+
+```go
+rows := []micup.ActionRow{
+	micup.NewSelectRow(micup.StringSelect("player:mode",
+		micup.NewSelectOption("Repeat", "repeat").WithEmoji(micup.Emoji{Name: "🔁"}),
+		micup.NewSelectOption("Shuffle", "shuffle").WithDescription("Random order"),
+		micup.NewSelectOption("Off", "off").WithDefault(true),
+	).WithPlaceholder("Playback mode")),
+	micup.NewSelectRow(micup.RoleSelect("roles:pick").WithValues(0, 3)),
+	micup.NewSelectRow(micup.ChannelSelect("log:channel", micup.ChannelTypeGuildText).WithDefaults(micup.DefaultChannel(channelID))),
+	micup.NewActionRow(micup.SuccessButton("panel:save", "Save")),
+}
+```
+
+| Constructor | Type | The user picks |
+|---|---|---|
+| `StringSelect(customID, options...)` | `ComponentTypeStringSelect` (3) | One of the bot's options; `Values` are the option values |
+| `UserSelect(customID)` | `ComponentTypeUserSelect` (5) | Users and members |
+| `RoleSelect(customID)` | `ComponentTypeRoleSelect` (6) | Roles |
+| `MentionableSelect(customID)` | `ComponentTypeMentionableSelect` (7) | Users or roles |
+| `ChannelSelect(customID, channelTypes...)` | `ComponentTypeChannelSelect` (8) | Channels, limited to the given types when any are set |
+
+`WithPlaceholder`, `WithValues(min, max)`, `WithDisabled` and `WithDefaults` return a changed copy; options have `WithDescription`, `WithEmoji` and `WithDefault`. Without `WithValues` the user picks exactly one value.
+
+The client checks these rules before sending:
+
+- custom ID of 1 to 100 characters, unique among the message's buttons and menus
+- placeholder up to 150 characters; `min` within 0-25, `max` within 1-25 and `min <= max`
+- a string select has 1 to 25 options, each with a label and a unique value of 1 to 100 characters and a description up to 100; `max` cannot exceed the option count, and at most `max` options are marked default
+- only string selects have options and only channel selects have channel types
+- the other selects preselect with `WithDefaults(DefaultUser(id), DefaultRole(id), DefaultChannel(id))`: at most `max` entries, of a type the menu accepts (users and roles for a mentionable select)
+
+Received messages carry a menu in `ActionRow.Select`; `Components` holds the row's buttons.
 
 ## Handling clicks
 
@@ -73,12 +110,29 @@ case micup.EventInteractionCreate:
 | Field or method | Meaning |
 |---|---|
 | `IsButton()` | The interaction is a button click (`InteractionTypeMessageComponent` with `ComponentTypeButton`) |
-| `CustomID()` | The clicked button's custom ID |
-| `ComponentData()` | `CustomID` and `ComponentType`; `false` for other interaction types |
+| `IsSelectMenu()` | The interaction is a choice in any of the five select menus |
+| `CustomID()` | The clicked button's or the menu's custom ID |
+| `SelectedValues()` | The chosen option values, or user, role and channel IDs |
+| `ComponentData()` | `CustomID`, `ComponentType`, `Values` and `Resolved`; `false` for other interaction types |
 | `Invoker()` | The user who clicked (`Member.User` in a guild, `User` in a DM) |
 | `Member` | The clicker's guild member, with role IDs |
 | `Message` | The message the button is on, with its current `Components` |
 | `GuildID`, `ChannelID`, `Locale`, `GuildLocale`, `AppPermissions` | Where it was clicked and what the bot may do there |
+
+A selection is read the same way. For user, role, mentionable and channel menus Micup resolves the chosen IDs, and `ComponentData` returns them in the order of `Values`:
+
+```go
+if i.IsSelectMenu() && i.CustomID() == "roles:pick" {
+	data, _ := i.ComponentData()
+	for _, role := range data.Roles() {
+		grant(role.ID)
+	}
+	content := fmt.Sprintf("%d roles picked", len(i.SelectedValues()))
+	return b.REST.RespondToInteraction(ctx, i, micup.MessageOptions{Content: content}, true)
+}
+```
+
+`Users()`, `Members()` (with `User` filled in), `Roles()` and `Channels()` skip IDs Micup did not resolve. A mentionable select can return both users and roles.
 
 Routing by custom ID stays in the application; a prefix such as `player:` keeps a bot's panels apart. Check who clicked before acting: anyone who can see the message can press its buttons.
 

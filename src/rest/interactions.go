@@ -53,7 +53,7 @@ func (c *Client) UpdateInteractionMessage(ctx context.Context, interaction model
 		return err
 	}
 	if len(data) == 0 {
-		return errors.New("interaction update needs content, embeds, buttons, flags or allowed mentions")
+		return errors.New("interaction update needs content, embeds, components, flags or allowed mentions")
 	}
 	return c.callback(ctx, interaction, interactionResponseUpdateMessage, data)
 }

@@ -6,7 +6,7 @@ The guides describe the supported public API and its operational limits.
 - [Gateway events, sessions and shards](gateway.md)
 - [Events and typed payloads](events.md)
 - [Messages, reactions and files](messages.md)
-- [Buttons and click handling](components.md)
+- [Buttons, select menus and click handling](components.md)
 - [Slash and context menu commands](commands.md)
 - [Guilds, members and moderation](guilds.md)
 - [Voice grants and LiveKit PCM publishing](voice.md)

@@ -177,3 +177,78 @@ func TestEditInteractionResponse(t *testing.T) {
 		t.Fatalf("edit response body = %s, message %+v", got.raw, msg)
 	}
 }
+
+func TestSendMessageWithSelectMenus(t *testing.T) {
+	c, rec := recordingClient(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"id":"5","channel_id":"1","author":{"id":"b"},"components":[{"type":1,"components":[{"type":6,"custom_id":"roles"}]}]}`)
+	})
+	rows := []model.ActionRow{
+		model.NewSelectRow(model.StringSelect("color", model.NewSelectOption("Red", "r"), model.NewSelectOption("Blue", "b")).WithValues(1, 2)),
+		model.NewSelectRow(model.RoleSelect("roles")),
+	}
+	msg, err := c.SendMessageWithOptions(context.Background(), "1", model.MessageOptions{Components: rows})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `[{"components":[{"custom_id":"color","max_values":2,"min_values":1,"options":[{"label":"Red","value":"r"},{"label":"Blue","value":"b"}],"type":3}],"type":1},{"components":[{"custom_id":"roles","type":6}],"type":1}]`
+	if s := componentsJSON(t, rec.last().body["components"]); s != want {
+		t.Fatalf("components = %s", s)
+	}
+	if len(msg.Components) != 1 || msg.Components[0].Select == nil || msg.Components[0].Select.CustomID != "roles" {
+		t.Fatalf("message components = %+v", msg.Components)
+	}
+}
+
+func TestInvalidSelectMenusAreRejected(t *testing.T) {
+	c, rec := recordingClient(t, nil)
+	sel := func(m model.SelectMenu) []model.ActionRow { return []model.ActionRow{model.NewSelectRow(m)} }
+	opt := model.NewSelectOption("A", "a")
+	many := make([]model.SelectOption, model.MaxSelectOptions+1)
+	for i := range many {
+		many[i] = model.NewSelectOption("x", fmt.Sprint(i))
+	}
+	mixed := model.NewSelectRow(model.UserSelect("u"))
+	mixed.Components = []model.Button{model.PrimaryButton("b", "B")}
+	cases := map[string][]model.ActionRow{
+		"buttons and select":     {mixed},
+		"no custom ID":           sel(model.UserSelect("")),
+		"long custom ID":         sel(model.UserSelect(strings.Repeat("a", model.MaxCustomIDLength+1))),
+		"duplicate ID":           {model.NewActionRow(model.PrimaryButton("a", "A")), model.NewSelectRow(model.UserSelect("a"))},
+		"unknown type":           sel(model.SelectMenu{Type: 4, CustomID: "a"}),
+		"long placeholder":       sel(model.UserSelect("a").WithPlaceholder(strings.Repeat("é", model.MaxSelectPlaceholder+1))),
+		"min above max":          sel(model.UserSelect("a").WithValues(3, 2)),
+		"max zero":               sel(model.UserSelect("a").WithValues(0, 0)),
+		"max over limit":         sel(model.UserSelect("a").WithValues(1, model.MaxSelectOptions+1)),
+		"string without options": sel(model.StringSelect("a")),
+		"too many options":       sel(model.StringSelect("a", many...)),
+		"max over options":       sel(model.StringSelect("a", opt).WithValues(1, 2)),
+		"option without label":   sel(model.StringSelect("a", model.NewSelectOption("", "a"))),
+		"option without value":   sel(model.StringSelect("a", model.NewSelectOption("A", ""))),
+		"long description":       sel(model.StringSelect("a", opt.WithDescription(strings.Repeat("d", model.MaxSelectOptionDescription+1)))),
+		"duplicate value":        sel(model.StringSelect("a", opt, model.NewSelectOption("B", "a"))),
+		"too many defaults":      sel(model.StringSelect("a", opt.WithDefault(true), model.NewSelectOption("B", "b").WithDefault(true))),
+		"string default_values":  sel(model.StringSelect("a", opt).WithDefaults(model.DefaultUser("1"))),
+		"options on user select": sel(model.SelectMenu{Type: model.ComponentTypeUserSelect, CustomID: "a", Options: []model.SelectOption{opt}}),
+		"channel types on role":  sel(model.SelectMenu{Type: model.ComponentTypeRoleSelect, CustomID: "a", ChannelTypes: []int{0}}),
+		"wrong default type":     sel(model.UserSelect("a").WithDefaults(model.DefaultRole("1"))),
+		"default without ID":     sel(model.ChannelSelect("a").WithDefaults(model.DefaultChannel(""))),
+		"defaults over max":      sel(model.RoleSelect("a").WithDefaults(model.DefaultRole("1"), model.DefaultRole("2"))),
+		"channel on mentionable": sel(model.MentionableSelect("a").WithDefaults(model.DefaultChannel("1"))),
+	}
+	for name, rows := range cases {
+		if _, err := c.SendMessageWithOptions(context.Background(), "1", model.MessageOptions{Components: rows}); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+	if len(rec.requests) != 0 {
+		t.Fatalf("invalid select menus reached Micup: %d requests", len(rec.requests))
+	}
+	valid := []model.ActionRow{
+		model.NewSelectRow(model.MentionableSelect("m").WithValues(0, 2).WithDefaults(model.DefaultUser("1"), model.DefaultRole("2"))),
+		model.NewSelectRow(model.ChannelSelect("c", model.ChannelTypeGuildText).WithDefaults(model.DefaultChannel("3"))),
+		model.NewSelectRow(model.StringSelect("s", opt.WithDefault(true))),
+	}
+	if _, err := c.SendMessageWithOptions(context.Background(), "1", model.MessageOptions{Components: valid}); err != nil {
+		t.Fatalf("valid select menus rejected: %v", err)
+	}
+}

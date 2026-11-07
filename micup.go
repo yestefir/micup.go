@@ -287,6 +287,9 @@ type (
 	ComponentData      = model.ComponentData
 	ActionRow          = model.ActionRow
 	Button             = model.Button
+	SelectMenu         = model.SelectMenu
+	SelectOption       = model.SelectOption
+	SelectDefault      = model.SelectDefault
 	VoiceState         = model.VoiceState
 	VoiceServerUpdate  = model.VoiceServerUpdate
 )
@@ -342,6 +345,22 @@ const (
 )
 
 const (
+	ComponentTypeStringSelect      = model.ComponentTypeStringSelect
+	ComponentTypeUserSelect        = model.ComponentTypeUserSelect
+	ComponentTypeRoleSelect        = model.ComponentTypeRoleSelect
+	ComponentTypeMentionableSelect = model.ComponentTypeMentionableSelect
+	ComponentTypeChannelSelect     = model.ComponentTypeChannelSelect
+	SelectDefaultUser              = model.SelectDefaultUser
+	SelectDefaultRole              = model.SelectDefaultRole
+	SelectDefaultChannel           = model.SelectDefaultChannel
+	MaxSelectOptions               = model.MaxSelectOptions
+	MaxSelectPlaceholder           = model.MaxSelectPlaceholder
+	MaxSelectOptionLabel           = model.MaxSelectOptionLabel
+	MaxSelectOptionValue           = model.MaxSelectOptionValue
+	MaxSelectOptionDescription     = model.MaxSelectOptionDescription
+)
+
+const (
 	InteractionTypePing               = model.InteractionTypePing
 	InteractionTypeApplicationCommand = model.InteractionTypeApplicationCommand
 	InteractionTypeMessageComponent   = model.InteractionTypeMessageComponent
@@ -390,6 +409,32 @@ func DangerButton(customID, label string) Button { return model.DangerButton(cus
 func LinkButton(url, label string) Button { return model.LinkButton(url, label) }
 
 func DisableButtons(rows []ActionRow) []ActionRow { return model.DisableButtons(rows) }
+
+func DisableComponents(rows []ActionRow) []ActionRow { return model.DisableComponents(rows) }
+
+func NewSelectRow(menu SelectMenu) ActionRow { return model.NewSelectRow(menu) }
+
+func StringSelect(customID string, options ...SelectOption) SelectMenu {
+	return model.StringSelect(customID, options...)
+}
+
+func UserSelect(customID string) SelectMenu { return model.UserSelect(customID) }
+
+func RoleSelect(customID string) SelectMenu { return model.RoleSelect(customID) }
+
+func MentionableSelect(customID string) SelectMenu { return model.MentionableSelect(customID) }
+
+func ChannelSelect(customID string, channelTypes ...int) SelectMenu {
+	return model.ChannelSelect(customID, channelTypes...)
+}
+
+func NewSelectOption(label, value string) SelectOption { return model.NewSelectOption(label, value) }
+
+func DefaultUser(id string) SelectDefault { return model.DefaultUser(id) }
+
+func DefaultRole(id string) SelectDefault { return model.DefaultRole(id) }
+
+func DefaultChannel(id string) SelectDefault { return model.DefaultChannel(id) }
 
 func ShortInput(customID, label string) TextInput { return model.ShortInput(customID, label) }
 
