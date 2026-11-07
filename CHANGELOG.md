@@ -4,6 +4,8 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-07
+
 ### Added
 
 - `src/events`: a payload type for every known Gateway event, grouped by domain, with a name→type registry. `micup.EventAs[T]` decodes an event and rejects the wrong type; `micup.DecodeEvent` returns the payload as `any` and raw JSON for unknown names.
