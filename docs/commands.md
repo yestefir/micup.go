@@ -4,6 +4,8 @@ Micup supports application commands: slash commands with typed options, and user
 
 ## Registering commands
 
+For a complete program with environment setup, guild-scoped registration, typed interaction handling, and Ctrl+C shutdown, see the [runnable slash echo bot](../examples/slash-echo/README.md).
+
 Commands belong to the bot's application. `b.ApplicationID` holds its ID (on Micup it equals the bot user ID).
 
 ```go

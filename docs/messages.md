@@ -27,6 +27,8 @@ msg, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 | `Files` | Files sent in the same request as multipart |
 | `Attachments` | Files uploaded earlier with `UploadAttachment` |
 
+An explicit empty `AllowedMentions` also disables mentions and serializes as `{"parse":[]}`. Empty policies never become `{}` or `{"parse":null}`, which Micup rejects in interaction message updates. Explicit user IDs, role IDs, and `RepliedUser` are preserved.
+
 Bots can send at least 4,000 characters per message.
 
 ## Files
