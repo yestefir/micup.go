@@ -5,10 +5,12 @@
 Use Go 1.26.8 or newer. A bot token is required. The voice package also requires an FFmpeg executable built with `libopus` support.
 
 ```sh
-go get github.com/yestefir/micup.go@v0.6.0
+go get github.com/yestefir/micup.go@v0.6.1
 ```
 
 ## One import
+
+For a complete bot instead of individual snippets, run the [ping example](../examples/README.md). It includes token validation, a typed message handler, and Ctrl+C shutdown.
 
 Everything public is in the root package `github.com/yestefir/micup.go` (package name `micup`). Voice publishing is the only other public package, `github.com/yestefir/micup.go/voice`, kept separate so bots without voice do not build LiveKit and WebRTC. Code under `src/` is the implementation; its paths may change between releases, so do not import it directly.
 
