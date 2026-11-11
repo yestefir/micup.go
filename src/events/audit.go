@@ -1,6 +1,6 @@
 package events
 
-import "encoding/json"
+import "github.com/yestefir/micup.go/src/model"
 
 type AuditLogEntryCreate struct {
 	ID         string           `json:"id"`
@@ -13,16 +13,7 @@ type AuditLogEntryCreate struct {
 	Options    *AuditLogOptions `json:"options,omitempty"`
 }
 
-type AuditLogChange struct {
-	Key      string          `json:"key"`
-	OldValue json.RawMessage `json:"old_value,omitempty"`
-	NewValue json.RawMessage `json:"new_value,omitempty"`
-}
-
-type AuditLogOptions struct {
-	ChannelID string      `json:"channel_id,omitempty"`
-	MessageID string      `json:"message_id,omitempty"`
-	ID        string      `json:"id,omitempty"`
-	Type      json.Number `json:"type,omitempty"`
-	Count     json.Number `json:"count,omitempty"`
-}
+type (
+	AuditLogChange  = model.AuditLogChange
+	AuditLogOptions = model.AuditLogOptions
+)

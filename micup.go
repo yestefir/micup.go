@@ -2,6 +2,7 @@ package micup
 
 import (
 	"context"
+	"time"
 
 	"github.com/yestefir/micup.go/src/bot"
 	"github.com/yestefir/micup.go/src/discovery"
@@ -38,6 +39,75 @@ type (
 )
 
 func EmojiString(emoji Emoji) string { return rest.EmojiString(emoji) }
+
+const (
+	CodeInvalidFormBody       = rest.CodeInvalidFormBody
+	CodeRateLimited           = rest.CodeRateLimited
+	CodeSlowmodeRateLimited   = rest.CodeSlowmodeRateLimited
+	CodeResourceLocked        = rest.CodeResourceLocked
+	CodeUnauthorized          = rest.CodeUnauthorized
+	CodeMissingAccess         = rest.CodeMissingAccess
+	CodeMissingPermissions    = rest.CodeMissingPermissions
+	CodeTwoFactorRequired     = rest.CodeTwoFactorRequired
+	CodeCommunicationDisabled = rest.CodeCommunicationDisabled
+	CodeContentBlocked        = rest.CodeContentBlocked
+	CodeCannotSendEmpty       = rest.CodeCannotSendEmpty
+	CodeUnknownChannel        = rest.CodeUnknownChannel
+	CodeUnknownGuild          = rest.CodeUnknownGuild
+	CodeUnknownMember         = rest.CodeUnknownMember
+	CodeUnknownMessage        = rest.CodeUnknownMessage
+	CodeUnknownRole           = rest.CodeUnknownRole
+	CodeUnknownUser           = rest.CodeUnknownUser
+	CodeUnknownInvite         = rest.CodeUnknownInvite
+	CodeUnknownEmoji          = rest.CodeUnknownEmoji
+	CodeUnknownSticker        = rest.CodeUnknownSticker
+	CodeUnknownWebhook        = rest.CodeUnknownWebhook
+	CodeThreadArchived        = rest.CodeThreadArchived
+	CodeThreadLocked          = rest.CodeThreadLocked
+	CodeMaxActiveThreads      = rest.CodeMaxActiveThreads
+	CodeNSFWAgeRestricted     = rest.CodeNSFWAgeRestricted
+	CodeFeatureDisabled       = rest.CodeFeatureDisabled
+)
+
+func ErrorCode(err error) string { return rest.ErrorCode(err) }
+
+func IsErrorCode(err error, codes ...string) bool { return rest.IsErrorCode(err, codes...) }
+
+func IsNotFound(err error) bool { return rest.IsNotFound(err) }
+
+func IsForbidden(err error) bool { return rest.IsForbidden(err) }
+
+type Optional[T any] = model.Optional[T]
+
+func Set[T any](value T) Optional[T] { return model.Set(value) }
+
+func Clear[T any]() Optional[T] { return model.Clear[T]() }
+
+func ImageData(contentType string, data []byte) (string, error) {
+	return model.ImageData(contentType, data)
+}
+
+func AttachmentURL(filename string) string { return model.AttachmentURL(filename) }
+
+const SnowflakeEpoch = model.SnowflakeEpoch
+
+func ParseSnowflake(id string) (uint64, error) { return model.ParseSnowflake(id) }
+
+func SnowflakeTime(id string) (time.Time, error) { return model.SnowflakeTime(id) }
+
+func SnowflakeAt(at time.Time) string { return model.SnowflakeAt(at) }
+
+func CompareSnowflakes(a, b string) int { return model.CompareSnowflakes(a, b) }
+
+func MentionUser(userID string) string { return model.MentionUser(userID) }
+
+func MentionRole(roleID string) string { return model.MentionRole(roleID) }
+
+func MentionChannel(channelID string) string { return model.MentionChannel(channelID) }
+
+func FormatTimestamp(at time.Time, style string) string { return model.FormatTimestamp(at, style) }
+
+func EscapeMarkdown(text string) string { return model.EscapeMarkdown(text) }
 
 func NewREST(config RESTConfig) (*RESTClient, error) { return rest.New(config) }
 
@@ -439,3 +509,243 @@ func DefaultChannel(id string) SelectDefault { return model.DefaultChannel(id) }
 func ShortInput(customID, label string) TextInput { return model.ShortInput(customID, label) }
 
 func ParagraphInput(customID, label string) TextInput { return model.ParagraphInput(customID, label) }
+
+type (
+	ThreadMetadata           = model.ThreadMetadata
+	ThreadMember             = model.ThreadMember
+	ForumTag                 = model.ForumTag
+	DefaultReaction          = model.DefaultReaction
+	ChannelEdit              = model.ChannelEdit
+	ChannelCreate            = model.ChannelCreate
+	ChannelPosition          = model.ChannelPosition
+	FollowedChannel          = model.FollowedChannel
+	ChannelFollowerStats     = model.ChannelFollowerStats
+	ThreadStart              = model.ThreadStart
+	ForumPostStart           = model.ForumPostStart
+	ForumPost                = model.ForumPost
+	ThreadEdit               = model.ThreadEdit
+	ThreadList               = model.ThreadList
+	ArchivedThreadQuery      = model.ArchivedThreadQuery
+	ThreadSearch             = model.ThreadSearch
+	ThreadMemberQuery        = model.ThreadMemberQuery
+	ForumPostData            = model.ForumPostData
+	GuildEdit                = model.GuildEdit
+	GuildQuery               = model.GuildQuery
+	VanityURL                = model.VanityURL
+	BanEntry                 = model.BanEntry
+	InviteCreate             = model.InviteCreate
+	Sticker                  = model.Sticker
+	EmojiCreate              = model.EmojiCreate
+	StickerCreate            = model.StickerCreate
+	StickerEdit              = model.StickerEdit
+	ExpressionFailure        = model.ExpressionFailure
+	EmojiBulkResult          = model.EmojiBulkResult
+	StickerBulkResult        = model.StickerBulkResult
+	ExpressionMetadata       = model.ExpressionMetadata
+	GatewayInfo              = model.GatewayInfo
+	SessionStartLimit        = model.SessionStartLimit
+	CurrentMemberEdit        = model.CurrentMemberEdit
+	MemberSearch             = model.MemberSearch
+	MemberSearchResult       = model.MemberSearchResult
+	MemberSearchSupplemental = model.MemberSearchSupplemental
+	MemberSearchPage         = model.MemberSearchPage
+	UserProfileQuery         = model.UserProfileQuery
+	UserProfile              = model.UserProfile
+	ProfileDetails           = model.ProfileDetails
+	ProfileBadge             = model.ProfileBadge
+	MutualGuild              = model.MutualGuild
+	WebhookSource            = model.WebhookSource
+	WebhookEdit              = model.WebhookEdit
+	RoleCreate               = model.RoleCreate
+	RoleEdit                 = model.RoleEdit
+	RolePosition             = model.RolePosition
+	RoleHoistPosition        = model.RoleHoistPosition
+	ChannelMention           = model.ChannelMention
+	StickerItem              = model.StickerItem
+	MessageSnapshot          = model.MessageSnapshot
+	MessageCall              = model.MessageCall
+	MessageForward           = model.MessageForward
+	KeptAttachment           = model.KeptAttachment
+	ReactionUsersPage        = model.ReactionUsersPage
+	ReactionUsersQuery       = model.ReactionUsersQuery
+	RefreshedURL             = model.RefreshedURL
+	CrosspostSource          = model.CrosspostSource
+	CrosspostSourceGuild     = model.CrosspostSourceGuild
+	MessageSearch            = model.MessageSearch
+	MessageSearchResult      = model.MessageSearchResult
+	EmbedProvider            = model.EmbedProvider
+	AuditLogEntry            = model.AuditLogEntry
+	AuditLogWebhook          = model.AuditLogWebhook
+	AuditLog                 = model.AuditLog
+	AuditLogQuery            = model.AuditLogQuery
+)
+
+const (
+	ChannelFlagPinned                           = model.ChannelFlagPinned
+	ChannelFlagRequireTag                       = model.ChannelFlagRequireTag
+	ChannelFlagHideMediaDownloadOptions         = model.ChannelFlagHideMediaDownloadOptions
+	AutoArchiveHour                             = model.AutoArchiveHour
+	AutoArchiveDay                              = model.AutoArchiveDay
+	AutoArchiveThreeDays                        = model.AutoArchiveThreeDays
+	AutoArchiveWeek                             = model.AutoArchiveWeek
+	ForumSortLatestActivity                     = model.ForumSortLatestActivity
+	ForumSortCreationTime                       = model.ForumSortCreationTime
+	ForumLayoutDefault                          = model.ForumLayoutDefault
+	ForumLayoutList                             = model.ForumLayoutList
+	ForumLayoutGrid                             = model.ForumLayoutGrid
+	ForumTagMatchSome                           = model.ForumTagMatchSome
+	ForumTagMatchAll                            = model.ForumTagMatchAll
+	ThreadMemberHasInteracted                   = model.ThreadMemberHasInteracted
+	ThreadMemberAllMessages                     = model.ThreadMemberAllMessages
+	ThreadMemberOnlyMentions                    = model.ThreadMemberOnlyMentions
+	ThreadMemberNoMessages                      = model.ThreadMemberNoMessages
+	MaxChannelName                              = model.MaxChannelName
+	MaxChannelTopic                             = model.MaxChannelTopic
+	MaxForumTopic                               = model.MaxForumTopic
+	MaxSlowmodeSeconds                          = model.MaxSlowmodeSeconds
+	MaxForumTags                                = model.MaxForumTags
+	MaxAppliedTags                              = model.MaxAppliedTags
+	MaxForumTagName                             = model.MaxForumTagName
+	MaxChannelPositions                         = model.MaxChannelPositions
+	EmbedTypeRich                               = model.EmbedTypeRich
+	MaxEmbedTitle                               = model.MaxEmbedTitle
+	MaxEmbedDescription                         = model.MaxEmbedDescription
+	MaxEmbedFields                              = model.MaxEmbedFields
+	MaxEmbedFieldName                           = model.MaxEmbedFieldName
+	MaxEmbedFieldValue                          = model.MaxEmbedFieldValue
+	MaxEmbedFooter                              = model.MaxEmbedFooter
+	MaxEmbedAuthor                              = model.MaxEmbedAuthor
+	MaxEmbedURL                                 = model.MaxEmbedURL
+	VerificationNone                            = model.VerificationNone
+	VerificationLow                             = model.VerificationLow
+	VerificationMedium                          = model.VerificationMedium
+	VerificationHigh                            = model.VerificationHigh
+	MFALevelNone                                = model.MFALevelNone
+	MFALevelElevated                            = model.MFALevelElevated
+	ExplicitFilterDisabled                      = model.ExplicitFilterDisabled
+	ExplicitFilterMembersWithoutRoles           = model.ExplicitFilterMembersWithoutRoles
+	ExplicitFilterAllMembers                    = model.ExplicitFilterAllMembers
+	NotifyAllMessages                           = model.NotifyAllMessages
+	NotifyOnlyMentions                          = model.NotifyOnlyMentions
+	SystemChannelSuppressJoinNotifications      = model.SystemChannelSuppressJoinNotifications
+	FeatureAnimatedBanner                       = model.FeatureAnimatedBanner
+	FeatureAnimatedIcon                         = model.FeatureAnimatedIcon
+	FeatureBanner                               = model.FeatureBanner
+	FeatureCloneEmojiEnabled                    = model.FeatureCloneEmojiEnabled
+	FeatureCloneStickerEnabled                  = model.FeatureCloneStickerEnabled
+	FeatureDetachedBanner                       = model.FeatureDetachedBanner
+	FeatureDiscoverable                         = model.FeatureDiscoverable
+	FeatureExpressionPurgeAllowed               = model.FeatureExpressionPurgeAllowed
+	FeatureHideOwnerCrown                       = model.FeatureHideOwnerCrown
+	FeatureInviteSplash                         = model.FeatureInviteSplash
+	FeatureInvitesDisabled                      = model.FeatureInvitesDisabled
+	FeaturePartnered                            = model.FeaturePartnered
+	FeatureTextChannelFlexibleNames             = model.FeatureTextChannelFlexibleNames
+	FeatureVanityURL                            = model.FeatureVanityURL
+	FeatureVerified                             = model.FeatureVerified
+	FeatureVisitsEnabled                        = model.FeatureVisitsEnabled
+	FeatureVoiceE2EE                            = model.FeatureVoiceE2EE
+	InviteTypeGuild                             = model.InviteTypeGuild
+	InviteTypeGroupDM                           = model.InviteTypeGroupDM
+	MaxInviteUses                               = model.MaxInviteUses
+	MaxInviteAge                                = model.MaxInviteAge
+	MaxBulkExpressions                          = model.MaxBulkExpressions
+	MaxEmojiName                                = model.MaxEmojiName
+	MaxStickerName                              = model.MaxStickerName
+	MemberProfileAvatarUnset                    = model.MemberProfileAvatarUnset
+	MemberProfileBannerUnset                    = model.MemberProfileBannerUnset
+	MentionNoPreference                         = model.MentionNoPreference
+	MentionPreferMention                        = model.MentionPreferMention
+	MentionPreferNoMention                      = model.MentionPreferNoMention
+	JoinSourceCreator                           = model.JoinSourceCreator
+	JoinSourceInstantInvite                     = model.JoinSourceInstantInvite
+	JoinSourceVanityURL                         = model.JoinSourceVanityURL
+	JoinSourceBotInvite                         = model.JoinSourceBotInvite
+	JoinSourceAdminForceAdd                     = model.JoinSourceAdminForceAdd
+	JoinSourceDiscovery                         = model.JoinSourceDiscovery
+	MessageFlagFailedToMentionSomeRolesInThread = model.MessageFlagFailedToMentionSomeRolesInThread
+	AttachmentFlagSpoiler                       = model.AttachmentFlagSpoiler
+	AttachmentFlagExplicitMedia                 = model.AttachmentFlagExplicitMedia
+	AttachmentFlagAnimated                      = model.AttachmentFlagAnimated
+	MessageReferenceDefault                     = model.MessageReferenceDefault
+	MessageReferenceForward                     = model.MessageReferenceForward
+	MaxStickersPerMessage                       = model.MaxStickersPerMessage
+	MaxReactionUsersPerPage                     = model.MaxReactionUsersPerPage
+	MaxPinsPerPage                              = model.MaxPinsPerPage
+	MaxRefreshURLs                              = model.MaxRefreshURLs
+	SearchAuthorUser                            = model.SearchAuthorUser
+	SearchAuthorBot                             = model.SearchAuthorBot
+	SearchAuthorWebhook                         = model.SearchAuthorWebhook
+	SearchHasImage                              = model.SearchHasImage
+	SearchHasSound                              = model.SearchHasSound
+	SearchHasVideo                              = model.SearchHasVideo
+	SearchHasFile                               = model.SearchHasFile
+	SearchHasSticker                            = model.SearchHasSticker
+	SearchHasEmbed                              = model.SearchHasEmbed
+	SearchHasLink                               = model.SearchHasLink
+	SearchHasSnapshot                           = model.SearchHasSnapshot
+	SearchSortTimestamp                         = model.SearchSortTimestamp
+	SearchSortRelevance                         = model.SearchSortRelevance
+	SortAscending                               = model.SortAscending
+	SortDescending                              = model.SortDescending
+	MaxSearchHitsPerPage                        = model.MaxSearchHitsPerPage
+	MaxSearchPage                               = model.MaxSearchPage
+	UserFlagStaff                               = model.UserFlagStaff
+	UserFlagPartner                             = model.UserFlagPartner
+	UserFlagBugHunter                           = model.UserFlagBugHunter
+	UserFlagFriendlyBot                         = model.UserFlagFriendlyBot
+	UserFlagFriendlyBotManualApproval           = model.UserFlagFriendlyBotManualApproval
+	UserFlagSpammer                             = model.UserFlagSpammer
+	UserFlagProfileHidden                       = model.UserFlagProfileHidden
+	WebhookTypeIncoming                         = model.WebhookTypeIncoming
+	WebhookTypeChannelFollower                  = model.WebhookTypeChannelFollower
+	MaxWebhookName                              = model.MaxWebhookName
+	AuditGuildUpdate                            = model.AuditGuildUpdate
+	AuditChannelCreate                          = model.AuditChannelCreate
+	AuditChannelUpdate                          = model.AuditChannelUpdate
+	AuditChannelDelete                          = model.AuditChannelDelete
+	AuditChannelOverwriteCreate                 = model.AuditChannelOverwriteCreate
+	AuditChannelOverwriteUpdate                 = model.AuditChannelOverwriteUpdate
+	AuditChannelOverwriteDelete                 = model.AuditChannelOverwriteDelete
+	AuditMemberKick                             = model.AuditMemberKick
+	AuditMemberPrune                            = model.AuditMemberPrune
+	AuditMemberBanAdd                           = model.AuditMemberBanAdd
+	AuditMemberBanRemove                        = model.AuditMemberBanRemove
+	AuditMemberUpdate                           = model.AuditMemberUpdate
+	AuditMemberRoleUpdate                       = model.AuditMemberRoleUpdate
+	AuditMemberMove                             = model.AuditMemberMove
+	AuditMemberDisconnect                       = model.AuditMemberDisconnect
+	AuditBotAdd                                 = model.AuditBotAdd
+	AuditRoleCreate                             = model.AuditRoleCreate
+	AuditRoleUpdate                             = model.AuditRoleUpdate
+	AuditRoleDelete                             = model.AuditRoleDelete
+	AuditInviteCreate                           = model.AuditInviteCreate
+	AuditInviteUpdate                           = model.AuditInviteUpdate
+	AuditInviteDelete                           = model.AuditInviteDelete
+	AuditWebhookCreate                          = model.AuditWebhookCreate
+	AuditWebhookUpdate                          = model.AuditWebhookUpdate
+	AuditWebhookDelete                          = model.AuditWebhookDelete
+	AuditEmojiCreate                            = model.AuditEmojiCreate
+	AuditEmojiUpdate                            = model.AuditEmojiUpdate
+	AuditEmojiDelete                            = model.AuditEmojiDelete
+	AuditMessageDelete                          = model.AuditMessageDelete
+	AuditMessageBulkDelete                      = model.AuditMessageBulkDelete
+	AuditMessagePin                             = model.AuditMessagePin
+	AuditMessageUnpin                           = model.AuditMessageUnpin
+	AuditStickerCreate                          = model.AuditStickerCreate
+	AuditStickerUpdate                          = model.AuditStickerUpdate
+	AuditStickerDelete                          = model.AuditStickerDelete
+	AuditThreadCreate                           = model.AuditThreadCreate
+	AuditThreadUpdate                           = model.AuditThreadUpdate
+	AuditThreadDelete                           = model.AuditThreadDelete
+	MaxAuditLogEntries                          = model.MaxAuditLogEntries
+	MaxRoleName                                 = model.MaxRoleName
+	MaxRoleColor                                = model.MaxRoleColor
+	TimestampShortTime                          = model.TimestampShortTime
+	TimestampLongTime                           = model.TimestampLongTime
+	TimestampShortDate                          = model.TimestampShortDate
+	TimestampLongDate                           = model.TimestampLongDate
+	TimestampShortDateTime                      = model.TimestampShortDateTime
+	TimestampLongDateTime                       = model.TimestampLongDateTime
+	TimestampRelative                           = model.TimestampRelative
+)

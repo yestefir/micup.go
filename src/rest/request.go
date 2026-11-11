@@ -20,6 +20,11 @@ import (
 
 const maxAuditReason = 512
 
+var (
+	errAroundIteration = errors.New("iteration takes Before or After, not Around")
+	errAfterIteration  = errors.New("audit log iteration runs newest first and takes Before, not After")
+)
+
 type RequestOption func(*request)
 
 func WithReason(reason string) RequestOption {
@@ -37,6 +42,7 @@ type request struct {
 	reason     string
 	dest       any
 	idempotent bool
+	anonymous  bool
 }
 
 type payload struct {
@@ -111,7 +117,9 @@ func (c *Client) send(ctx context.Context, r *request, body payload) (*http.Resp
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bot "+c.token)
+	if !r.anonymous {
+		req.Header.Set("Authorization", "Bot "+c.token)
+	}
 	req.Header.Set("User-Agent", version.UserAgent)
 	if body.contentType != "" {
 		req.Header.Set("Content-Type", body.contentType)
