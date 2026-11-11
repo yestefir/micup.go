@@ -29,13 +29,30 @@ const (
 	MessageFlagHasThread             = 1 << 5
 	MessageFlagSuppressNotifications = 1 << 12
 	MessageFlagVoiceMessage          = 1 << 13
+
+	MessageFlagFailedToMentionSomeRolesInThread = 1 << 8
 )
 
 const (
-	MaxEmbeds          = 10
-	MaxAttachments     = 10
-	MaxBulkDelete      = 100
-	MaxMessagesPerPage = 100
+	AttachmentFlagSpoiler       = 1 << 3
+	AttachmentFlagExplicitMedia = 1 << 4
+	AttachmentFlagAnimated      = 1 << 5
+)
+
+const (
+	MessageReferenceDefault = 0
+	MessageReferenceForward = 1
+)
+
+const (
+	MaxEmbeds               = 10
+	MaxAttachments          = 10
+	MaxBulkDelete           = 100
+	MaxMessagesPerPage      = 100
+	MaxStickersPerMessage   = 3
+	MaxReactionUsersPerPage = 100
+	MaxPinsPerPage          = 50
+	MaxRefreshURLs          = 50
 )
 
 const (
@@ -67,6 +84,53 @@ type Message struct {
 	MessageReference  *MessageReference `json:"message_reference,omitempty"`
 	ReferencedMessage *Message          `json:"referenced_message,omitempty"`
 	Nonce             json.RawMessage   `json:"nonce,omitempty"`
+	MentionChannels   []ChannelMention  `json:"mention_channels,omitempty"`
+	Users             []User            `json:"users,omitempty"`
+	Stickers          []StickerItem     `json:"stickers,omitempty"`
+	MessageSnapshots  []MessageSnapshot `json:"message_snapshots,omitempty"`
+	Call              *MessageCall      `json:"call,omitempty"`
+	Thread            *Channel          `json:"thread,omitempty"`
+}
+
+func (m Message) HasFlag(flag int) bool { return m.Flags&flag == flag }
+
+func (m Message) IsReply() bool { return m.Type == MessageTypeReply }
+
+func (m Message) IsForward() bool {
+	return m.MessageReference != nil && m.MessageReference.Type == MessageReferenceForward
+}
+
+func (m Message) IsWebhook() bool { return m.WebhookID != "" }
+
+type ChannelMention struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Type int    `json:"type"`
+}
+
+type StickerItem struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Animated bool   `json:"animated,omitempty"`
+}
+
+type MessageSnapshot struct {
+	Content         string           `json:"content,omitempty"`
+	Timestamp       string           `json:"timestamp,omitempty"`
+	EditedTimestamp *string          `json:"edited_timestamp,omitempty"`
+	Mentions        []string         `json:"mentions,omitempty"`
+	MentionRoles    []string         `json:"mention_roles,omitempty"`
+	MentionChannels []ChannelMention `json:"mention_channels,omitempty"`
+	Embeds          []Embed          `json:"embeds,omitempty"`
+	Attachments     []Attachment     `json:"attachments,omitempty"`
+	Stickers        []StickerItem    `json:"stickers,omitempty"`
+	Type            int              `json:"type"`
+	Flags           int              `json:"flags,omitempty"`
+}
+
+type MessageCall struct {
+	Participants   []string `json:"participants"`
+	EndedTimestamp *string  `json:"ended_timestamp"`
 }
 
 type MessageReference struct {
@@ -90,12 +154,20 @@ type Attachment struct {
 	Flags       int     `json:"flags,omitempty"`
 	Duration    int     `json:"duration,omitempty"`
 	ExpiresAt   *string `json:"expires_at,omitempty"`
+	ContentHash *string `json:"content_hash,omitempty"`
+	Placeholder string  `json:"placeholder,omitempty"`
+	NSFW        bool    `json:"nsfw,omitempty"`
+	Waveform    string  `json:"waveform,omitempty"`
+	Expired     bool    `json:"expired,omitempty"`
 }
+
+func (a Attachment) IsSpoiler() bool { return a.Flags&AttachmentFlagSpoiler != 0 }
 
 type Emoji struct {
 	ID       string `json:"id,omitempty"`
 	Name     string `json:"name"`
 	Animated bool   `json:"animated,omitempty"`
+	User     *User  `json:"user,omitempty"`
 }
 
 type Reaction struct {
@@ -115,6 +187,8 @@ type File struct {
 	Name        string
 	ContentType string
 	Description string
+	Title       string
+	Spoiler     bool
 	Reader      io.Reader
 }
 
@@ -124,6 +198,24 @@ type UploadedAttachment struct {
 	Size           int64
 	ContentType    string
 	Description    string
+	Title          string
+	Spoiler        bool
+	Duration       int
+	Waveform       string
+}
+
+type MessageForward struct {
+	ChannelID     string
+	MessageID     string
+	GuildID       string
+	AttachmentIDs []string
+	EmbedIndices  []int
+}
+
+type KeptAttachment struct {
+	ID          string
+	Title       Optional[string]
+	Description Optional[string]
 }
 
 type MessageOptions struct {
@@ -139,6 +231,7 @@ type MessageOptions struct {
 	AllowedMentions *AllowedMentions
 	Files           []File
 	Attachments     []UploadedAttachment
+	Forward         *MessageForward
 }
 
 type MessageEdit struct {
@@ -149,6 +242,7 @@ type MessageEdit struct {
 	AllowedMentions *AllowedMentions
 	Files           []File
 	Attachments     []UploadedAttachment
+	KeepAttachments []KeptAttachment
 }
 
 type MessageQuery struct {
@@ -171,4 +265,97 @@ type PinsPage struct {
 type PinQuery struct {
 	Limit  int
 	Before string
+}
+
+type ReactionUsersPage struct {
+	Items     []User  `json:"items"`
+	HasMore   bool    `json:"has_more"`
+	NextAfter *string `json:"next_after"`
+}
+
+type ReactionUsersQuery struct {
+	Limit int
+	After string
+}
+
+type RefreshedURL struct {
+	Original  string `json:"original"`
+	Refreshed string `json:"refreshed"`
+}
+
+type CrosspostSource struct {
+	Guild CrosspostSourceGuild `json:"guild"`
+}
+
+type CrosspostSourceGuild struct {
+	ID                       string   `json:"id"`
+	Name                     string   `json:"name"`
+	Icon                     *string  `json:"icon"`
+	Banner                   *string  `json:"banner"`
+	Description              *string  `json:"description"`
+	Features                 []string `json:"features"`
+	ApproximateMemberCount   *int     `json:"approximate_member_count"`
+	ApproximatePresenceCount *int     `json:"approximate_presence_count"`
+	Discoverable             bool     `json:"discoverable"`
+}
+
+const (
+	SearchAuthorUser    = "user"
+	SearchAuthorBot     = "bot"
+	SearchAuthorWebhook = "webhook"
+
+	SearchHasImage    = "image"
+	SearchHasSound    = "sound"
+	SearchHasVideo    = "video"
+	SearchHasFile     = "file"
+	SearchHasSticker  = "sticker"
+	SearchHasEmbed    = "embed"
+	SearchHasLink     = "link"
+	SearchHasSnapshot = "snapshot"
+
+	SearchSortTimestamp = "timestamp"
+	SearchSortRelevance = "relevance"
+	SortAscending       = "asc"
+	SortDescending      = "desc"
+
+	MaxSearchHitsPerPage = 25
+	MaxSearchPage        = 400
+)
+
+type MessageSearch struct {
+	GuildID            string
+	ChannelID          string
+	ChannelIDs         []string
+	ExcludeChannelIDs  []string
+	Content            string
+	ExactPhrases       []string
+	AuthorIDs          []string
+	ExcludeAuthorIDs   []string
+	AuthorTypes        []string
+	Mentions           []string
+	MentionEveryone    *bool
+	Pinned             *bool
+	Has                []string
+	ExcludeHas         []string
+	LinkHostnames      []string
+	AttachmentFilename []string
+	AttachmentExt      []string
+	MinID              string
+	MaxID              string
+	SortBy             string
+	SortOrder          string
+	HitsPerPage        int
+	Page               int
+	IncludeNSFW        bool
+}
+
+type MessageSearchResult struct {
+	Messages    []Message      `json:"messages"`
+	Channels    []Channel      `json:"channels,omitempty"`
+	Total       int            `json:"total"`
+	HitsPerPage int            `json:"hits_per_page"`
+	Page        int            `json:"page"`
+	Threads     []Channel      `json:"threads,omitempty"`
+	Members     []ThreadMember `json:"members,omitempty"`
+	Indexing    bool           `json:"indexing,omitempty"`
 }

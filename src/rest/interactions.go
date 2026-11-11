@@ -162,3 +162,59 @@ func interactionMessageData(options model.MessageOptions, ephemeral bool) (map[s
 	}
 	return data, nil
 }
+
+func (c *Client) InteractionResponse(ctx context.Context, interaction model.Interaction) (model.Message, error) {
+	p, err := interactionMessagePath(interaction, "@original")
+	if err != nil {
+		return model.Message{}, err
+	}
+	var message model.Message
+	err = c.call(ctx, &request{method: http.MethodGet, path: p, dest: &message})
+	return message, err
+}
+
+func (c *Client) DeleteInteractionResponse(ctx context.Context, interaction model.Interaction) error {
+	p, err := interactionMessagePath(interaction, "@original")
+	if err != nil {
+		return err
+	}
+	return c.call(ctx, &request{method: http.MethodDelete, path: p})
+}
+
+func (c *Client) EditInteractionFollowup(ctx context.Context, interaction model.Interaction, messageID string, edit model.MessageEdit) (model.Message, error) {
+	if messageID == "" {
+		return model.Message{}, errors.New("follow-up message ID is required")
+	}
+	p, err := interactionMessagePath(interaction, messageID)
+	if err != nil {
+		return model.Message{}, err
+	}
+	body, err := editBody(edit, "interaction follow-up")
+	if err != nil {
+		return model.Message{}, err
+	}
+	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
+		body["attachments"] = attachments
+	}
+	var message model.Message
+	err = c.call(ctx, &request{method: http.MethodPatch, path: p, body: body, files: edit.Files, dest: &message})
+	return message, err
+}
+
+func (c *Client) DeleteInteractionFollowup(ctx context.Context, interaction model.Interaction, messageID string) error {
+	if messageID == "" {
+		return errors.New("follow-up message ID is required")
+	}
+	p, err := interactionMessagePath(interaction, messageID)
+	if err != nil {
+		return err
+	}
+	return c.call(ctx, &request{method: http.MethodDelete, path: p})
+}
+
+func interactionMessagePath(interaction model.Interaction, messageID string) (string, error) {
+	if interaction.ApplicationID == "" || interaction.Token == "" {
+		return "", errors.New("interaction application ID and token are required")
+	}
+	return path("webhooks", url.PathEscape(interaction.ApplicationID), url.PathEscape(interaction.Token), "messages", url.PathEscape(messageID)), nil
+}

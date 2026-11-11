@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -75,4 +76,79 @@ func headerSeconds(value string) time.Duration {
 		return 0
 	}
 	return time.Duration(seconds * float64(time.Second))
+}
+
+const (
+	CodeInvalidFormBody       = "INVALID_FORM_BODY"
+	CodeRateLimited           = "RATE_LIMITED"
+	CodeSlowmodeRateLimited   = "SLOWMODE_RATE_LIMITED"
+	CodeResourceLocked        = "RESOURCE_LOCKED"
+	CodeUnauthorized          = "UNAUTHORIZED"
+	CodeMissingAccess         = "MISSING_ACCESS"
+	CodeMissingPermissions    = "MISSING_PERMISSIONS"
+	CodeTwoFactorRequired     = "TWO_FACTOR_REQUIRED"
+	CodeCommunicationDisabled = "COMMUNICATION_DISABLED"
+	CodeContentBlocked        = "CONTENT_BLOCKED"
+	CodeCannotSendEmpty       = "CANNOT_SEND_EMPTY_MESSAGE"
+	CodeUnknownChannel        = "UNKNOWN_CHANNEL"
+	CodeUnknownGuild          = "UNKNOWN_GUILD"
+	CodeUnknownMember         = "UNKNOWN_MEMBER"
+	CodeUnknownMessage        = "UNKNOWN_MESSAGE"
+	CodeUnknownRole           = "UNKNOWN_ROLE"
+	CodeUnknownUser           = "UNKNOWN_USER"
+	CodeUnknownInvite         = "UNKNOWN_INVITE"
+	CodeUnknownEmoji          = "UNKNOWN_EMOJI"
+	CodeUnknownSticker        = "UNKNOWN_STICKER"
+	CodeUnknownWebhook        = "UNKNOWN_WEBHOOK"
+	CodeThreadArchived        = "THREAD_ARCHIVED"
+	CodeThreadLocked          = "THREAD_LOCKED"
+	CodeMaxActiveThreads      = "MAX_ACTIVE_THREADS"
+	CodeNSFWAgeRestricted     = "NSFW_CONTENT_AGE_RESTRICTED"
+	CodeFeatureDisabled       = "FEATURE_TEMPORARILY_DISABLED"
+)
+
+func (e *APIError) HasFieldCode(code string) bool {
+	for _, field := range e.Errors {
+		if field.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *APIError) NotFound() bool { return e.StatusCode == http.StatusNotFound }
+
+func (e *APIError) Forbidden() bool { return e.StatusCode == http.StatusForbidden }
+
+func (e *APIError) RateLimited() bool { return e.StatusCode == http.StatusTooManyRequests }
+
+func ErrorCode(err error) string {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.Code
+	}
+	return ""
+}
+
+func IsErrorCode(err error, codes ...string) bool {
+	code := ErrorCode(err)
+	if code == "" {
+		return false
+	}
+	for _, want := range codes {
+		if code == want {
+			return true
+		}
+	}
+	return false
+}
+
+func IsNotFound(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && apiErr.NotFound()
+}
+
+func IsForbidden(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && apiErr.Forbidden()
 }
