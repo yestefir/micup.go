@@ -18,14 +18,16 @@ msg, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 
 | Field | Meaning |
 |---|---|
-| `Content`, `Embeds` (max 10), `StickerIDs` (max 3) | What the message shows. A message needs text, an embed, a button, a file or a sticker |
-| `Components` | Rows of buttons; see [Buttons](components.md) |
+| `Content`, `Embeds` (max 10), `StickerIDs` (max 3) | What the message shows. A message needs text, an embed, a component, a file or a sticker |
+| `Components` | Rows of buttons or a select menu; see [Buttons and select menus](components.md) |
 | `ReplyTo` | The message ID to reply to |
 | `Nonce` | Your ID for the message (up to 32 characters). Micup remembers it for 5 minutes per channel and returns the first message when you send it again, so a send with a nonce is safe to retry and the client retries it on 5xx |
 | `Flags` | `MessageFlagSuppressEmbeds`, `MessageFlagSuppressNotifications` or `MessageFlagVoiceMessage` |
 | `AllowedMentions` | Which mentions notify. When nil, no mention notifies anyone (`parse: []`). Do not combine `Parse` with `Users` or `Roles` |
 | `Files` | Files sent in the same request as multipart |
 | `Attachments` | Files uploaded earlier with `UploadAttachment` |
+
+An explicit empty `AllowedMentions` also disables mentions and serializes as `{"parse":[]}`. Empty policies never become `{}` or `{"parse":null}`, which Micup rejects in interaction message updates. Explicit user IDs, role IDs, and `RepliedUser` are preserved.
 
 Bots can send at least 4,000 characters per message.
 
@@ -86,7 +88,7 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 
 ## Gateway payloads
 
-`micup.MessageCreate` (and `micup.MessageUpdate`) embeds `micup.Message` and adds `ChannelType`, `MentionHere` and, in guild channels, the author's `Member` with role IDs. `Message` carries attachments, embeds, buttons (`Components`), reactions, `MessageReference` and `ReferencedMessage` for replies.
+`micup.MessageCreate` (and `micup.MessageUpdate`) embeds `micup.Message` and adds `ChannelType`, `MentionHere` and, in guild channels, the author's `Member` with role IDs. `Message` carries attachments, embeds, buttons and select menus (`Components`), reactions, `MessageReference` and `ReferencedMessage` for replies.
 
 ## Webhooks
 
@@ -97,4 +99,4 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 | `DeleteWebhook(ctx, webhookID, ...)` | Delete a webhook |
 | `ExecuteWebhook(ctx, id, token, micup.WebhookMessage{...})` | Post as the webhook; returns the message only when `Wait` is true |
 
-`WebhookMessage` embeds `MessageOptions` (without buttons) and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. The webhook token is a secret: anyone with the ID and token can post.
+`WebhookMessage` embeds `MessageOptions` (without components) and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. The webhook token is a secret: anyone with the ID and token can post.

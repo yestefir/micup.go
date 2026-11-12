@@ -4,7 +4,7 @@
 
 - **Gateway:** sessions that resume, replay unprocessed events and re-identify on the same socket; a shard manager for many shards in one process; optional zstd-stream compression; ignored events and presence; command pacing below Micup's limits.
 - **State:** guilds, channels with permission overwrites, roles, member roles and voice states, with permission computation.
-- **REST:** messages (send, edit, delete, bulk delete, list), buttons and click answers, reactions, pins, typing, DMs, files (multipart and presigned uploads), members, roles, moderation and webhooks, with Micup's error codes and rate limit rules.
+- **REST:** messages (send, edit, delete, bulk delete, list), buttons, select menus and their answers, reactions, pins, typing, DMs, files (multipart and presigned uploads), members, roles, moderation and webhooks, with Micup's error codes and rate limit rules.
 - **Voice:** the join handshake with fast refusal and permission checks, grant rotation, and Opus publishing to LiveKit.
 
 The module keeps platform transport separate from application behavior. It does not implement music search, queues, command syntax, persistence, or worker coordination.
@@ -18,7 +18,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v0.6.0
+go get github.com/yestefir/micup.go@v0.7.0
 ```
 
 ## Quick start
@@ -97,6 +97,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v0.6.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v0.7.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

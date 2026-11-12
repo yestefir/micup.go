@@ -45,8 +45,10 @@ type InteractionGuild struct {
 }
 
 type ComponentData struct {
-	CustomID      string `json:"custom_id"`
-	ComponentType int    `json:"component_type"`
+	CustomID      string    `json:"custom_id"`
+	ComponentType int       `json:"component_type"`
+	Values        []string  `json:"values,omitempty"`
+	Resolved      *Resolved `json:"resolved,omitempty"`
 }
 
 func (i Interaction) ComponentData() (ComponentData, bool) {

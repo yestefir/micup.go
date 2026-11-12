@@ -104,6 +104,7 @@ type Role struct {
 	Hoist         bool        `json:"hoist"`
 	Mentionable   bool        `json:"mentionable"`
 	Managed       bool        `json:"managed"`
+	Icon          *string     `json:"icon,omitempty"`
 	UnicodeEmoji  *string     `json:"unicode_emoji,omitempty"`
 	IconEmojiID   *string     `json:"icon_emoji_id,omitempty"`
 }

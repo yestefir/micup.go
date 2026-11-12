@@ -2,7 +2,8 @@
 
 These programs use only the public `micup` package. Run them from the repository root with Go 1.26.8 or newer. They use the checked-out library, so they also demonstrate APIs newer than the latest release. No FFmpeg or voice setup is needed.
 
-## Ping bot
+| [Ping](ping/main.go) | Typed message events and a `!ping` reply; setup below |
+| [Slash echo](slash-echo/README.md) | Guild command registration, typed options, and private interaction responses |
 
 Invite your bot to a test guild, enable its message-content grant, and allow it to view the test channel, read message history, and send messages.
 

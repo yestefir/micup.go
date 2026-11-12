@@ -16,6 +16,7 @@ const (
 	interactionResponseDeferUpdate   = 6
 	interactionResponseUpdateMessage = 7
 	interactionResponseAutocomplete  = 8
+	interactionResponseModal         = 9
 )
 
 func (c *Client) RespondToInteraction(ctx context.Context, interaction model.Interaction, options model.MessageOptions, ephemeral bool) error {
@@ -52,7 +53,7 @@ func (c *Client) UpdateInteractionMessage(ctx context.Context, interaction model
 		return err
 	}
 	if len(data) == 0 {
-		return errors.New("interaction update needs content, embeds, buttons, flags or allowed mentions")
+		return errors.New("interaction update needs content, embeds, components, flags or allowed mentions")
 	}
 	return c.callback(ctx, interaction, interactionResponseUpdateMessage, data)
 }
@@ -109,6 +110,20 @@ func (c *Client) RespondAutocomplete(ctx context.Context, interaction model.Inte
 	return c.callback(ctx, interaction, interactionResponseAutocomplete, map[string]any{"choices": choices})
 }
 
+func (c *Client) RespondWithModal(ctx context.Context, interaction model.Interaction, modal model.Modal) error {
+	if err := validateInteraction(interaction); err != nil {
+		return err
+	}
+	if err := model.ValidateModalTarget(interaction); err != nil {
+		return err
+	}
+	if err := modal.Validate(); err != nil {
+		return err
+	}
+	body := map[string]any{"type": interactionResponseModal, "data": modal}
+	return c.Do(ctx, http.MethodPost, path("interactions", url.PathEscape(interaction.ID), url.PathEscape(interaction.Token), "callback"), body, nil)
+}
+
 func (c *Client) callback(ctx context.Context, interaction model.Interaction, kind int, data map[string]any) error {
 	body := map[string]any{"type": kind}
 	if data != nil {
@@ -146,4 +161,60 @@ func interactionMessageData(options model.MessageOptions, ephemeral bool) (map[s
 		data["flags"] = model.MessageFlagEphemeral
 	}
 	return data, nil
+}
+
+func (c *Client) InteractionResponse(ctx context.Context, interaction model.Interaction) (model.Message, error) {
+	p, err := interactionMessagePath(interaction, "@original")
+	if err != nil {
+		return model.Message{}, err
+	}
+	var message model.Message
+	err = c.call(ctx, &request{method: http.MethodGet, path: p, dest: &message})
+	return message, err
+}
+
+func (c *Client) DeleteInteractionResponse(ctx context.Context, interaction model.Interaction) error {
+	p, err := interactionMessagePath(interaction, "@original")
+	if err != nil {
+		return err
+	}
+	return c.call(ctx, &request{method: http.MethodDelete, path: p})
+}
+
+func (c *Client) EditInteractionFollowup(ctx context.Context, interaction model.Interaction, messageID string, edit model.MessageEdit) (model.Message, error) {
+	if messageID == "" {
+		return model.Message{}, errors.New("follow-up message ID is required")
+	}
+	p, err := interactionMessagePath(interaction, messageID)
+	if err != nil {
+		return model.Message{}, err
+	}
+	body, err := editBody(edit, "interaction follow-up")
+	if err != nil {
+		return model.Message{}, err
+	}
+	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
+		body["attachments"] = attachments
+	}
+	var message model.Message
+	err = c.call(ctx, &request{method: http.MethodPatch, path: p, body: body, files: edit.Files, dest: &message})
+	return message, err
+}
+
+func (c *Client) DeleteInteractionFollowup(ctx context.Context, interaction model.Interaction, messageID string) error {
+	if messageID == "" {
+		return errors.New("follow-up message ID is required")
+	}
+	p, err := interactionMessagePath(interaction, messageID)
+	if err != nil {
+		return err
+	}
+	return c.call(ctx, &request{method: http.MethodDelete, path: p})
+}
+
+func interactionMessagePath(interaction model.Interaction, messageID string) (string, error) {
+	if interaction.ApplicationID == "" || interaction.Token == "" {
+		return "", errors.New("interaction application ID and token are required")
+	}
+	return path("webhooks", url.PathEscape(interaction.ApplicationID), url.PathEscape(interaction.Token), "messages", url.PathEscape(messageID)), nil
 }

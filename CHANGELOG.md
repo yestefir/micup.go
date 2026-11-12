@@ -4,6 +4,8 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-07
+
 ### Added
 
 - `src/events`: a payload type for every known Gateway event, grouped by domain, with a name→type registry. `micup.EventAs[T]` decodes an event and rejects the wrong type; `micup.DecodeEvent` returns the payload as `any` and raw JSON for unknown names.
@@ -14,6 +16,8 @@ Notable changes to micup.go are recorded here.
 - [Events and typed payloads](docs/events.md), with an event table generated from the registry.
 - Application commands: `GlobalCommands`, `GuildCommands`, `Create…`, `Edit…`, `Delete…` and `Set…Commands` for global and guild scopes, with `ApplicationCommand.Validate` checking Micup's rules before a request is sent. See [Slash and context menu commands](docs/commands.md).
 - `Interaction.CommandData` with `Path`, typed option readers, resolved users, members, roles, channels and attachments, `Focused`, `TargetUser` and `TargetMessage`. `IsCommand`, `IsAutocomplete` and `RespondAutocomplete`.
+- Modals: `Modal`, `TextInput` (`ShortInput`, `ParagraphInput` with `WithLength`, `WithRequired`, `WithValue`, `WithPlaceholder`), `RespondWithModal` for command and button interactions, and `Interaction.ModalData` / `IsModalSubmit` to read submitted values. `Modal.Validate` checks Micup's limits before sending.
+- Select menus: `StringSelect`, `UserSelect`, `RoleSelect`, `MentionableSelect` and `ChannelSelect` placed with `NewSelectRow`, options from `NewSelectOption`, and `DefaultUser`, `DefaultRole`, `DefaultChannel` preselections. Menus are validated before sending and decode into `ActionRow.Select` on received messages. `Interaction.IsSelectMenu`, `SelectedValues`, and `ComponentData.Values`, `Resolved`, `Users`, `Members`, `Roles`, `Channels` read a selection. `DisableComponents` disables buttons and menus. See [Buttons and select menus](docs/components.md).
 - `Interaction.Channel`, `Guild`, `Context` and `AttachmentSizeLimit`; `Member.Permissions` and `Channel.Permissions` as resolved by Micup. `EventApplicationCommandsUpdate` and `ApplicationCommandsUpdate`.
 
 ### Fixed
@@ -26,6 +30,12 @@ Notable changes to micup.go are recorded here.
 
 - Payload types were checked against anonymized responses and events captured from Micup; those captures are part of the test suite.
 - The session cache and member inventories decode payloads with the shared types and keep the readable fields when Micup sends an unexpected value type.
+
+## [0.6.1] - 2026-11-07
+
+### Fixed
+
+- Empty `AllowedMentions` serializes with an explicit `parse: []` in messages and interaction updates, avoiding Micup's `400 INVALID_FORM_BODY` rejection of `data.allowed_mentions` during button navigation.
 
 ## [0.6.0] - 2026-11-05
 
