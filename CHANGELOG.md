@@ -4,6 +4,8 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-12
+
 ### Added
 
 - Channels: `CreateChannel`, `ModifyChannel`, `DeleteChannel`, `ModifyChannelPositions`, `SetChannelPermission`, `DeleteChannelPermission`, `FollowChannel` and `ChannelFollowerStats`. Edit structs use `micup.Optional[T]` (`micup.Set`, `micup.Clear`) so a field can be left out, changed or cleared. See [Channels, roles, threads and invites](docs/channels.md).

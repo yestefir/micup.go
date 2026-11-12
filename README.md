@@ -20,7 +20,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v0.7.0
+go get github.com/yestefir/micup.go@v0.8.0
 ```
 
 ## Quick start
@@ -101,6 +101,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v0.7.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v0.8.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).
