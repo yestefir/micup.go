@@ -104,7 +104,7 @@ The table is generated from the registry. Captured means the payload type is tes
 | `VOICE_STATE_UPDATE` | `micup.EventVoiceStateUpdate` | `micup.VoiceState` | yes |
 | `VOICE_SERVER_UPDATE` | `micup.EventVoiceServerUpdate` | `micup.VoiceServerUpdate` | yes |
 | `GUILD_EMOJIS_UPDATE` | `micup.EventGuildEmojisUpdate` | `micup.GuildEmojisUpdate` | yes |
-| `GUILD_STICKERS_UPDATE` | `micup.EventGuildStickersUpdate` | `micup.GuildStickersUpdate` | no |
+| `GUILD_STICKERS_UPDATE` | `micup.EventGuildStickersUpdate` | `micup.GuildStickersUpdate` | yes |
 | `GUILD_MEMBER_LIST_UPDATE` | `micup.EventGuildMemberListUpdate` | `micup.MemberListUpdate` | no |
 | `GUILD_COUNTS_UPDATE` | `micup.EventGuildCountsUpdate` | `micup.GuildCountsUpdate` | no |
 | `CHANNEL_RECIPIENT_ADD` | `micup.EventChannelRecipientAdd` | `micup.ChannelRecipient` | no |
@@ -116,7 +116,7 @@ The table is generated from the registry. Captured means the payload type is tes
 | `THREAD_CREATE` | `micup.EventThreadCreate` | `micup.ThreadCreate` | yes |
 | `THREAD_UPDATE` | `micup.EventThreadUpdate` | `micup.Channel` | yes |
 | `THREAD_DELETE` | `micup.EventThreadDelete` | `micup.ThreadDelete` | yes |
-| `THREAD_LIST_SYNC` | `micup.EventThreadListSync` | `micup.ThreadListSync` | no |
+| `THREAD_LIST_SYNC` | `micup.EventThreadListSync` | `micup.ThreadListSync` | yes |
 | `THREAD_MEMBER_UPDATE` | `micup.EventThreadMemberUpdate` | `micup.ThreadMember` | yes |
 | `THREAD_MEMBERS_UPDATE` | `micup.EventThreadMembersUpdate` | `micup.ThreadMembersUpdate` | no |
 | `THREAD_MEMBER_LIST_UPDATE` | `micup.EventThreadMemberListUpdate` | `micup.ThreadMemberListUpdate` | no |

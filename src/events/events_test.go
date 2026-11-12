@@ -22,7 +22,6 @@ var uncaptured = map[string]bool{
 	gateway.EventGuildBanRemove:    true,
 	gateway.EventPresenceUpdate:    true,
 
-	gateway.EventGuildStickersUpdate:       true,
 	gateway.EventGuildMemberListUpdate:     true,
 	gateway.EventGuildCountsUpdate:         true,
 	gateway.EventChannelRecipientAdd:       true,
@@ -31,7 +30,6 @@ var uncaptured = map[string]bool{
 	gateway.EventPresenceUpdateBulk:        true,
 	gateway.EventPassiveUpdates:            true,
 	gateway.EventReactionAddMany:           true,
-	gateway.EventThreadListSync:            true,
 	gateway.EventThreadMembersUpdate:       true,
 	gateway.EventThreadMemberListUpdate:    true,
 	gateway.EventCallCreate:                true,
@@ -139,6 +137,14 @@ func TestCapturedThreadAndEmojiPayloads(t *testing.T) {
 	member := decodeFirst[model.ThreadMember](t, gateway.EventThreadMemberUpdate)
 	if member.ID == "" || member.UserID == "" || member.GuildID == "" || member.Flags != model.ThreadMemberHasInteracted {
 		t.Errorf("thread member update: %+v", member)
+	}
+	sync := decodeFirst[ThreadListSync](t, gateway.EventThreadListSync)
+	if sync.GuildID == "" || len(sync.Threads) != 2 || len(sync.Members) != 1 || sync.Threads[0].Flags != model.ChannelFlagPinned || !sync.Threads[0].ThreadMetadata.Locked {
+		t.Errorf("thread list sync: %+v", sync)
+	}
+	stickers, err := As[GuildStickersUpdate](load(t, filepath.Join("testdata", gateway.EventGuildStickersUpdate+".1.json")))
+	if err != nil || len(stickers.Stickers) != 1 || len(stickers.Stickers[0].Tags) != 2 || stickers.Stickers[0].Description != "renamed" {
+		t.Errorf("stickers update: %+v %v", stickers, err)
 	}
 	emojis, err := As[GuildEmojisUpdate](load(t, filepath.Join("testdata", gateway.EventGuildEmojisUpdate+".1.json")))
 	if err != nil || emojis.GuildID == "" || len(emojis.Emojis) != 1 || emojis.Emojis[0].ID == "" {

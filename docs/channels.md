@@ -28,6 +28,8 @@ An edit with no fields returns an error before any request is sent.
 | `FollowChannel(ctx, announcementID, targetID)`, `ChannelFollowerStats` | Announcement channel follows |
 | `CrosspostMessage(ctx, channelID, messageID)` | Publishes an announcement to followers (10 in a row, then one per 6 minutes) |
 
+Micup currently refuses announcement channels: creating one returns `INVALID_CHANNEL_TYPE` and converting a text channel returns `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`. The follow and crosspost methods follow the Fluxer API and work only on instances that allow announcement channels.
+
 Names are 1 to 100 characters, topics at most 4,096 and slowmode 0 to 21,600 seconds; forum tags are checked for count, length, duplicates and emoji fields.
 
 ## Roles
@@ -36,7 +38,7 @@ Names are 1 to 100 characters, topics at most 4,096 and slowmode 0 to 21,600 sec
 |---|---|
 | `CreateRole(ctx, guildID, micup.RoleCreate{Name, Color, Permissions, Icon, UnicodeEmoji})` | A nil `Permissions` copies the everyone role |
 | `ModifyRole(ctx, guildID, roleID, micup.RoleEdit{...})` | Only `HoistPosition`, `Icon` and `UnicodeEmoji` can be cleared |
-| `DeleteRole`, `ModifyRolePositions`, `ModifyRoleHoistPositions`, `ResetRoleHoistPositions` | The everyone role cannot be deleted or moved |
+| `DeleteRole`, `ModifyRolePositions`, `ModifyRoleHoistPositions`, `ResetRoleHoistPositions` | The everyone role cannot be deleted or moved. Micup renumbers every role after a reorder, so read the stored positions back with `Roles` |
 
 Micup refuses role icons (`Icon` and `UnicodeEmoji`) with `INVALID_FORM_BODY` until the guild reaches boost level 1.
 
@@ -70,7 +72,7 @@ Archive durations are `micup.AutoArchiveHour`, `AutoArchiveDay`, `AutoArchiveThr
 
 ## Search
 
-`SearchMessages(ctx, micup.MessageSearch{GuildID, ChannelID, Content, Has, AuthorIDs, ...})` searches one guild or channel; bots cannot use the other scopes. When `Indexing` is true, Micup is building the index and the request should be retried. `SearchMembers(ctx, guildID, micup.MemberSearch{...})` needs a moderation permission.
+`SearchMessages(ctx, micup.MessageSearch{GuildID, ChannelID, Content, Has, AuthorIDs, ...})` searches one guild or channel; bots cannot use the other scopes. When `Indexing` is true, Micup is building the index and the request should be retried; a new guild's message index can stay in that state for a long time. `SearchMembers(ctx, guildID, micup.MemberSearch{...})` needs a moderation permission.
 
 ## Paging
 
