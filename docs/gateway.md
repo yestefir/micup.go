@@ -131,9 +131,9 @@ The cache also follows `GUILD_EMOJIS_UPDATE`, `GUILD_STICKERS_UPDATE`, `THREAD_C
 | `Subscribe(ctx, map[string]micup.Subscription{...})` | 14 (Lazy Request): `Active`, `Sync`, `Typing`, `MemberListChannels`, `Members`, `Threads`, `ThreadMemberLists` |
 | `UpdateVoiceState(ctx, guildID, micup.VoiceJoin{SelfMute, SelfDeaf})` | 4; changes mute and deafen on the current connection |
 
-Count requests wait up to 12 seconds and return `micup.ErrNoResponse` when Micup does not answer. `ShardManager` routes each call to the owning shards and has `Latency()` and `Guilds()` across shards. `SessionOptions.OnReady(resumed)` runs after `READY` or `RESUMED`, `OnDisconnect(err)` after each lost connection, and `Session.SessionID()` returns the current session.
+Count requests wait up to 12 seconds and return `micup.ErrNoResponse` when Micup does not answer. `ShardManager` routes each call to the owning shards and has `Latency()` and `Guilds()` across shards. `SessionOptions.OnReady(resumed)` runs on its own goroutine after `READY` or `RESUMED`, so it may call Gateway requests; `OnDisconnect(err)` runs after each lost connection, and `Session.SessionID()` returns the current session.
 
-`b.RecommendedShards(ctx)` counts the bot's guilds and suggests a shard count that keeps each shard well under `micup.MaxGuildsPerShard` (2,500). Close codes have constants such as `micup.CloseShardingRequired`.
+`b.RecommendedShards(ctx)` pages through the bot's guilds (one request per 200 guilds, since Micup's `/gateway/bot` always reports one shard) and suggests a shard count that keeps each shard well under `micup.MaxGuildsPerShard` (2,500). Close codes have constants such as `micup.CloseShardingRequired`.
 
 ### Member requests
 

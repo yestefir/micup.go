@@ -259,16 +259,13 @@ func (m *Manager) UpdateVoiceState(ctx context.Context, guildID string, options 
 }
 
 func (m *Manager) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]events.GuildCount, error) {
-	byShard := map[int][]string{}
-	for _, guildID := range guildIDs {
-		id, err := ForGuild(guildID, m.count)
-		if err != nil {
-			return nil, err
-		}
-		if _, ok := m.sessions[id]; !ok {
-			return nil, ErrNotOwned
-		}
-		byShard[id] = append(byShard[id], guildID)
+	ids := session.UniqueIDs(guildIDs)
+	if len(ids) == 0 {
+		return nil, errors.New("a guild count request needs at least one guild ID")
+	}
+	byShard, err := m.groupByShard(ids)
+	if err != nil {
+		return nil, err
 	}
 	var counts []events.GuildCount
 	for _, id := range m.ids {
@@ -284,6 +281,21 @@ func (m *Manager) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]
 	return counts, nil
 }
 
+func (m *Manager) groupByShard(guildIDs []string) (map[int][]string, error) {
+	byShard := map[int][]string{}
+	for _, guildID := range guildIDs {
+		id, err := ForGuild(guildID, m.count)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := m.sessions[id]; !ok {
+			return nil, ErrNotOwned
+		}
+		byShard[id] = append(byShard[id], guildID)
+	}
+	return byShard, nil
+}
+
 func (m *Manager) RequestChannelMemberCounts(ctx context.Context, guildID string, channelIDs []string) ([]events.ChannelMemberCount, error) {
 	s, err := m.ForGuild(guildID)
 	if err != nil {
@@ -296,26 +308,24 @@ func (m *Manager) Subscribe(ctx context.Context, subscriptions map[string]gatewa
 	if err := gateway.ValidateSubscriptions(subscriptions); err != nil {
 		return err
 	}
-	byShard := map[int]map[string]gateway.Subscription{}
-	for guildID, subscription := range subscriptions {
-		id, err := ForGuild(guildID, m.count)
-		if err != nil {
-			return err
-		}
-		if _, ok := m.sessions[id]; !ok {
-			return ErrNotOwned
-		}
-		if byShard[id] == nil {
-			byShard[id] = map[string]gateway.Subscription{}
-		}
-		byShard[id][guildID] = subscription
+	guildIDs := make([]string, 0, len(subscriptions))
+	for guildID := range subscriptions {
+		guildIDs = append(guildIDs, guildID)
+	}
+	byShard, err := m.groupByShard(guildIDs)
+	if err != nil {
+		return err
 	}
 	var errs []error
 	for _, id := range m.ids {
 		if len(byShard[id]) == 0 {
 			continue
 		}
-		if err := m.sessions[id].Subscribe(ctx, byShard[id]); err != nil {
+		part := make(map[string]gateway.Subscription, len(byShard[id]))
+		for _, guildID := range byShard[id] {
+			part[guildID] = subscriptions[guildID]
+		}
+		if err := m.sessions[id].Subscribe(ctx, part); err != nil {
 			errs = append(errs, fmt.Errorf("Micup shard %d: %w", id, err))
 		}
 	}
