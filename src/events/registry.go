@@ -59,4 +59,31 @@ var registry = map[string]payload{
 
 	gateway.EventVoiceStateUpdate:  of[model.VoiceState](),
 	gateway.EventVoiceServerUpdate: of[model.VoiceServerUpdate](),
+
+	gateway.EventGuildEmojisUpdate:         of[GuildEmojisUpdate](),
+	gateway.EventGuildStickersUpdate:       of[GuildStickersUpdate](),
+	gateway.EventGuildMemberListUpdate:     of[MemberListUpdate](),
+	gateway.EventGuildCountsUpdate:         of[GuildCountsUpdate](),
+	gateway.EventChannelRecipientAdd:       of[ChannelRecipient](),
+	gateway.EventChannelRecipientRemove:    of[ChannelRecipient](),
+	gateway.EventChannelMemberCountsUpdate: of[ChannelMemberCountsUpdate](),
+	gateway.EventPresenceUpdateBulk:        of[PresenceUpdateBulk](),
+	gateway.EventPassiveUpdates:            of[PassiveUpdates](),
+	gateway.EventReactionAddMany:           of[ReactionAddMany](),
+
+	gateway.EventThreadCreate:           of[ThreadCreate](),
+	gateway.EventThreadUpdate:           of[model.Channel](),
+	gateway.EventThreadDelete:           of[ThreadDelete](),
+	gateway.EventThreadListSync:         of[ThreadListSync](),
+	gateway.EventThreadMemberUpdate:     of[model.ThreadMember](),
+	gateway.EventThreadMembersUpdate:    of[ThreadMembersUpdate](),
+	gateway.EventThreadMemberListUpdate: of[ThreadMemberListUpdate](),
+
+	gateway.EventCallCreate:         of[Call](),
+	gateway.EventCallUpdate:         of[Call](),
+	gateway.EventCallDelete:         of[CallDelete](),
+	gateway.EventEntranceSoundPlay:  of[EntranceSoundPlay](),
+	gateway.EventRelationshipAdd:    of[Relationship](),
+	gateway.EventRelationshipUpdate: of[Relationship](),
+	gateway.EventRelationshipRemove: of[RelationshipRemove](),
 }

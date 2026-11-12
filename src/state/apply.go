@@ -38,6 +38,16 @@ func (c *Cache) Apply(name string, data json.RawMessage) *VoiceMove {
 		c.applyMembersChunk(data)
 	case gateway.EventVoiceStateUpdate:
 		return c.applyVoiceState(data)
+	case gateway.EventGuildEmojisUpdate:
+		c.applyEmojis(data)
+	case gateway.EventGuildStickersUpdate:
+		c.applyStickers(data)
+	case gateway.EventThreadCreate, gateway.EventThreadUpdate:
+		c.applyThread(data)
+	case gateway.EventThreadDelete:
+		c.applyThreadDelete(data)
+	case gateway.EventThreadListSync:
+		c.applyThreadListSync(data)
 	}
 	return nil
 }
@@ -81,6 +91,9 @@ func (c *Cache) applyGuildCreate(payload events.GuildCreate) {
 		g.members = previous.members
 	}
 	g.ownerID = payload.OwnerID
+	g.info = guildInfo(payload.Guild)
+	g.emojis = payload.Emojis
+	g.stickers = payload.Stickers
 	for _, role := range payload.Roles {
 		g.roles[role.ID] = role
 	}
@@ -89,7 +102,7 @@ func (c *Cache) applyGuildCreate(payload events.GuildCreate) {
 			delete(c.channels, id)
 		}
 	}
-	for _, channel := range payload.Channels {
+	for _, channel := range append(payload.Channels, payload.Threads...) {
 		if channel.ID != "" {
 			channel.GuildID = payload.ID
 			c.channels[channel.ID] = channel
@@ -118,8 +131,20 @@ func (c *Cache) applyGuildUpdate(data json.RawMessage) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if g := c.guilds[payload.ID]; g != nil && payload.OwnerID != "" {
+	g := c.guilds[payload.ID]
+	if g == nil {
+		return
+	}
+	if payload.OwnerID != "" {
 		g.ownerID = payload.OwnerID
+	}
+	if payload.Name != "" {
+		g.info = guildInfo(payload.Guild)
+	}
+	for _, role := range payload.Roles {
+		if role.ID != "" {
+			g.roles[role.ID] = role
+		}
 	}
 }
 
@@ -222,6 +247,11 @@ func (c *Cache) applyChannel(name string, data json.RawMessage) {
 	defer c.mu.Unlock()
 	if name == gateway.EventChannelDelete {
 		delete(c.channels, channel.ID)
+		for id, child := range c.channels {
+			if child.IsThread() && child.ParentID == channel.ID {
+				delete(c.channels, id)
+			}
+		}
 	} else if channel.GuildID != "" {
 		c.channels[channel.ID] = channel
 	}
@@ -294,6 +324,75 @@ func (c *Cache) applyMembersChunk(data json.RawMessage) {
 	for _, member := range chunk.Members {
 		if member.User != nil && member.User.ID != "" {
 			g.members[member.User.ID] = member.Roles
+		}
+	}
+}
+
+func guildInfo(guild model.Guild) model.Guild {
+	guild.Roles, guild.Emojis, guild.Stickers = nil, nil, nil
+	return guild
+}
+
+func (c *Cache) applyEmojis(data json.RawMessage) {
+	payload, ok := events.Parse[events.GuildEmojisUpdate](data)
+	if !ok || payload.GuildID == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.guildLocked(payload.GuildID).emojis = payload.Emojis
+}
+
+func (c *Cache) applyStickers(data json.RawMessage) {
+	payload, ok := events.Parse[events.GuildStickersUpdate](data)
+	if !ok || payload.GuildID == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.guildLocked(payload.GuildID).stickers = payload.Stickers
+}
+
+func (c *Cache) applyThread(data json.RawMessage) {
+	thread, ok := events.Parse[model.Channel](data)
+	if !ok || thread.ID == "" || thread.GuildID == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.channels[thread.ID] = thread
+}
+
+func (c *Cache) applyThreadDelete(data json.RawMessage) {
+	payload, ok := events.Parse[events.ThreadDelete](data)
+	if !ok || payload.ID == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.channels, payload.ID)
+}
+
+func (c *Cache) applyThreadListSync(data json.RawMessage) {
+	payload, ok := events.Parse[events.ThreadListSync](data)
+	if !ok || payload.GuildID == "" {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	parents := map[string]bool{}
+	for _, id := range payload.ChannelIDs {
+		parents[id] = true
+	}
+	for id, channel := range c.channels {
+		if channel.GuildID == payload.GuildID && channel.IsThread() && (len(parents) == 0 || parents[channel.ParentID]) {
+			delete(c.channels, id)
+		}
+	}
+	for _, thread := range payload.Threads {
+		if thread.ID != "" {
+			thread.GuildID = payload.GuildID
+			c.channels[thread.ID] = thread
 		}
 	}
 }

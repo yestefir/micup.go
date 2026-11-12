@@ -76,6 +76,39 @@ const (
 	EventVoiceServerUpdate = "VOICE_SERVER_UPDATE"
 )
 
+const (
+	EventGuildEmojisUpdate         = "GUILD_EMOJIS_UPDATE"
+	EventGuildStickersUpdate       = "GUILD_STICKERS_UPDATE"
+	EventGuildMemberListUpdate     = "GUILD_MEMBER_LIST_UPDATE"
+	EventGuildCountsUpdate         = "GUILD_COUNTS_UPDATE"
+	EventChannelRecipientAdd       = "CHANNEL_RECIPIENT_ADD"
+	EventChannelRecipientRemove    = "CHANNEL_RECIPIENT_REMOVE"
+	EventChannelMemberCountsUpdate = "CHANNEL_MEMBER_COUNTS_UPDATE"
+	EventPresenceUpdateBulk        = "PRESENCE_UPDATE_BULK"
+	EventPassiveUpdates            = "PASSIVE_UPDATES"
+	EventReactionAddMany           = "MESSAGE_REACTION_ADD_MANY"
+)
+
+const (
+	EventThreadCreate           = "THREAD_CREATE"
+	EventThreadUpdate           = "THREAD_UPDATE"
+	EventThreadDelete           = "THREAD_DELETE"
+	EventThreadListSync         = "THREAD_LIST_SYNC"
+	EventThreadMemberUpdate     = "THREAD_MEMBER_UPDATE"
+	EventThreadMembersUpdate    = "THREAD_MEMBERS_UPDATE"
+	EventThreadMemberListUpdate = "THREAD_MEMBER_LIST_UPDATE"
+)
+
+const (
+	EventCallCreate         = "CALL_CREATE"
+	EventCallUpdate         = "CALL_UPDATE"
+	EventCallDelete         = "CALL_DELETE"
+	EventEntranceSoundPlay  = "ENTRANCE_SOUND_PLAY"
+	EventRelationshipAdd    = "RELATIONSHIP_ADD"
+	EventRelationshipUpdate = "RELATIONSHIP_UPDATE"
+	EventRelationshipRemove = "RELATIONSHIP_REMOVE"
+)
+
 var knownEvents = []string{
 	EventReady, EventResumed, EventRateLimited, EventSessionsReplace, EventGatewayRolloutUpdate,
 	EventGuildCreate, EventGuildSync, EventGuildUpdate, EventGuildDelete, EventGuildAuditLogEntryCreate,
@@ -89,6 +122,13 @@ var knownEvents = []string{
 	EventInviteCreate, EventInviteDelete, EventWebhooksUpdate,
 	EventInteractionCreate, EventApplicationCommandsUpdate,
 	EventVoiceStateUpdate, EventVoiceServerUpdate,
+	EventGuildEmojisUpdate, EventGuildStickersUpdate, EventGuildMemberListUpdate, EventGuildCountsUpdate,
+	EventChannelRecipientAdd, EventChannelRecipientRemove, EventChannelMemberCountsUpdate,
+	EventPresenceUpdateBulk, EventPassiveUpdates, EventReactionAddMany,
+	EventThreadCreate, EventThreadUpdate, EventThreadDelete, EventThreadListSync,
+	EventThreadMemberUpdate, EventThreadMembersUpdate, EventThreadMemberListUpdate,
+	EventCallCreate, EventCallUpdate, EventCallDelete, EventEntranceSoundPlay,
+	EventRelationshipAdd, EventRelationshipUpdate, EventRelationshipRemove,
 }
 
 func KnownEvents() []string { return append([]string(nil), knownEvents...) }

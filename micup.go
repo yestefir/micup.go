@@ -143,7 +143,28 @@ const (
 	OpInvalidSession             = gateway.OpInvalidSession
 	OpHello                      = gateway.OpHello
 	OpHeartbeatAck               = gateway.OpHeartbeatAck
+	OpVoiceSignal                = gateway.OpVoiceSignal
+	OpRequestForumUnreads        = gateway.OpRequestForumUnreads
 )
+
+const (
+	CloseUnknownError         = gateway.CloseUnknownError
+	CloseUnknownOpcode        = gateway.CloseUnknownOpcode
+	CloseDecodeError          = gateway.CloseDecodeError
+	CloseNotAuthenticated     = gateway.CloseNotAuthenticated
+	CloseAuthenticationFailed = gateway.CloseAuthenticationFailed
+	CloseAlreadyAuthenticated = gateway.CloseAlreadyAuthenticated
+	CloseInvalidSequence      = gateway.CloseInvalidSequence
+	CloseRateLimited          = gateway.CloseRateLimited
+	CloseSessionTimeout       = gateway.CloseSessionTimeout
+	CloseInvalidShard         = gateway.CloseInvalidShard
+	CloseShardingRequired     = gateway.CloseShardingRequired
+	CloseInvalidAPIVersion    = gateway.CloseInvalidAPIVersion
+)
+
+func ValidateSubscriptions(subscriptions map[string]Subscription) error {
+	return gateway.ValidateSubscriptions(subscriptions)
+}
 
 var (
 	ErrReconnectRequested = gateway.ErrReconnectRequested
@@ -207,6 +228,8 @@ var (
 	ErrVoiceRefused       = session.ErrVoiceRefused
 	ErrVoicePermission    = session.ErrVoicePermission
 	ErrMembersRateLimited = session.ErrMembersRateLimited
+	ErrNotInVoice         = session.ErrNotInVoice
+	ErrNoResponse         = session.ErrNoResponse
 )
 
 type (
@@ -230,6 +253,8 @@ func ShardForGuild(guildID string, shardCount int) (int, error) {
 }
 
 const DefaultIdentifyInterval = shard.DefaultIdentifyInterval
+
+const MaxGuildsPerShard = bot.MaxGuildsPerShard
 
 var (
 	ErrShardNotOwned       = shard.ErrNotOwned

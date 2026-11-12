@@ -102,3 +102,68 @@ func EventAs[T any](event Event) (T, error) { return events.As[T](event) }
 func NewEventMux() *EventMux { return events.NewMux() }
 
 func Listen[T any](fn func(context.Context, T) error) EventListener { return events.Listen(fn) }
+
+const (
+	EventGuildEmojisUpdate         = gateway.EventGuildEmojisUpdate
+	EventGuildStickersUpdate       = gateway.EventGuildStickersUpdate
+	EventGuildMemberListUpdate     = gateway.EventGuildMemberListUpdate
+	EventGuildCountsUpdate         = gateway.EventGuildCountsUpdate
+	EventChannelRecipientAdd       = gateway.EventChannelRecipientAdd
+	EventChannelRecipientRemove    = gateway.EventChannelRecipientRemove
+	EventChannelMemberCountsUpdate = gateway.EventChannelMemberCountsUpdate
+	EventPresenceUpdateBulk        = gateway.EventPresenceUpdateBulk
+	EventPassiveUpdates            = gateway.EventPassiveUpdates
+	EventReactionAddMany           = gateway.EventReactionAddMany
+	EventThreadCreate              = gateway.EventThreadCreate
+	EventThreadUpdate              = gateway.EventThreadUpdate
+	EventThreadDelete              = gateway.EventThreadDelete
+	EventThreadListSync            = gateway.EventThreadListSync
+	EventThreadMemberUpdate        = gateway.EventThreadMemberUpdate
+	EventThreadMembersUpdate       = gateway.EventThreadMembersUpdate
+	EventThreadMemberListUpdate    = gateway.EventThreadMemberListUpdate
+	EventCallCreate                = gateway.EventCallCreate
+	EventCallUpdate                = gateway.EventCallUpdate
+	EventCallDelete                = gateway.EventCallDelete
+	EventEntranceSoundPlay         = gateway.EventEntranceSoundPlay
+	EventRelationshipAdd           = gateway.EventRelationshipAdd
+	EventRelationshipUpdate        = gateway.EventRelationshipUpdate
+	EventRelationshipRemove        = gateway.EventRelationshipRemove
+)
+
+type (
+	GuildEmojisUpdate         = events.GuildEmojisUpdate
+	GuildStickersUpdate       = events.GuildStickersUpdate
+	GuildCount                = events.GuildCount
+	GuildCountsUpdate         = events.GuildCountsUpdate
+	ChannelMemberCount        = events.ChannelMemberCount
+	ChannelMemberCountsUpdate = events.ChannelMemberCountsUpdate
+	PassiveUpdates            = events.PassiveUpdates
+	ReactionAddition          = events.ReactionAddition
+	ReactionAddMany           = events.ReactionAddMany
+	ChannelRecipient          = events.ChannelRecipient
+	ThreadCreate              = events.ThreadCreate
+	ThreadDelete              = events.ThreadDelete
+	ThreadListSync            = events.ThreadListSync
+	ThreadMemberPresence      = events.ThreadMemberPresence
+	ThreadMembersUpdate       = events.ThreadMembersUpdate
+	ThreadMemberListUpdate    = events.ThreadMemberListUpdate
+	MemberListGroup           = events.MemberListGroup
+	MemberListMember          = events.MemberListMember
+	MemberListItem            = events.MemberListItem
+	MemberListOperation       = events.MemberListOperation
+	MemberListUpdate          = events.MemberListUpdate
+	PresenceUpdateBulk        = events.PresenceUpdateBulk
+	Relationship              = events.Relationship
+	RelationshipRemove        = events.RelationshipRemove
+	Call                      = events.Call
+	CallDelete                = events.CallDelete
+	EntranceSoundPlay         = events.EntranceSoundPlay
+	Subscription              = gateway.Subscription
+)
+
+const (
+	RelationshipFriend          = events.RelationshipFriend
+	RelationshipBlocked         = events.RelationshipBlocked
+	RelationshipIncomingRequest = events.RelationshipIncomingRequest
+	RelationshipOutgoingRequest = events.RelationshipOutgoingRequest
+)
