@@ -10,6 +10,8 @@ The guides describe the supported public API and its operational limits.
 - [Buttons, select menus and click handling](components.md)
 - [Slash and context menu commands](commands.md)
 - [Guilds, members and moderation](guilds.md)
+- [Channels, roles, threads, invites, emojis and search](channels.md)
+- [Formatting, media URLs and snowflakes](formatting.md)
 - [Voice grants and LiveKit PCM publishing](voice.md)
 - [Architecture and package layers](architecture.md)
 - [Migrating from v0.3 to v0.4](migration.md)
