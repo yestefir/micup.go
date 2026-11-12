@@ -26,7 +26,6 @@ Notable changes to micup.go are recorded here.
 ### Fixed
 
 - Guild settings sent inside `properties` in `READY`, `GUILD_CREATE` and `GUILD_SYNC` (features, images, levels, system channel) are now decoded; only the owner and name were kept before.
-- The REST rate limiter keyed "remove every reaction" (`DELETE …/reactions`) as if it had an emoji segment.
 
 ## [0.7.0] - 2026-11-07
 
