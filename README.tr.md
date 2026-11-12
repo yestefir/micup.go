@@ -3,8 +3,10 @@
 `micup.go`, Micup botları için bağımsız bir Go istemcisidir ve Micup'ın üzerinde çalıştığı Fluxer API'sini izler:
 
 - **Gateway:** kaldığı yerden süren, işlenmemiş olayları yeniden alan ve aynı soketten yeniden IDENTIFY yapan oturumlar; tek süreçte çok shard; isteğe bağlı zstd-stream sıkıştırma; yok sayılan olaylar ve durum; Micup sınırlarının altında komut hızı.
-- **Önbellek:** guild'ler, izin geçersiz kılmalı kanallar, roller, üye rolleri, ses durumları ve izin hesabı.
-- **REST:** mesajlar (gönderme, düzenleme, silme, toplu silme, listeleme), butonlar ve tıklama yanıtları, tepkiler, sabitleme, yazıyor göstergesi, DM, dosyalar (multipart ve önceden yükleme), üyeler, roller, moderasyon ve webhook'lar; Micup hata kodları ve rate limit kurallarıyla.
+- **Gateway komutları:** üye istekleri, guild ve kanal üye sayıları, Lazy Request abonelikleri ve ses durumu güncelleme; thread, arama, emoji, çıkartma ve üye listesi dahil her Micup olayı için tipli veri.
+- **Önbellek:** ayarları, emojileri ve çıkartmalarıyla guild'ler, izin geçersiz kılmalı kanallar ve thread'ler, roller, üye rolleri, ses durumları; izin ve rol hiyerarşisi kontrolleri.
+- **REST:** mesajlar (gönderme, düzenleme, iletme, yayınlama, silme, toplu silme, listeleme, arama), butonlar, seçim menüleri, modallar ve komutlar, tepkiler, sabitleme, yazıyor göstergesi, DM, dosyalar, kanallar, thread ve forumlar, roller, guild ayarları, üyeler, davetler, emojiler, çıkartmalar, denetim kayıtları, yasaklar, moderasyon ve webhook'lar; sayfalama yineleyicileri, Micup hata kodları ve rate limit kurallarıyla.
+- **Yardımcılar:** bahsetmeler, zaman damgaları, markdown kaçışı, embed oluşturucu, medya URL'leri, snowflake zamanları ve izin adları.
 - **Ses:** hızlı ret ve izin kontrolüyle katılma, yetki yenileme ve LiveKit'e Opus yayını.
 
 Modül Micup taşımasını uygulama mantığından ayırır. Müzik arama ve kuyruğu, komut sözdizimi, veritabanı ve worker yönetimi kapsam dışındadır.
