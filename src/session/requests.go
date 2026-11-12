@@ -20,7 +20,7 @@ const (
 var ErrNoResponse = errors.New("Micup Gateway did not answer the request")
 
 func (s *Session) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]events.GuildCount, error) {
-	ids := uniqueIDs(guildIDs)
+	ids := UniqueIDs(guildIDs)
 	if len(ids) == 0 || len(ids) > maxCountGuilds {
 		return nil, fmt.Errorf("a guild count request takes 1 to %d guild IDs", maxCountGuilds)
 	}
@@ -28,12 +28,12 @@ func (s *Session) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]
 	if err != nil {
 		return nil, err
 	}
-	update, _ := events.Parse[events.GuildCountsUpdate](data)
-	return update.Counts, nil
+	update, err := events.As[events.GuildCountsUpdate](gateway.Event{Name: gateway.EventGuildCountsUpdate, Data: data})
+	return update.Counts, err
 }
 
 func (s *Session) RequestChannelMemberCounts(ctx context.Context, guildID string, channelIDs []string) ([]events.ChannelMemberCount, error) {
-	ids := uniqueIDs(channelIDs)
+	ids := UniqueIDs(channelIDs)
 	if guildID == "" || len(ids) == 0 || len(ids) > maxCountChannels {
 		return nil, fmt.Errorf("a channel member count request takes a guild ID and 1 to %d channel IDs", maxCountChannels)
 	}
@@ -41,8 +41,8 @@ func (s *Session) RequestChannelMemberCounts(ctx context.Context, guildID string
 	if err != nil {
 		return nil, err
 	}
-	update, _ := events.Parse[events.ChannelMemberCountsUpdate](data)
-	return update.Counts, nil
+	update, err := events.As[events.ChannelMemberCountsUpdate](gateway.Event{Name: gateway.EventChannelMemberCountsUpdate, Data: data})
+	return update.Counts, err
 }
 
 func (s *Session) Subscribe(ctx context.Context, subscriptions map[string]gateway.Subscription) error {
@@ -113,7 +113,7 @@ func (s *Session) handleCounts(event gateway.Event) {
 	}
 }
 
-func uniqueIDs(ids []string) []string {
+func UniqueIDs(ids []string) []string {
 	unique := slices.DeleteFunc(slices.Clone(ids), func(id string) bool { return id == "" })
 	slices.Sort(unique)
 	return slices.Compact(unique)

@@ -200,11 +200,7 @@ func (c *Cache) Guild(guildID string) (model.Guild, bool) {
 	guild.ID = guildID
 	guild.OwnerID = g.ownerID
 	guild.Features = slices.Clone(guild.Features)
-	guild.Roles = make([]model.Role, 0, len(g.roles))
-	for _, role := range g.roles {
-		guild.Roles = append(guild.Roles, role)
-	}
-	slices.SortFunc(guild.Roles, func(a, b model.Role) int { return b.Position - a.Position })
+	guild.Roles = sortedRoles(g.roles)
 	guild.Emojis = slices.Clone(g.emojis)
 	guild.Stickers = slices.Clone(g.stickers)
 	return guild, true
@@ -230,8 +226,27 @@ func (c *Cache) Threads(guildID string) []model.Channel {
 }
 
 func (c *Cache) Roles(guildID string) []model.Role {
-	guild, _ := c.Guild(guildID)
-	return guild.Roles
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	g := c.guilds[guildID]
+	if g == nil {
+		return nil
+	}
+	return sortedRoles(g.roles)
+}
+
+func sortedRoles(byID map[string]model.Role) []model.Role {
+	roles := make([]model.Role, 0, len(byID))
+	for _, role := range byID {
+		roles = append(roles, role)
+	}
+	slices.SortFunc(roles, func(a, b model.Role) int {
+		if a.Position != b.Position {
+			return b.Position - a.Position
+		}
+		return model.CompareSnowflakes(a.ID, b.ID)
+	})
+	return roles
 }
 
 func (c *Cache) Emojis(guildID string) []model.Emoji {
@@ -268,6 +283,31 @@ func (c *Cache) HighestRole(guildID, userID string) (model.Role, bool) {
 	if g == nil {
 		return model.Role{}, false
 	}
+	return g.highestRole(guildID, userID)
+}
+
+func (c *Cache) CanManage(guildID, actorID, targetID string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	g := c.guilds[guildID]
+	if g == nil {
+		return false
+	}
+	if g.ownerID != "" && actorID == g.ownerID {
+		return true
+	}
+	if targetID == g.ownerID {
+		return false
+	}
+	actor, ok := g.highestRole(guildID, actorID)
+	if !ok {
+		return false
+	}
+	target, ok := g.highestRole(guildID, targetID)
+	return ok && actor.Position > target.Position
+}
+
+func (g *guild) highestRole(guildID, userID string) (model.Role, bool) {
 	best, found := g.roles[guildID]
 	for _, id := range g.members[userID] {
 		if role, ok := g.roles[id]; ok && (!found || role.Position > best.Position) {
@@ -275,21 +315,6 @@ func (c *Cache) HighestRole(guildID, userID string) (model.Role, bool) {
 		}
 	}
 	return best, found
-}
-
-func (c *Cache) CanManage(guildID, actorID, targetID string) bool {
-	if owner := c.OwnerID(guildID); owner != "" && actorID == owner {
-		return true
-	}
-	if targetID == c.OwnerID(guildID) {
-		return false
-	}
-	actor, ok := c.HighestRole(guildID, actorID)
-	if !ok {
-		return false
-	}
-	target, ok := c.HighestRole(guildID, targetID)
-	return ok && actor.Position > target.Position
 }
 
 func (c *Cache) selectChannels(keep func(model.Channel) bool) []model.Channel {

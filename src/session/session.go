@@ -274,7 +274,7 @@ func (s *Session) rememberSession(event gateway.Event) {
 
 func (s *Session) announceReady(resumed bool) {
 	if s.options.OnReady != nil {
-		s.options.OnReady(resumed)
+		go s.options.OnReady(resumed)
 	}
 }
 

@@ -199,3 +199,23 @@ func TestManagerRunsOnce(t *testing.T) {
 		t.Fatalf("second Run was accepted: %v", err)
 	}
 }
+
+func TestManagerCountsCleanGuildIDs(t *testing.T) {
+	p := fixture.New(t)
+	m, err := shard.NewManager(session.Config{Endpoint: p.GatewayURL(), Token: fixture.Token, BotID: fixture.BotID}, shard.Options{ShardCount: 1, IdentifyInterval: time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- m.Run(ctx) }()
+	defer func() { cancel(); <-done }()
+	fixture.Eventually(t, m.Ready)
+	if _, err := m.RequestGuildCounts(context.Background(), nil); err == nil {
+		t.Fatal("an empty count request was accepted")
+	}
+	counts, err := m.RequestGuildCounts(context.Background(), []string{fixture.GuildID, fixture.GuildID, ""})
+	if err != nil || len(counts) != 1 {
+		t.Fatalf("counts %+v %v", counts, err)
+	}
+}

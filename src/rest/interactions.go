@@ -73,7 +73,11 @@ func (c *Client) EditInteractionResponse(ctx context.Context, interaction model.
 	if err != nil {
 		return model.Message{}, err
 	}
-	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
+	attachments, changed, err := editAttachments(edit)
+	if err != nil {
+		return model.Message{}, err
+	}
+	if changed {
 		body["attachments"] = attachments
 	}
 	var message model.Message
@@ -193,7 +197,11 @@ func (c *Client) EditInteractionFollowup(ctx context.Context, interaction model.
 	if err != nil {
 		return model.Message{}, err
 	}
-	if attachments := attachmentMetadata(edit.Files, edit.Attachments); len(attachments) != 0 {
+	attachments, changed, err := editAttachments(edit)
+	if err != nil {
+		return model.Message{}, err
+	}
+	if changed {
 		body["attachments"] = attachments
 	}
 	var message model.Message

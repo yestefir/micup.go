@@ -406,3 +406,36 @@ func TestErrorHelpers(t *testing.T) {
 		t.Fatal("non-API errors must not match")
 	}
 }
+
+func TestReviewRegressions(t *testing.T) {
+	c, rec := recordingClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			fmt.Fprintf(w, `{"id":"3","flags":%d}`, model.MessageFlagCrossposted|model.MessageFlagHasThread|model.MessageFlagSuppressNotifications)
+			return
+		}
+		fmt.Fprint(w, `{"id":"3"}`)
+	})
+	ctx := context.Background()
+	if _, err := c.ModifyChannel(ctx, "1", model.ChannelEdit{Name: model.Clear[string]()}); err == nil {
+		t.Fatal("clearing a channel name was accepted")
+	}
+	if _, err := c.SuppressEmbeds(ctx, "1", "3", true); err != nil {
+		t.Fatal(err)
+	}
+	if flags := rec.last().body["flags"]; flags != float64(model.MessageFlagSuppressEmbeds|model.MessageFlagSuppressNotifications) {
+		t.Fatalf("suppress embeds sent flags %v", flags)
+	}
+	i := model.Interaction{ApplicationID: "8", Token: "tok"}
+	if _, err := c.EditInteractionFollowup(ctx, i, "3", model.MessageEdit{KeepAttachments: []model.KeptAttachment{}}); err != nil {
+		t.Fatal(err)
+	}
+	if string(rec.last().raw) != `{"attachments":[]}` {
+		t.Fatalf("follow-up edit sent %s", rec.last().raw)
+	}
+	if _, err := c.EditInteractionResponse(ctx, i, model.MessageEdit{KeepAttachments: []model.KeptAttachment{{ID: "4"}}}); err != nil {
+		t.Fatal(err)
+	}
+	if string(rec.last().raw) != `{"attachments":[{"id":"4"}]}` {
+		t.Fatalf("response edit sent %s", rec.last().raw)
+	}
+}

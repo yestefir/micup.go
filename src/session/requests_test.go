@@ -81,3 +81,24 @@ func TestUpdateVoiceStateKeepsTheConnection(t *testing.T) {
 		t.Fatalf("voice state update sent as %v", update)
 	}
 }
+
+func TestReadyHookCanUseGatewayRequests(t *testing.T) {
+	p := fixture.New(t)
+	result := make(chan error, 1)
+	var s *session.Session
+	s = newSession(t, p, session.Options{OnReady: func(bool) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, err := s.RequestGuildCounts(ctx, []string{fixture.GuildID})
+		result <- err
+	}})
+	run(t, s)
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatalf("count request from OnReady: %v", err)
+		}
+	case <-time.After(8 * time.Second):
+		t.Fatal("OnReady blocked the Gateway")
+	}
+}
