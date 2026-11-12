@@ -9,6 +9,7 @@ import (
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/internal/httpx"
 	"github.com/yestefir/micup.go/src/internal/version"
+	"github.com/yestefir/micup.go/src/model"
 	"github.com/yestefir/micup.go/src/rest"
 	"github.com/yestefir/micup.go/src/session"
 	"github.com/yestefir/micup.go/src/shard"
@@ -83,6 +84,8 @@ func (b *Bot) identify(ctx context.Context) error {
 }
 
 func (b *Bot) Endpoints() discovery.Endpoints { return b.endpoints }
+
+func (b *Bot) Media() model.Media { return model.Media{Base: b.endpoints.Media} }
 
 func (b *Bot) SessionConfig() session.Config {
 	return session.Config{

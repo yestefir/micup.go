@@ -117,6 +117,7 @@ micup.const.DefaultIdentifyInterval
 micup.const.DefaultMaxBackoff
 micup.const.DefaultMinBackoff
 micup.const.DefaultOrigin
+micup.const.ElevatedPermissions
 micup.const.EmbedTypeRich
 micup.const.EventApplicationCommandsUpdate
 micup.const.EventCallCreate
@@ -215,6 +216,11 @@ micup.const.ForumSortCreationTime
 micup.const.ForumSortLatestActivity
 micup.const.ForumTagMatchAll
 micup.const.ForumTagMatchSome
+micup.const.ImageAVIF
+micup.const.ImageGIF
+micup.const.ImageJPEG
+micup.const.ImagePNG
+micup.const.ImageWebP
 micup.const.InteractionContextBotDM
 micup.const.InteractionContextGuild
 micup.const.InteractionContextPrivateChannel
@@ -470,6 +476,7 @@ micup.func.EscapeMarkdown
 micup.func.EventAs
 micup.func.FormatTimestamp
 micup.func.ImageData
+micup.func.InviteURL
 micup.func.IsErrorCode
 micup.func.IsForbidden
 micup.func.IsNotFound
@@ -482,6 +489,7 @@ micup.func.MentionUser
 micup.func.MentionableSelect
 micup.func.New
 micup.func.NewActionRow
+micup.func.NewEmbed
 micup.func.NewEventMux
 micup.func.NewREST
 micup.func.NewSelectOption
@@ -490,6 +498,7 @@ micup.func.NewSession
 micup.func.NewShardManager
 micup.func.NewState
 micup.func.ParagraphInput
+micup.func.ParsePermission
 micup.func.ParseSnowflake
 micup.func.PrimaryButton
 micup.func.RoleSelect
@@ -594,12 +603,14 @@ micup.type.GuildMembers
 micup.type.GuildQuery
 micup.type.GuildStickersUpdate
 micup.type.GuildUpdate
+micup.type.ImageOptions
 micup.type.Interaction
 micup.type.InteractionGuild
 micup.type.Invite
 micup.type.InviteCreate
 micup.type.InviteDelete
 micup.type.KeptAttachment
+micup.type.Media
 micup.type.Member
 micup.type.MemberEdit
 micup.type.MemberListGroup

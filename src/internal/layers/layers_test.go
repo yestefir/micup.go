@@ -26,7 +26,7 @@ var allowed = map[string][]string{
 	"session":            {"events", "gateway", "model", "state"},
 	"shard":              {"events", "gateway", "model", "session"},
 	"voice":              {},
-	"bot":                {"discovery", "gateway", "internal/httpx", "internal/version", "rest", "session", "shard"},
+	"bot":                {"discovery", "gateway", "internal/httpx", "internal/version", "model", "rest", "session", "shard"},
 }
 
 func TestPackageLayers(t *testing.T) {

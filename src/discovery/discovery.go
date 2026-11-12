@@ -19,8 +19,11 @@ const (
 )
 
 type Endpoints struct {
-	API     string
-	Gateway string
+	API       string
+	Gateway   string
+	Media     string
+	StaticCDN string
+	Invite    string
 }
 
 func ParseOrigin(raw string) (*url.URL, error) {
@@ -47,8 +50,11 @@ func Discover(ctx context.Context, client *http.Client, origin *url.URL) (Endpoi
 	defer resp.Body.Close()
 	var document struct {
 		Endpoints struct {
-			API     string `json:"api_public"`
-			Gateway string `json:"gateway"`
+			API       string `json:"api_public"`
+			Gateway   string `json:"gateway"`
+			Media     string `json:"media"`
+			StaticCDN string `json:"static_cdn"`
+			Invite    string `json:"invite"`
 		} `json:"endpoints"`
 	}
 	if resp.StatusCode != http.StatusOK || json.NewDecoder(io.LimitReader(resp.Body, responseLimit)).Decode(&document) != nil {
@@ -62,5 +68,19 @@ func Discover(ctx context.Context, client *http.Client, origin *url.URL) (Endpoi
 	if err != nil || gateway.Host != origin.Host || (gateway.Scheme != "ws" && gateway.Scheme != "wss") || (origin.Scheme == "https" && gateway.Scheme != "wss") {
 		return Endpoints{}, errors.New("invalid Micup Gateway endpoint")
 	}
-	return Endpoints{API: strings.TrimRight(api.String(), "/"), Gateway: gateway.String()}, nil
+	return Endpoints{
+		API:       strings.TrimRight(api.String(), "/"),
+		Gateway:   gateway.String(),
+		Media:     webBase(document.Endpoints.Media),
+		StaticCDN: webBase(document.Endpoints.StaticCDN),
+		Invite:    webBase(document.Endpoints.Invite),
+	}, nil
+}
+
+func webBase(raw string) string {
+	parsed, err := url.Parse(raw)
+	if raw == "" || err != nil || parsed.Host == "" || parsed.User != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
+		return ""
+	}
+	return strings.TrimRight(parsed.String(), "/")
 }

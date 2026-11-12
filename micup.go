@@ -774,3 +774,24 @@ const (
 	TimestampLongDateTime                       = model.TimestampLongDateTime
 	TimestampRelative                           = model.TimestampRelative
 )
+
+type (
+	Media        = model.Media
+	ImageOptions = model.ImageOptions
+)
+
+const (
+	ImagePNG  = model.ImagePNG
+	ImageJPEG = model.ImageJPEG
+	ImageWebP = model.ImageWebP
+	ImageGIF  = model.ImageGIF
+	ImageAVIF = model.ImageAVIF
+
+	ElevatedPermissions = model.ElevatedPermissions
+)
+
+func InviteURL(base, code string) (string, error) { return model.InviteURL(base, code) }
+
+func NewEmbed() Embed { return model.NewEmbed() }
+
+func ParsePermission(name string) (Permissions, bool) { return model.ParsePermission(name) }
