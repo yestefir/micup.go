@@ -22,7 +22,6 @@ var uncaptured = map[string]bool{
 	gateway.EventGuildBanRemove:    true,
 	gateway.EventPresenceUpdate:    true,
 
-	gateway.EventGuildEmojisUpdate:         true,
 	gateway.EventGuildStickersUpdate:       true,
 	gateway.EventGuildMemberListUpdate:     true,
 	gateway.EventGuildCountsUpdate:         true,
@@ -32,11 +31,7 @@ var uncaptured = map[string]bool{
 	gateway.EventPresenceUpdateBulk:        true,
 	gateway.EventPassiveUpdates:            true,
 	gateway.EventReactionAddMany:           true,
-	gateway.EventThreadCreate:              true,
-	gateway.EventThreadUpdate:              true,
-	gateway.EventThreadDelete:              true,
 	gateway.EventThreadListSync:            true,
-	gateway.EventThreadMemberUpdate:        true,
 	gateway.EventThreadMembersUpdate:       true,
 	gateway.EventThreadMemberListUpdate:    true,
 	gateway.EventCallCreate:                true,
@@ -126,6 +121,29 @@ func decodeFirst[T any](t *testing.T, name string) T {
 		t.Fatal(err)
 	}
 	return value
+}
+
+func TestCapturedThreadAndEmojiPayloads(t *testing.T) {
+	created := decodeFirst[ThreadCreate](t, gateway.EventThreadCreate)
+	if !created.NewlyCreated || !created.IsThread() || created.ParentID == "" || created.ThreadMetadata == nil || created.Member == nil || created.Member.UserID == "" {
+		t.Errorf("thread create: %+v", created)
+	}
+	updated := decodeFirst[model.Channel](t, gateway.EventThreadUpdate)
+	if updated.ID == "" || updated.ThreadMetadata == nil {
+		t.Errorf("thread update: %+v", updated)
+	}
+	deleted := decodeFirst[ThreadDelete](t, gateway.EventThreadDelete)
+	if deleted.ID == "" || deleted.GuildID == "" || deleted.ParentID == "" || deleted.Type != model.ChannelTypePublicThread {
+		t.Errorf("thread delete: %+v", deleted)
+	}
+	member := decodeFirst[model.ThreadMember](t, gateway.EventThreadMemberUpdate)
+	if member.ID == "" || member.UserID == "" || member.GuildID == "" || member.Flags != model.ThreadMemberHasInteracted {
+		t.Errorf("thread member update: %+v", member)
+	}
+	emojis, err := As[GuildEmojisUpdate](load(t, filepath.Join("testdata", gateway.EventGuildEmojisUpdate+".1.json")))
+	if err != nil || emojis.GuildID == "" || len(emojis.Emojis) != 1 || emojis.Emojis[0].ID == "" {
+		t.Errorf("emojis update: %+v %v", emojis, err)
+	}
 }
 
 func TestCapturedPayloadFields(t *testing.T) {

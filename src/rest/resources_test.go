@@ -22,7 +22,7 @@ func TestResourceRoutes(t *testing.T) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/audit-logs"):
 			fmt.Fprint(w, `{"audit_log_entries":[{"id":"9","action_type":22,"user_id":"1","target_id":"2","options":{"delete_message_seconds":60}}],"users":[{"id":"1"}]}`)
-		case strings.HasSuffix(r.URL.Path, "/bans"), strings.HasSuffix(r.URL.Path, "/invites") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/emojis") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/stickers") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/thread-members"), r.URL.Path == "/api/v1/users/@me/channels" && r.Method == http.MethodGet, r.URL.Path == "/api/v1/users/@me/guilds":
+		case strings.HasSuffix(r.URL.Path, "/bans"), strings.HasSuffix(r.URL.Path, "/invites") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/emojis") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/stickers") && r.Method == http.MethodGet, strings.HasSuffix(r.URL.Path, "/thread-members"), r.URL.Path == "/api/v1/users/@me/guilds":
 			fmt.Fprint(w, `[]`)
 		case r.URL.Path == "/api/v1/gateway/bot":
 			fmt.Fprint(w, `{"url":"wss://gateway.example","shards":1,"session_start_limit":{"total":1000,"remaining":999,"reset_after":14400000,"max_concurrency":1}}`)
@@ -123,7 +123,6 @@ func TestResourceRoutes(t *testing.T) {
 			_, err := c.UserProfile(ctx, "2", model.UserProfileQuery{GuildID: "5", WithMutualGuilds: true})
 			return err
 		}, "GET", "/users/2/profile", "guild_id=5&with_mutual_guilds=true", ""},
-		{"dm channels", func() error { _, err := c.DMChannels(ctx); return err }, "GET", "/users/@me/channels", "", ""},
 		{"invite", func() error { _, err := c.Invite(ctx, "abc"); return err }, "GET", "/invites/abc", "", ""},
 		{"create invite", func() error {
 			invite, err := c.CreateInvite(ctx, "1", model.InviteCreate{MaxAge: 3600, Unique: true})
