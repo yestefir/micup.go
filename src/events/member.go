@@ -26,3 +26,34 @@ type GuildBan struct {
 	GuildID string     `json:"guild_id"`
 	User    model.User `json:"user"`
 }
+
+type MemberListGroup struct {
+	ID    string `json:"id"`
+	Count int    `json:"count"`
+}
+
+type MemberListMember struct {
+	model.Member
+	Presence *PresenceUpdate `json:"presence,omitempty"`
+}
+
+type MemberListItem struct {
+	Group  *MemberListGroup  `json:"group,omitempty"`
+	Member *MemberListMember `json:"member,omitempty"`
+}
+
+type MemberListOperation struct {
+	Op    string           `json:"op"`
+	Range []int            `json:"range,omitempty"`
+	Items []MemberListItem `json:"items,omitempty"`
+}
+
+type MemberListUpdate struct {
+	GuildID     string                `json:"guild_id"`
+	ID          string                `json:"id"`
+	ChannelID   string                `json:"channel_id,omitempty"`
+	MemberCount int                   `json:"member_count"`
+	OnlineCount int                   `json:"online_count"`
+	Groups      []MemberListGroup     `json:"groups,omitempty"`
+	Ops         []MemberListOperation `json:"ops,omitempty"`
+}

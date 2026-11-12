@@ -15,6 +15,9 @@ type Cache struct {
 }
 
 type guild struct {
+	info        model.Guild
+	emojis      []model.Emoji
+	stickers    []model.Sticker
 	ownerID     string
 	unavailable bool
 	roles       map[string]model.Role
@@ -116,6 +119,13 @@ func (c *Cache) Permissions(guildID, channelID, userID string) (model.Permission
 		if !ok || channel.GuildID != guildID {
 			return 0, false
 		}
+		if channel.IsThread() {
+			parent, ok := c.channels[channel.ParentID]
+			if !ok {
+				return 0, false
+			}
+			channel = parent
+		}
 		overwrites = channel.PermissionOverwrites
 	}
 	return model.ComputePermissions(guildID, g.ownerID, userID, g.roles, memberRoles, overwrites), true
@@ -177,4 +187,126 @@ func (c *Cache) Remember(channelID, guildID string) {
 		return
 	}
 	c.channels[channelID] = model.Channel{ID: channelID, GuildID: guildID}
+}
+
+func (c *Cache) Guild(guildID string) (model.Guild, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	g := c.guilds[guildID]
+	if g == nil || g.unavailable {
+		return model.Guild{}, false
+	}
+	guild := g.info
+	guild.ID = guildID
+	guild.OwnerID = g.ownerID
+	guild.Features = slices.Clone(guild.Features)
+	guild.Roles = make([]model.Role, 0, len(g.roles))
+	for _, role := range g.roles {
+		guild.Roles = append(guild.Roles, role)
+	}
+	slices.SortFunc(guild.Roles, func(a, b model.Role) int { return b.Position - a.Position })
+	guild.Emojis = slices.Clone(g.emojis)
+	guild.Stickers = slices.Clone(g.stickers)
+	return guild, true
+}
+
+func (c *Cache) GuildIDs() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	ids := make([]string, 0, len(c.guilds))
+	for id := range c.guilds {
+		ids = append(ids, id)
+	}
+	slices.SortFunc(ids, model.CompareSnowflakes)
+	return ids
+}
+
+func (c *Cache) GuildChannels(guildID string) []model.Channel {
+	return c.selectChannels(func(channel model.Channel) bool { return channel.GuildID == guildID && !channel.IsThread() })
+}
+
+func (c *Cache) Threads(guildID string) []model.Channel {
+	return c.selectChannels(func(channel model.Channel) bool { return channel.GuildID == guildID && channel.IsThread() })
+}
+
+func (c *Cache) Roles(guildID string) []model.Role {
+	guild, _ := c.Guild(guildID)
+	return guild.Roles
+}
+
+func (c *Cache) Emojis(guildID string) []model.Emoji {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if g := c.guilds[guildID]; g != nil {
+		return slices.Clone(g.emojis)
+	}
+	return nil
+}
+
+func (c *Cache) Stickers(guildID string) []model.Sticker {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if g := c.guilds[guildID]; g != nil {
+		return slices.Clone(g.stickers)
+	}
+	return nil
+}
+
+func (c *Cache) Members(guildID string) int {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if g := c.guilds[guildID]; g != nil {
+		return len(g.members)
+	}
+	return 0
+}
+
+func (c *Cache) HighestRole(guildID, userID string) (model.Role, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	g := c.guilds[guildID]
+	if g == nil {
+		return model.Role{}, false
+	}
+	best, found := g.roles[guildID]
+	for _, id := range g.members[userID] {
+		if role, ok := g.roles[id]; ok && (!found || role.Position > best.Position) {
+			best, found = role, true
+		}
+	}
+	return best, found
+}
+
+func (c *Cache) CanManage(guildID, actorID, targetID string) bool {
+	if owner := c.OwnerID(guildID); owner != "" && actorID == owner {
+		return true
+	}
+	if targetID == c.OwnerID(guildID) {
+		return false
+	}
+	actor, ok := c.HighestRole(guildID, actorID)
+	if !ok {
+		return false
+	}
+	target, ok := c.HighestRole(guildID, targetID)
+	return ok && actor.Position > target.Position
+}
+
+func (c *Cache) selectChannels(keep func(model.Channel) bool) []model.Channel {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	var channels []model.Channel
+	for _, channel := range c.channels {
+		if keep(channel) {
+			channel.PermissionOverwrites = slices.Clone(channel.PermissionOverwrites)
+			channels = append(channels, channel)
+		}
+	}
+	slices.SortFunc(channels, func(a, b model.Channel) int {
+		if a.Position != b.Position {
+			return a.Position - b.Position
+		}
+		return model.CompareSnowflakes(a.ID, b.ID)
+	})
+	return channels
 }

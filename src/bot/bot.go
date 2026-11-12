@@ -112,3 +112,31 @@ func (b *Bot) NewSession(options session.Options) (*session.Session, error) {
 func (b *Bot) NewShardManager(options shard.Options) (*shard.Manager, error) {
 	return shard.NewManager(b.SessionConfig(), options)
 }
+
+const (
+	MaxGuildsPerShard    = 2500
+	targetGuildsPerShard = 2000
+)
+
+func (b *Bot) GuildCount(ctx context.Context) (int, error) {
+	count := 0
+	for _, err := range b.REST.EachGuild(ctx) {
+		if err != nil {
+			return count, err
+		}
+		count++
+	}
+	return count, nil
+}
+
+func (b *Bot) RecommendedShards(ctx context.Context) (int, error) {
+	guilds, err := b.GuildCount(ctx)
+	if err != nil {
+		return 0, err
+	}
+	shards := max((guilds+targetGuildsPerShard-1)/targetGuildsPerShard, 1)
+	if info, err := b.REST.GatewayInfo(ctx); err == nil {
+		shards = max(shards, info.Shards)
+	}
+	return shards, nil
+}

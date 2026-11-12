@@ -16,6 +16,7 @@ var (
 	ErrVoiceGrant       = errors.New("invalid Micup voice grant")
 	ErrVoiceMoved       = errors.New("Micup voice channel changed during join")
 	ErrVoiceRefused     = errors.New("Micup refused the voice join")
+	ErrNotInVoice       = errors.New("the bot has no voice connection in the guild")
 )
 
 type VoiceJoin struct {
@@ -99,6 +100,16 @@ func (s *Session) LeaveVoice(guildID, connectionID string) error {
 	delete(s.grants, guildID)
 	s.mu.Unlock()
 	return s.Send(context.Background(), gateway.OpVoiceStateUpdate, map[string]any{"guild_id": guildID, "channel_id": nil, "connection_id": connectionID})
+}
+
+func (s *Session) UpdateVoiceState(ctx context.Context, guildID string, options VoiceJoin) error {
+	s.mu.Lock()
+	grant, ok := s.grants[guildID]
+	s.mu.Unlock()
+	if !ok || grant.ConnectionID == "" || grant.ChannelID == "" {
+		return ErrNotInVoice
+	}
+	return s.Send(ctx, gateway.OpVoiceStateUpdate, map[string]any{"guild_id": guildID, "channel_id": grant.ChannelID, "connection_id": grant.ConnectionID, "self_mute": options.SelfMute, "self_deaf": options.SelfDeaf, "self_video": false, "self_stream": false})
 }
 
 func (s *Session) beginJoin(guildID string) (chan joinResult, error) {

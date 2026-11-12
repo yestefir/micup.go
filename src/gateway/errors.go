@@ -10,24 +10,44 @@ var (
 	ErrClosed             = errors.New("Micup Gateway is disconnected")
 )
 
+const (
+	CloseUnknownError         = 4000
+	CloseUnknownOpcode        = 4001
+	CloseDecodeError          = 4002
+	CloseNotAuthenticated     = 4003
+	CloseAuthenticationFailed = 4004
+	CloseAlreadyAuthenticated = 4005
+	CloseInvalidSequence      = 4007
+	CloseRateLimited          = 4008
+	CloseSessionTimeout       = 4009
+	CloseInvalidShard         = 4010
+	CloseShardingRequired     = 4011
+	CloseInvalidAPIVersion    = 4012
+)
+
 type CloseError struct {
 	Code int
 	Text string
 }
 
 func (e *CloseError) Error() string {
+	if e.Text != "" {
+		return fmt.Sprintf("Micup Gateway closed the connection (code %d: %s)", e.Code, e.Text)
+	}
 	return fmt.Sprintf("Micup Gateway closed the connection (code %d)", e.Code)
 }
 
 func (e *CloseError) Fatal() bool {
 	switch e.Code {
-	case 4001, 4002, 4003, 4004, 4005, 4010, 4011, 4012:
+	case CloseUnknownOpcode, CloseDecodeError, CloseNotAuthenticated, CloseAuthenticationFailed, CloseAlreadyAuthenticated, CloseInvalidShard, CloseShardingRequired, CloseInvalidAPIVersion:
 		return true
 	}
 	return false
 }
 
-func (e *CloseError) ResetsSession() bool { return e.Code == 4007 || e.Code == 4009 }
+func (e *CloseError) ResetsSession() bool {
+	return e.Code == CloseInvalidSequence || e.Code == CloseSessionTimeout
+}
 
 const (
 	VoiceChannelFull        = "VOICE_CHANNEL_FULL"
