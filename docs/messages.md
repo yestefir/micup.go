@@ -70,7 +70,7 @@ _, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 | `DeleteMessage(ctx, channelID, messageID, micup.WithReason("..."))` | Delete one message |
 | `BulkDeleteMessages(ctx, channelID, ids, ...)` | 1 to 100 messages of any age, needs `MANAGE_MESSAGES` |
 | `TriggerTyping(ctx, channelID)` | Show the typing indicator |
-| `CreateDM(ctx, userID)`, `SendDM(ctx, userID, options)`, `DMChannels(ctx)` | Open (or return) the DM channel with a user, send to it, or list open DMs |
+| `CreateDM(ctx, userID)`, `SendDM(ctx, userID, options)` | Open (or return) the DM channel with a user, or send to it. Micup does not let bots list their DMs |
 | `ForwardMessage(ctx, channelID, micup.MessageForward{ChannelID, MessageID})` | Forward a message, optionally only some `AttachmentIDs` or `EmbedIndices` |
 | `CrosspostMessage`, `CrosspostSource` | Publish an announcement, or find where a published copy came from |
 | `DeleteAttachment(ctx, channelID, messageID, attachmentID)` | Remove one attachment from the bot's message |

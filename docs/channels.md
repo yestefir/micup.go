@@ -38,6 +38,8 @@ Names are 1 to 100 characters, topics at most 4,096 and slowmode 0 to 21,600 sec
 | `ModifyRole(ctx, guildID, roleID, micup.RoleEdit{...})` | Only `HoistPosition`, `Icon` and `UnicodeEmoji` can be cleared |
 | `DeleteRole`, `ModifyRolePositions`, `ModifyRoleHoistPositions`, `ResetRoleHoistPositions` | The everyone role cannot be deleted or moved |
 
+Micup refuses role icons (`Icon` and `UnicodeEmoji`) with `INVALID_FORM_BODY` until the guild reaches boost level 1.
+
 `micup.ImageData("image/png", bytes)` builds the data URL Micup expects for role icons, emojis, stickers, webhook avatars and guild images.
 
 ## Guild settings

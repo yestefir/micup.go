@@ -103,7 +103,7 @@ The table is generated from the registry. Captured means the payload type is tes
 | `APPLICATION_COMMANDS_UPDATE` | `micup.EventApplicationCommandsUpdate` | `micup.ApplicationCommandsUpdate` | yes |
 | `VOICE_STATE_UPDATE` | `micup.EventVoiceStateUpdate` | `micup.VoiceState` | yes |
 | `VOICE_SERVER_UPDATE` | `micup.EventVoiceServerUpdate` | `micup.VoiceServerUpdate` | yes |
-| `GUILD_EMOJIS_UPDATE` | `micup.EventGuildEmojisUpdate` | `micup.GuildEmojisUpdate` | no |
+| `GUILD_EMOJIS_UPDATE` | `micup.EventGuildEmojisUpdate` | `micup.GuildEmojisUpdate` | yes |
 | `GUILD_STICKERS_UPDATE` | `micup.EventGuildStickersUpdate` | `micup.GuildStickersUpdate` | no |
 | `GUILD_MEMBER_LIST_UPDATE` | `micup.EventGuildMemberListUpdate` | `micup.MemberListUpdate` | no |
 | `GUILD_COUNTS_UPDATE` | `micup.EventGuildCountsUpdate` | `micup.GuildCountsUpdate` | no |
@@ -113,11 +113,11 @@ The table is generated from the registry. Captured means the payload type is tes
 | `PRESENCE_UPDATE_BULK` | `micup.EventPresenceUpdateBulk` | `micup.PresenceUpdateBulk` | no |
 | `PASSIVE_UPDATES` | `micup.EventPassiveUpdates` | `micup.PassiveUpdates` | no |
 | `MESSAGE_REACTION_ADD_MANY` | `micup.EventReactionAddMany` | `micup.ReactionAddMany` | no |
-| `THREAD_CREATE` | `micup.EventThreadCreate` | `micup.ThreadCreate` | no |
-| `THREAD_UPDATE` | `micup.EventThreadUpdate` | `micup.Channel` | no |
-| `THREAD_DELETE` | `micup.EventThreadDelete` | `micup.ThreadDelete` | no |
+| `THREAD_CREATE` | `micup.EventThreadCreate` | `micup.ThreadCreate` | yes |
+| `THREAD_UPDATE` | `micup.EventThreadUpdate` | `micup.Channel` | yes |
+| `THREAD_DELETE` | `micup.EventThreadDelete` | `micup.ThreadDelete` | yes |
 | `THREAD_LIST_SYNC` | `micup.EventThreadListSync` | `micup.ThreadListSync` | no |
-| `THREAD_MEMBER_UPDATE` | `micup.EventThreadMemberUpdate` | `micup.ThreadMember` | no |
+| `THREAD_MEMBER_UPDATE` | `micup.EventThreadMemberUpdate` | `micup.ThreadMember` | yes |
 | `THREAD_MEMBERS_UPDATE` | `micup.EventThreadMembersUpdate` | `micup.ThreadMembersUpdate` | no |
 | `THREAD_MEMBER_LIST_UPDATE` | `micup.EventThreadMemberListUpdate` | `micup.ThreadMemberListUpdate` | no |
 | `CALL_CREATE` | `micup.EventCallCreate` | `micup.Call` | no |
