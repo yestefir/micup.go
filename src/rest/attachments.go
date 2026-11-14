@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"github.com/yestefir/micup.go/src/internal/version"
 	"github.com/yestefir/micup.go/src/model"
@@ -64,6 +65,19 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 	case "multipart":
 		if item.PartSize <= 0 || len(item.Parts) == 0 {
 			return model.UploadedAttachment{}, errors.New("Micup returned an invalid multipart upload plan")
+		}
+		expectedParts := (upload.Size-1)/item.PartSize + 1
+		if int64(len(item.Parts)) < expectedParts {
+			return model.UploadedAttachment{}, errors.New("Micup upload plan does not cover the whole file")
+		}
+		if int64(len(item.Parts)) > expectedParts {
+			return model.UploadedAttachment{}, errors.New("Micup upload plan has more parts than the file")
+		}
+		sort.Slice(item.Parts, func(i, j int) bool { return item.Parts[i].PartNumber < item.Parts[j].PartNumber })
+		for i, part := range item.Parts {
+			if part.PartNumber != i+1 {
+				return model.UploadedAttachment{}, errors.New("Micup returned an invalid multipart upload plan")
+			}
 		}
 		remaining := upload.Size
 		for _, part := range item.Parts {

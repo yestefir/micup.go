@@ -60,6 +60,8 @@ _, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 
 `UploadAttachment` asks Micup for an upload plan, sends the bytes to the returned URLs (in 10 MiB parts above 10 MiB) without the bot token, and completes multipart uploads. `Size` must be the exact byte count. Upload URLs are secrets until they expire; the library never logs them. A bot can attach files up to 50 MiB unless the instance changes the limit, and at most 10 per message.
 
+For multipart uploads, the client checks the part count and consecutive numbering against the declared file size before reading file data or uploading parts. It sends file segments in part-number order, even if the plan lists the parts in a different order.
+
 ## Reading and editing
 
 | Method | Endpoint |
