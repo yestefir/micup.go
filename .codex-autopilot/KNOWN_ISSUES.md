@@ -5,12 +5,11 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 119 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 117 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the modified voice implementation and Gateway fixture reduced the remaining count from 119 to 117; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
 - `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
-- Voice joins use their own caller contexts and pending results. Investigate terminal shutdown separately from transient/recoverable disconnects before proposing any lifecycle change; no voice-shutdown defect is claimed yet. The member-request shutdown and saturation defects are resolved below.
 
 ## Scope limitations
 
@@ -29,6 +28,10 @@
 ## Resolved in cycle 2026-11-14_06-21
 
 - P2: When `Session.Run` stopped, pending member requests with independent caller contexts remained registered and waited for their own deadlines. A local Gateway test reproduced two requests returning deadline exceeded after the run had stopped. Final run cleanup now removes registrations, drains buffered responses and notifies each request with the existing `gateway.ErrClosed`/public `micup.ErrGatewayClosed`. Empty/full-queue tests and the public request fixture pass. Transient reconnects do not execute this final cleanup.
+
+## Resolved in cycle 2026-11-14_06-51
+
+- P2: Pending voice joins with independent caller contexts also waited until their own deadlines after `Run` stopped. A local Gateway fixture held a confirmed join response and reproduced deadline exceeded after terminal shutdown. Final cleanup now signals `gateway.ErrClosed`/public `micup.ErrGatewayClosed`, replaces buffered responses safely under the notification mutex, and clears refusal ordering. Guild reservations remain until callers execute their existing deferred `endJoin`, preventing premature guild reuse. Normal joins, refusals, resumption and member cleanup pass regression/race checks.
 
 ## Resolved in cycle 2026-11-14_04-21
 

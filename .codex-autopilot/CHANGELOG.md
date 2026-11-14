@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_06-51
+
+- Fixed pending voice joins outliving terminal `Session.Run`. Final cleanup notifies each waiter with the existing closed-connection error and clears refusal ordering; reservations remain until each caller completes its existing deferred cleanup, avoiding premature guild reuse.
+- Serialized voice grant/refusal queue writes with shutdown using the existing mutex. Empty/full queue notifications are bounded and channels are not closed. Transient reconnect handling and established voice grants are outside this change.
+- Added a held-voice-response mode/counter to the local test fixture, a public pending-join regression and controlled empty/full-queue/ownership tests. Both regressions failed before the fix and pass afterward. Gateway docs describe the closed error.
+- Validation: 159 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 117 existing CRLF files. No speed claim.
+- Fix commit: `cf647d97d38bceda68e15eb74eb78cb502a437e6`. No push, deployment, dependency or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_06-21
 
 - Fixed pending member requests outliving terminal session execution. `Session.Run` final cleanup now retires all registered member requests and queues the existing closed-connection error. Transient reconnects remain inside the run loop and retain their prior behavior.
