@@ -5,13 +5,15 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 111 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by two after formatting the modified shard files; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 110 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by one after formatting the modified inventory file; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
 - `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
 
 ## Scope limitations
+
+- Member inventory workers recheck context and target identity/availability at page boundaries and completion. They do not forcibly interrupt an already-started custom MemberLookup call; that implementation must honor its context. A lifecycle/context change just after admission may overlap the in-flight lookup. Added per-page mutex check overhead has not been profiled; lookup-count fixtures do not establish production speed.
 
 - Shard IDENTIFY waiting now uses one admission channel per manager. The limiter constructor costs 160 B/2 allocations versus 48 B/1 allocation before; observed constructor times increased. Cancelled waits do not extend cooldowns, but a call already admitted before cancellation still consumes its interval. No strict shard ordering or end-to-end wire spacing guarantee is added; dialing/scheduling follow admission.
 
@@ -78,3 +80,6 @@
 ## Resolved in cycle 2026-11-14_10-51
 
 - P2: The shard IDENTIFY limiter reserved its next slot before waiting, and never reclaimed a slot when the context ended. Four already-cancelled calls and four calls cancelled while waiting each added 20 seconds to a seeded cooldown despite returning context.Canceled. This retained schedule can also affect a later manager Run. The limiter now serializes cancellable admission through the current cooldown and advances next only for successful admission, preserving earlier cooldowns. Both schedule regressions fail before the fix and pass afterward; busy-admission cancellation and existing multi-shard pacing/fatal shutdown tests pass. A per-manager channel adds 112 B/one limiter-construction allocation; no production restart latency is claimed.
+## Resolved in cycle 2026-11-14_11-21
+
+- P2: Member enumeration checked its target identity only after all pages, so READY/guild sync/deletion/outage still allowed later page lookups. Outages retained the target pointer and could publish the obsolete enumeration as Complete. A custom lookup finishing successfully as its context ended could likewise trigger further pages and completion. Four bounded lifecycle probes made three calls each before the fix and now make one; pre-cancelled/mid-page cancellation made two calls each and now make zero/one. Short terminal-page outage/cancellation probes also published Complete before the fix. Page-boundary context/lifecycle checks plus completion checks now stop obsolete work and keep interrupted inventories incomplete, preserving existing retry/reconciliation behavior. Eight cases fail before the fix and pass afterward. No production request count, unbounded-loop or forced in-flight cancellation claim.

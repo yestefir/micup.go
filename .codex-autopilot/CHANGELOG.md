@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_11-21
+
+- Added member-inventory context/target checks before page lookups and cancellation/availability checks before completion. Workers stop obsolete pagination after READY, guild sync, guild deletion/outage or cancellation, while retaining existing epoch identity, retry and event-reconciliation rules.
+- Eight bounded regressions fail before the fix and pass afterward. Four lifecycle probes make 4 total page calls versus 12; pre-cancelled/mid-page context probes make 1 versus 4. Short outage/cancelled last pages no longer publish Complete. Custom in-flight lookups must honor context themselves.
+- Validation: 178 top-level race tests pass, 2 optional voice skips, no failures; targeted inventory/shutdown regressions pass five repetitions. Vet/build/modified-file formatting/whitespace pass. Full formatting reports 110 existing CRLF files after formatting the modified inventory source.
+- No speed/latency claim or allocation comparison; added per-page mutex check overhead is unprofiled and prior constructor/snapshot costs remain recorded.
+- Fix commit: `aeafe8e2cf419bcace1bcce0ab835de66c2d00f5`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_10-51
 
 - Fixed cancelled shard IDENTIFY calls reserving future cooldown slots. Admission now remains serialized through the cooldown, supports context cancellation while queued and advances the next deadline only on success; already admitted cooldowns are retained.
