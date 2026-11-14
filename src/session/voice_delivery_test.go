@@ -40,7 +40,7 @@ func TestSessionShutdownNotifiesEmptyAndFullVoiceJoins(t *testing.T) {
 		if _, err := s.beginJoin(guild); !errors.Is(err, ErrVoiceJoinPending) {
 			t.Errorf("guild reopened before the previous caller finished cleanup: %v", err)
 		}
-		s.endJoin(guild)
+		s.endJoin(guild, queue)
 	}
 	if len(s.pending) != 0 || len(s.joinOrder) != 0 {
 		t.Error("join state remained after callers finished cleanup")

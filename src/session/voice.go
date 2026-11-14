@@ -54,7 +54,7 @@ func (s *Session) JoinVoice(ctx context.Context, guildID, channelID string, opti
 	if err != nil {
 		return model.VoiceServerUpdate{}, err
 	}
-	defer s.endJoin(guildID)
+	defer s.endJoin(guildID, pending)
 	if err := s.Send(ctx, gateway.OpVoiceStateUpdate, map[string]any{"guild_id": guildID, "channel_id": channelID, "self_mute": options.SelfMute, "self_deaf": options.SelfDeaf, "self_video": false, "self_stream": false}); err != nil {
 		return model.VoiceServerUpdate{}, err
 	}
@@ -62,24 +62,31 @@ func (s *Session) JoinVoice(ctx context.Context, guildID, channelID string, opti
 	case <-ctx.Done():
 		return model.VoiceServerUpdate{}, ctx.Err()
 	case result := <-pending:
-		if result.err != nil {
-			return model.VoiceServerUpdate{}, result.err
-		}
-		grant := result.grant
-		if grant.Endpoint == "" || grant.Token == "" {
-			return model.VoiceServerUpdate{}, ErrVoiceGrant
-		}
-		if grant.ChannelID == "" {
-			grant.ChannelID = channelID
-		}
-		if grant.ChannelID != channelID {
-			return model.VoiceServerUpdate{}, ErrVoiceMoved
-		}
-		s.mu.Lock()
-		s.grants[guildID] = grant
-		s.mu.Unlock()
-		return grant, nil
+		return s.finishJoin(guildID, channelID, pending, result)
 	}
+}
+
+func (s *Session) finishJoin(guildID, channelID string, pending chan joinResult, result joinResult) (model.VoiceServerUpdate, error) {
+	if result.err != nil {
+		return model.VoiceServerUpdate{}, result.err
+	}
+	grant := result.grant
+	if grant.Endpoint == "" || grant.Token == "" {
+		return model.VoiceServerUpdate{}, ErrVoiceGrant
+	}
+	if grant.ChannelID == "" {
+		grant.ChannelID = channelID
+	}
+	if grant.ChannelID != channelID {
+		return model.VoiceServerUpdate{}, ErrVoiceMoved
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.pending[guildID] != pending {
+		return model.VoiceServerUpdate{}, ErrVoiceGrant
+	}
+	s.grants[guildID] = grant
+	return grant, nil
 }
 
 func (s *Session) Voice(guildID string) (model.VoiceServerUpdate, bool) {
@@ -113,11 +120,14 @@ func (s *Session) beginJoin(guildID string) (chan joinResult, error) {
 	return pending, nil
 }
 
-func (s *Session) endJoin(guildID string) {
+func (s *Session) endJoin(guildID string, pending chan joinResult) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.pending[guildID] != pending {
+		return
+	}
 	delete(s.pending, guildID)
 	s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == guildID })
-	s.mu.Unlock()
 }
 
 func (s *Session) handleGatewayError(refusal gateway.GatewayError) {
@@ -188,12 +198,18 @@ func (s *Session) handleVoiceServerUpdate(event gateway.Event) {
 func (s *Session) stopVoiceJoins() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.failVoiceJoins(gateway.ErrClosed)
+}
+
+// failVoiceJoins requires s.mu. Callers decide whether reservations remain
+// until caller cleanup (shutdown), or are invalidated (a replaced session).
+func (s *Session) failVoiceJoins(err error) {
 	for _, pending := range s.pending {
 		select {
 		case <-pending:
 		default:
 		}
-		pending <- joinResult{err: gateway.ErrClosed}
+		pending <- joinResult{err: err}
 	}
 	s.joinOrder = nil
 }
@@ -202,6 +218,8 @@ func (s *Session) dropAllGrants() {
 	s.mu.Lock()
 	grants := s.grants
 	s.grants = map[string]model.VoiceServerUpdate{}
+	s.failVoiceJoins(ErrVoiceGrant)
+	clear(s.pending)
 	s.mu.Unlock()
 	for guildID, grant := range grants {
 		s.voiceLost(guildID, grant.ConnectionID)
