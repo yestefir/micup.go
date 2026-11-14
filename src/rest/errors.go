@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -63,7 +64,7 @@ func readAPIError(resp *http.Response) *APIError {
 	}
 	switch {
 	case body.RetryAfter > 0:
-		apiErr.RetryAfter = max(time.Duration(body.RetryAfter*float64(time.Second)), minRetryAfter)
+		apiErr.RetryAfter = max(secondsDuration(body.RetryAfter), minRetryAfter)
 	default:
 		apiErr.RetryAfter = headerSeconds(resp.Header.Get("Retry-After"))
 	}
@@ -72,10 +73,22 @@ func readAPIError(resp *http.Response) *APIError {
 
 func headerSeconds(value string) time.Duration {
 	seconds, err := strconv.ParseFloat(value, 64)
-	if err != nil || seconds <= 0 {
+	if err != nil && !errors.Is(err, strconv.ErrRange) {
 		return 0
 	}
-	return time.Duration(seconds * float64(time.Second))
+	return secondsDuration(seconds)
+}
+
+func secondsDuration(seconds float64) time.Duration {
+	if seconds <= 0 || math.IsNaN(seconds) {
+		return 0
+	}
+	const maxDuration = time.Duration(1<<63 - 1)
+	nanoseconds := seconds * float64(time.Second)
+	if nanoseconds >= float64(maxDuration) {
+		return maxDuration
+	}
+	return time.Duration(nanoseconds)
 }
 
 const (
