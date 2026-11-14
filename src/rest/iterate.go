@@ -8,8 +8,9 @@ import (
 	"github.com/yestefir/micup.go/src/model"
 )
 
-func (c *Client) EachMessage(ctx context.Context, channelID string, query model.MessageQuery) iter.Seq2[model.Message, error] {
+func (c *Client) EachMessage(ctx context.Context, channelID string, initial model.MessageQuery) iter.Seq2[model.Message, error] {
 	return func(yield func(model.Message, error) bool) {
+		query := initial
 		ascending := query.After != "" && query.Before == ""
 		if query.Around != "" {
 			yield(model.Message{}, errAroundIteration)
@@ -39,6 +40,9 @@ func (c *Client) EachMessage(ctx context.Context, channelID string, query model.
 				return
 			}
 			last := page[len(page)-1].ID
+			if last == "" || ascending && last == query.After || !ascending && last == query.Before {
+				return
+			}
 			if ascending {
 				query.After = last
 			} else {
@@ -95,8 +99,9 @@ func (c *Client) EachReactionUser(ctx context.Context, channelID, messageID, emo
 	}
 }
 
-func (c *Client) EachAuditLogEntry(ctx context.Context, guildID string, query model.AuditLogQuery) iter.Seq2[model.AuditLogEntry, error] {
+func (c *Client) EachAuditLogEntry(ctx context.Context, guildID string, initial model.AuditLogQuery) iter.Seq2[model.AuditLogEntry, error] {
 	return func(yield func(model.AuditLogEntry, error) bool) {
+		query := initial
 		if query.After != "" {
 			yield(model.AuditLogEntry{}, errAfterIteration)
 			return
@@ -118,7 +123,11 @@ func (c *Client) EachAuditLogEntry(ctx context.Context, guildID string, query mo
 			if len(page.Entries) < query.Limit {
 				return
 			}
-			query.Before = page.Entries[len(page.Entries)-1].ID
+			last := page.Entries[len(page.Entries)-1].ID
+			if last == "" || last == query.Before {
+				return
+			}
+			query.Before = last
 		}
 	}
 }
@@ -132,13 +141,14 @@ func (c *Client) EachGuild(ctx context.Context) iter.Seq2[model.Guild, error] {
 				yield(model.Guild{}, err)
 				return
 			}
+			previous := query.After
 			for _, guild := range page {
 				if !yield(guild, nil) {
 					return
 				}
 				query.After = guild.ID
 			}
-			if len(page) < query.Limit {
+			if len(page) < query.Limit || query.After == "" || query.After == previous {
 				return
 			}
 		}

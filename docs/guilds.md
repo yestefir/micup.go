@@ -2,6 +2,8 @@
 
 All methods are on `b.REST`. Routes that write the audit log accept `micup.WithReason("...")`.
 
+`EachGuild(ctx)` fetches successive pages of the bot's guilds. `EachAuditLogEntry(ctx, guildID, query)` fetches audit entries newest first and accepts `Before`, but not `After`. Each traversal has its own cursor and starts from the supplied query. Both iterators stop when the next cursor is empty or unchanged; a repeated page may already have been yielded before this check. Break from the loop to stop fetching pages.
+
 | Method | Endpoint and notes |
 |---|---|
 | `Guild(ctx, guildID)`, `GuildChannels(ctx, guildID)`, `Roles(ctx, guildID)` | Read a guild, its channels and its roles |

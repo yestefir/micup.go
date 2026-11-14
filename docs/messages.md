@@ -74,6 +74,8 @@ _, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 
 Only `DEFAULT` and `REPLY` messages can be edited, pinned or replied to.
 
+`EachMessage(ctx, channelID, query)` fetches successive pages lazily. With `After`, messages are yielded in ascending ID order; otherwise they are yielded newest first. `Around` is not supported for iteration. Each traversal starts from the supplied query, including when the same iterator is used concurrently. Break from the loop to stop fetching pages. Iteration stops if the next cursor is empty or unchanged; a repeated page may already have been yielded before this check.
+
 ## Reactions and pins
 
 Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(emoji)` builds it from a `micup.Emoji`).
