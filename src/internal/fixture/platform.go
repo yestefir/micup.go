@@ -49,6 +49,7 @@ type Platform struct {
 	HoldVoice         bool
 	HoldCounts        bool
 	CountsRequested   atomic.Int64
+	SwapCountEvents   bool
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
 	HoldMembers       bool
@@ -283,7 +284,11 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			for _, id := range ids {
 				counts = append(counts, map[string]any{"guild_id": id, "member_count": 10, "online_count": 3})
 			}
-			c.event(gateway.EventGuildCountsUpdate, map[string]any{"counts": counts, "nonce": nonce})
+			name := gateway.EventGuildCountsUpdate
+			if p.SwapCountEvents {
+				name = gateway.EventChannelMemberCountsUpdate
+			}
+			c.event(name, map[string]any{"counts": counts, "nonce": nonce})
 		case gateway.OpRequestChannelMemberCounts:
 			if p.holdCounts() {
 				continue
@@ -297,7 +302,11 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			for _, id := range ids {
 				counts = append(counts, map[string]any{"guild_id": guild, "channel_id": id, "member_count": 4, "online_count": 2})
 			}
-			c.event(gateway.EventChannelMemberCountsUpdate, map[string]any{"counts": counts, "nonce": nonce})
+			name := gateway.EventChannelMemberCountsUpdate
+			if p.SwapCountEvents {
+				name = gateway.EventGuildCountsUpdate
+			}
+			c.event(name, map[string]any{"counts": counts, "nonce": nonce})
 		case gateway.OpLazyRequest:
 			p.mu.Lock()
 			p.subscriptions = append(p.subscriptions, append(json.RawMessage(nil), packet.D...))

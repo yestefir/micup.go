@@ -68,7 +68,7 @@ type Session struct {
 	presenceMu     sync.Mutex
 	memberRequests map[string]chan memberChunk
 	memberSlots    chan struct{}
-	countRequests  map[string]chan []byte
+	countRequests  map[string]chan gateway.Event
 	countSlots     chan struct{}
 	sessionID      atomic.Value
 }
@@ -111,7 +111,7 @@ func New(config Config, options Options) (*Session, error) {
 		pending:        map[string]voicePending{},
 		memberRequests: map[string]chan memberChunk{},
 		memberSlots:    make(chan struct{}, maxMemberRequestsInFlight),
-		countRequests:  map[string]chan []byte{},
+		countRequests:  map[string]chan gateway.Event{},
 		countSlots:     make(chan struct{}, 1),
 		presence:       options.Presence,
 	}, nil
