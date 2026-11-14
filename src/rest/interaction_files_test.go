@@ -44,3 +44,27 @@ func TestNewInteractionMessagesDoNotSilentlyDiscardFiles(t *testing.T) {
 		}
 	}
 }
+
+func TestInteractionUpdateRejectsKeptAttachmentOptions(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		kept []model.KeptAttachment
+	}{
+		{"unchanged", nil},
+		{"remove all", []model.KeptAttachment{}},
+		{"keep selected", []model.KeptAttachment{{ID: "attachment"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, rec := recordingClient(t, nil)
+			content := "updated text"
+			err := c.UpdateInteractionMessage(context.Background(), click(), model.MessageEdit{Content: &content, KeepAttachments: tc.kept})
+			if tc.kept == nil {
+				if err != nil || len(rec.requests) != 1 {
+					t.Fatalf("text update returned %v with %d requests", err, len(rec.requests))
+				}
+			} else if err == nil || len(rec.requests) != 0 {
+				t.Fatalf("attachment edit silently discarded: error %v, requests %d", err, len(rec.requests))
+			}
+		})
+	}
+}

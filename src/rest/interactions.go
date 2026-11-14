@@ -45,8 +45,8 @@ func (c *Client) UpdateInteractionMessage(ctx context.Context, interaction model
 	if err := validateComponentInteraction(interaction); err != nil {
 		return err
 	}
-	if len(edit.Files) != 0 || len(edit.Attachments) != 0 {
-		return errors.New("an interaction message update cannot carry files")
+	if len(edit.Files) != 0 || len(edit.Attachments) != 0 || edit.KeepAttachments != nil {
+		return errors.New("an interaction message update does not support attachment options")
 	}
 	data, err := editBody(edit, "interaction update")
 	if err != nil {
