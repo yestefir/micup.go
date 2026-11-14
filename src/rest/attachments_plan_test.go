@@ -18,6 +18,7 @@ type uploadPlanStats struct {
 	completed atomic.Int64
 	mu        sync.Mutex
 	bodies    map[string]string
+	queries   map[string]string
 }
 
 type countedUploadReader struct {
@@ -31,9 +32,9 @@ func (r *countedUploadReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func multipartPlanClient(t *testing.T, partSize int64, numbers []int) (*Client, *uploadPlanStats) {
+func multipartPlanClient(t *testing.T, partSize int64, numbers []int, edits ...func(map[string]any)) (*Client, *uploadPlanStats) {
 	t.Helper()
-	stats := &uploadPlanStats{bodies: map[string]string{}}
+	stats := &uploadPlanStats{bodies: map[string]string{}, queries: map[string]string{}}
 	var c *Client
 	c = newClient(t, func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -42,11 +43,15 @@ func multipartPlanClient(t *testing.T, partSize int64, numbers []int) (*Client, 
 			for _, number := range numbers {
 				parts = append(parts, map[string]any{"part_number": number, "upload_url": strings.TrimSuffix(c.baseURL, "/api/v1") + "/put/" + strconv.Itoa(number)})
 			}
-			_ = json.NewEncoder(w).Encode(map[string]any{"attachments": []map[string]any{{"upload_filename": "key", "upload_mode": "multipart", "upload_id": "upload", "part_size": partSize, "parts": parts}}})
+			attachment := map[string]any{"upload_filename": "key", "upload_mode": "multipart", "upload_id": "upload", "part_size": partSize, "parts": parts}
+			for _, edit := range edits {
+				edit(attachment)
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"attachments": []map[string]any{attachment}})
 		case strings.HasPrefix(r.URL.Path, "/put/"):
 			stats.puts.Add(1)
 			if r.Header.Get("Authorization") != "" {
-				t.Error("upload received bot credentials")
+				t.Error("upload received an Authorization header")
 			}
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -54,6 +59,7 @@ func multipartPlanClient(t *testing.T, partSize int64, numbers []int) (*Client, 
 			}
 			stats.mu.Lock()
 			stats.bodies[strings.TrimPrefix(r.URL.Path, "/put/")] = string(body)
+			stats.queries[strings.TrimPrefix(r.URL.Path, "/put/")] = r.URL.RawQuery
 			stats.mu.Unlock()
 			w.WriteHeader(http.StatusNoContent)
 		case strings.HasSuffix(r.URL.Path, "/complete"):
@@ -115,5 +121,62 @@ func TestMultipartUploadShortReaderDoesNotComplete(t *testing.T) {
 	_, err := c.UploadAttachment(context.Background(), "channel", Upload{Name: "file.bin", Size: 6, Reader: reader})
 	if !errors.Is(err, io.ErrUnexpectedEOF) || stats.puts.Load() != 0 || stats.completed.Load() != 0 || reader.read.Load() != 3 {
 		t.Errorf("short read was not preserved: error %v; read %d; puts %d; completions %d", err, reader.read.Load(), stats.puts.Load(), stats.completed.Load())
+	}
+}
+
+func TestInvalidUploadPlanMetadataDoesNotConsumeOrUpload(t *testing.T) {
+	for name, edit := range map[string]func(map[string]any){
+		"missing multipart key": func(plan map[string]any) { delete(plan, "upload_filename") },
+		"missing multipart ID":  func(plan map[string]any) { delete(plan, "upload_id") },
+		"invalid first URL": func(plan map[string]any) {
+			plan["parts"].([]map[string]any)[0]["upload_url"] = "ftp://invalid.test/part"
+		},
+		"invalid later URL": func(plan map[string]any) {
+			plan["parts"].([]map[string]any)[1]["upload_url"] = "//invalid.test/part"
+		},
+		"empty later URL": func(plan map[string]any) {
+			plan["parts"].([]map[string]any)[1]["upload_url"] = ""
+		},
+		"multipart userinfo": func(plan map[string]any) {
+			part := plan["parts"].([]map[string]any)[0]
+			part["upload_url"] = strings.Replace(part["upload_url"].(string), "http://", "http://fixture-user:fixture-pass@", 1)
+		},
+		"missing singlepart key": func(plan map[string]any) {
+			plan["upload_mode"] = "singlepart"
+			plan["upload_url"] = plan["parts"].([]map[string]any)[0]["upload_url"]
+			delete(plan, "upload_filename")
+		},
+		"singlepart userinfo": func(plan map[string]any) {
+			plan["upload_mode"] = "singlepart"
+			partURL := plan["parts"].([]map[string]any)[0]["upload_url"].(string)
+			plan["upload_url"] = strings.Replace(partURL, "http://", "http://fixture-user:fixture-pass@", 1)
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, stats := multipartPlanClient(t, 4, []int{1, 2}, edit)
+			reader := &countedUploadReader{reader: strings.NewReader("abcdef")}
+			_, err := c.UploadAttachment(context.Background(), "channel", Upload{Name: "file.bin", Size: 6, Reader: reader})
+			if err == nil || reader.read.Load() != 0 || stats.puts.Load() != 0 || stats.completed.Load() != 0 {
+				t.Errorf("invalid metadata had side effects: error %v; read %d; puts %d; completions %d", err, reader.read.Load(), stats.puts.Load(), stats.completed.Load())
+			}
+		})
+	}
+}
+
+func TestUploadURLsPreserveSignedQueries(t *testing.T) {
+	c, stats := multipartPlanClient(t, 4, []int{2, 1}, func(plan map[string]any) {
+		for _, part := range plan["parts"].([]map[string]any) {
+			part["upload_url"] = part["upload_url"].(string) + "?signature=fixture%2Bvalue&part=" + strconv.Itoa(part["part_number"].(int))
+		}
+	})
+	if _, err := c.UploadAttachment(context.Background(), "channel", Upload{Name: "file.bin", Size: 6, Reader: strings.NewReader("abcdef")}); err != nil {
+		t.Fatal(err)
+	}
+	stats.mu.Lock()
+	defer stats.mu.Unlock()
+	for _, number := range []string{"1", "2"} {
+		if got := stats.queries[number]; got != "signature=fixture%2Bvalue&part="+number {
+			t.Errorf("part %s query changed: %q", number, got)
+		}
 	}
 }

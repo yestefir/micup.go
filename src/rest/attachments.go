@@ -54,6 +54,9 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 		return model.UploadedAttachment{}, errors.New("Micup returned an invalid upload plan")
 	}
 	item := plan.Attachments[0]
+	if item.UploadFilename == "" {
+		return model.UploadedAttachment{}, errors.New("Micup returned an invalid upload plan")
+	}
 	if item.ContentType != "" {
 		contentType = item.ContentType
 	}
@@ -63,7 +66,7 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 			return model.UploadedAttachment{}, err
 		}
 	case "multipart":
-		if item.PartSize <= 0 || len(item.Parts) == 0 {
+		if item.UploadID == "" || item.PartSize <= 0 || len(item.Parts) == 0 {
 			return model.UploadedAttachment{}, errors.New("Micup returned an invalid multipart upload plan")
 		}
 		expectedParts := (upload.Size-1)/item.PartSize + 1
@@ -77,6 +80,9 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 		for i, part := range item.Parts {
 			if part.PartNumber != i+1 {
 				return model.UploadedAttachment{}, errors.New("Micup returned an invalid multipart upload plan")
+			}
+			if err := validateUploadURL(part.UploadURL); err != nil {
+				return model.UploadedAttachment{}, err
 			}
 		}
 		remaining := upload.Size
@@ -108,9 +114,8 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 }
 
 func (c *Client) put(ctx context.Context, target, contentType string, body io.Reader, size int64) error {
-	parsed, err := url.Parse(target)
-	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" {
-		return errors.New("Micup returned an invalid upload URL")
+	if err := validateUploadURL(target); err != nil {
+		return err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, target, body)
 	if err != nil {
@@ -132,6 +137,14 @@ func (c *Client) put(ctx context.Context, target, contentType string, body io.Re
 	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, discardLimit))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("Micup attachment upload returned HTTP %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func validateUploadURL(target string) error {
+	parsed, err := url.Parse(target)
+	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" || parsed.User != nil {
+		return errors.New("Micup returned an invalid upload URL")
 	}
 	return nil
 }
