@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_09-21
+
+- Added upload key/multipart ID checks and preflight validation of every multipart URL before file consumption or data PUTs. A shared URL validator retains HTTP(S)/host checks and rejects embedded credentials in either upload mode.
+- Eight invalid metadata/URL cases previously read file bytes; five returned nil under permissive fixtures, and two credential-bearing URL cases sent an Authorization header. All now reject before file/data transfer. No bot-token leak or production incident is asserted.
+- Added signed-query preservation coverage and retained numbered layouts, short-read handling, normal singlepart/multipart behavior and Authorization omission checks. The fixture's credential warning now accurately describes any Authorization header rather than calling URL-supplied auth a bot token.
+- Validation: 171 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 114 existing CRLF files. No runtime speed claim.
+- Fix commit: `8d3dd2b6ad2685cdd415cc9c90a3a6321c052bc7`. No push, deployment, dependency, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_08-51
 
 - Fixed multipart byte routing for numbered plans listed out of order. Parts now upload in numeric order, with exact expected count and consecutive 1-based numbering checked before file reads/data PUTs. Count-error messages are preserved; buffers and completion payloads are unchanged.

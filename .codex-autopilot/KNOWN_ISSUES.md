@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 114 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the deliberately modified upload implementation reduced the remaining count from 115 to 114; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 114 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -33,6 +33,10 @@
 ## Resolved in cycle 2026-11-14_08-51
 
 - P2: Multipart file segments were assigned by response-array order instead of `part_number`. A reversed local plan sent `ef` to part 1 and `abcd` to part 2 for the six-byte fixture. Count-mismatched layouts read/uploaded partial data before failing, and duplicate/nonpositive/gapped numbering could complete under a permissive local server. Client now sorts by number and validates count/consecutive 1-based coverage before reads/data PUTs. Two valid-order cases, eight invalid layouts and a short-reader case pass. No production corruption incident or upstream response-order guarantee is claimed.
+
+## Resolved in cycle 2026-11-14_09-21
+
+- P2: Missing upload keys/IDs and invalid later part URLs were not fully checked before consuming/uploading data; missing keys could return an unusable successful attachment under local fixtures. Embedded URL credentials also generated an Authorization header on upload requests, contrary to the upload transport contract; this was URL-supplied Basic auth, not a demonstrated bot-token leak. Plans now require nonempty keys/multipart IDs, preflight all multipart URLs and reject userinfo. Eight local metadata/URL cases fail before the fix and pass afterward without file/data side effects. Valid signed query strings are preserved.
 
 ## Resolved in cycle 2026-11-14_05-21
 
