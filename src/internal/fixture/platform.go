@@ -55,6 +55,8 @@ type Platform struct {
 	MembersRequested  atomic.Int64
 	ReplayMemberChunk bool
 	RepeatMemberUser  bool
+	MemberChunkOrder  []int
+	MemberChunkCounts []int
 	memberReplay      *memberReplay
 	MemberInFlight    atomic.Int64
 	MemberDrops       atomic.Int64
@@ -234,6 +236,8 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			delay := p.MemberDelay
 			replay := p.ReplayMemberChunk
 			repeatUser := p.RepeatMemberUser
+			order := append([]int(nil), p.MemberChunkOrder...)
+			counts := append([]int(nil), p.MemberChunkCounts...)
 			p.mu.Unlock()
 			go func() {
 				defer p.MemberInFlight.Add(-1)
@@ -242,8 +246,16 @@ func (p *Platform) serve(ws *websocket.Conn) {
 				if repeatUser {
 					users[1] = users[0]
 				}
-				for i, user := range users {
-					data := map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}}
+				if order == nil {
+					order = []int{0, 1}
+				}
+				for position, i := range order {
+					user := users[i]
+					count := 2
+					if position < len(counts) {
+						count = counts[position]
+					}
+					data := map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": count, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}}
 					if replay {
 						packet := c.eventPacket(gateway.EventGuildMembersChunk, data)
 						p.mu.Lock()

@@ -24,6 +24,8 @@ const (
 type memberChunk struct {
 	members     []model.Member
 	sequence    int64
+	index       int
+	count       int
 	last        bool
 	hasSequence bool
 	err         error
@@ -82,6 +84,8 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 	}
 	var members []model.Member
 	var seen map[int64]struct{}
+	indexes := make(map[int]struct{})
+	var count int
 	for {
 		select {
 		case <-ctx.Done():
@@ -99,8 +103,18 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 				}
 				seen[chunk.sequence] = struct{}{}
 			}
+			if count == 0 {
+				count = chunk.count
+			}
+			if chunk.count != count {
+				return members, errors.New("Micup member response changed its chunk count; member list is incomplete")
+			}
+			if _, duplicate := indexes[chunk.index]; duplicate {
+				continue
+			}
+			indexes[chunk.index] = struct{}{}
 			members = append(members, chunk.members...)
-			if chunk.last {
+			if len(indexes) == count {
 				return members, nil
 			}
 		}
@@ -116,7 +130,7 @@ func (s *Session) handleMembersChunk(event gateway.Event) {
 		s.deliverChunk(chunk.Nonce, memberChunk{err: errors.New("Micup member response has an invalid chunk position; member list is incomplete")})
 		return
 	}
-	response := memberChunk{members: chunk.Members, last: chunk.ChunkIndex == chunk.ChunkCount-1}
+	response := memberChunk{members: chunk.Members, index: chunk.ChunkIndex, count: chunk.ChunkCount, last: chunk.ChunkIndex == chunk.ChunkCount-1}
 	if event.Sequence != nil {
 		response.sequence, response.hasSequence = *event.Sequence, true
 	}
