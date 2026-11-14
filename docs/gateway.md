@@ -68,6 +68,8 @@ After a disconnect the session sends RESUME with the last session ID and the las
 | `Flags` | Session flags: `micup.FlagChannelThreads`, `micup.FlagDebounceMessageReactions`, `micup.FlagGuildVisits` |
 | `Compress` | Connects with `compress=zstd-stream&stream=1`. Every server frame is then one part of a single zstd stream, and every client message goes through one compressor for the whole connection, as Micup requires. Cuts Gateway bandwidth substantially for bots in many guilds; off by default |
 
+Session construction copies `IgnoredEvents`. Reusing or editing the caller's slice afterward does not change an existing session's event filtering or later IDENTIFY payloads.
+
 #### Changing the bot's status
 
 Each call sends opcode 3 and remembers the result, so the next IDENTIFY publishes it too. `ShardManager` has the same methods and applies them to every shard. A shard that is disconnected keeps the new presence and sends it when it identifies again.

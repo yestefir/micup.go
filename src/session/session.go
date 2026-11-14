@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -96,6 +97,7 @@ func New(config Config, options Options) (*Session, error) {
 	if options.MaxBackoff < options.MinBackoff {
 		options.MaxBackoff = max(DefaultMaxBackoff, options.MinBackoff)
 	}
+	options.IgnoredEvents = slices.Clone(options.IgnoredEvents)
 	return &Session{
 		config:         config,
 		options:        options,
