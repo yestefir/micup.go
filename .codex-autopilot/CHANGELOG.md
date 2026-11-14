@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_09-51
+
+- Removed terminal REST backoffs after the fifth/final transport or retryable API failure; retry count and final rate-limit pacing remain intact. Documented exhaustion behavior.
+- Regression reproduced cancellation masking the last global 429 error before the fix; final API error and pacing assertions pass afterward.
+- Controlled exhaustion benchmarks, one iteration per mode/version: HTTP 503 15.5026391 -> 7.5032818 seconds (51.60% lower); transport error 15.5034012 -> 7.5023466 seconds (51.61% lower). Five attempts each, synthetic in-process transport, real backoff sleeps. No production performance extrapolation.
+- Validation: 172 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting reports 113 existing CRLF files.
+- Fix commit: `6f62fb8c7ff917c2c35e0c011f62b0531af68267`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_09-21
 
 - Added upload key/multipart ID checks and preflight validation of every multipart URL before file consumption or data PUTs. A shared URL validator retains HTTP(S)/host checks and rejects embedded credentials in either upload mode.

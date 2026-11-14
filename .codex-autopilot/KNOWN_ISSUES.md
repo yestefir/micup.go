@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 114 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 113 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by one after formatting the modified request file; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -16,7 +16,7 @@
 - Gateway sends recheck context after obtaining write access, but write-lock acquisition itself is not cancellable and an already-started write is not actively interrupted by context cancellation. No responsiveness/production workload profile has been established. Do not describe the late-transmission fix as guaranteeing immediate cancellation while another writer is active.
 - New iterator progress guards detect an empty or unchanged next cursor. They do not deduplicate previously yielded items or detect arbitrary multi-page cursor cycles. A repeated page may be yielded once before termination, matching the existing member/thread iterator convention.
 - Discovery sampled each domain, documentation, tests and critical REST/session/Gateway paths. This cycle was not an exhaustive audit of every source line or dependency advisory.
-- Runtime latency, CPU, process memory usage and production throughput have no baseline. Header/parsing/presence/cache microbenchmarks have controlled definitions, not production profiles. Independent custom presence snapshots cost an extra 80 B and one allocation. Fully populated cache-channel snapshots cost 1568 B/49 allocations versus the prior unsafe 48 B/1 allocation; populated role snapshots cost 96 B/7 allocations versus 0. Minimal channel/role snapshots still allocate zero. These ownership costs are measured and explicit; production impact is not established.
+- Production-service latency, CPU, process memory usage and production throughput have no baseline. Controlled retry-exhaustion elapsed benchmarks use real sleeps and an in-process transport, one iteration per mode/version; they do not establish production latency distributions. Header/parsing/presence/cache microbenchmarks have controlled definitions, not production profiles. Independent custom presence snapshots cost an extra 80 B and one allocation. Fully populated cache-channel snapshots cost 1568 B/49 allocations versus the prior unsafe 48 B/1 allocation; populated role snapshots cost 96 B/7 allocations versus 0. Minimal channel/role snapshots still allocate zero. These ownership costs are measured and explicit; production impact is not established.
 
 ## Resolved in cycle 2026-11-14_07-21
 
@@ -66,3 +66,7 @@
 
 - P1: Shared mutable message/audit iterator query produced confirmed data races under concurrent use and skipped earlier pages on subsequent traversals. Fixed with a per-traversal query copy.
 - P1: Message, audit-log and guild iteration could keep fetching a repeated full page. Fixed with cursor progress checks, verified against bounded local server fixtures.
+
+## Resolved in cycle 2026-11-14_09-51
+
+- P2: REST retries slept after their fifth/final failure even though no further attempt could occur. For retryable server/transport failures this added an unnecessary eight-second backoff, and cancellation during the final wait could hide the final API error. Both paths now return immediately after the last failure. A five-response 429 regression failed before the fix with context canceled and now returns the final global API error while preserving limiter pacing. Controlled five-attempt server/transport benchmarks fell from about 15.50 to 7.50 seconds, one iteration per mode/version. No production latency distribution is claimed.
