@@ -62,6 +62,10 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 	}
 	chunks := make(chan memberChunk, 16)
 	s.mu.Lock()
+	if !s.Ready() {
+		s.mu.Unlock()
+		return nil, ErrNotReady
+	}
 	s.memberRequests[nonce] = chunks
 	s.mu.Unlock()
 	defer func() {

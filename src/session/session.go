@@ -153,8 +153,13 @@ func (s *Session) Run(ctx context.Context) error {
 			s.options.OnDisconnect(err)
 		}
 		var closed *gateway.CloseError
-		if errors.As(err, &closed) && closed.Fatal() {
-			return closed
+		if errors.As(err, &closed) {
+			if closed.ResetsSession() {
+				s.invalidateSession()
+			}
+			if closed.Fatal() {
+				return closed
+			}
 		}
 		if established {
 			delay = s.options.MinBackoff
@@ -194,26 +199,30 @@ func (s *Session) ResolveGuild(ctx context.Context, channelID string) (string, e
 
 func (s *Session) gatewayOptions() gateway.Options {
 	return gateway.Options{
-		URL:          s.config.Endpoint,
-		Token:        s.config.Token,
-		ShardID:      s.config.ShardID,
-		ShardCount:   s.config.ShardCount,
-		UserAgent:    s.options.UserAgent,
-		Browser:      s.options.Browser,
-		Resume:       &s.resume,
-		OnConnect:    s.attach,
-		OnDisconnect: func() { s.attach(nil) },
-		OnSessionInvalidated: func() {
-			s.ready.Store(false)
-			s.dropAllGrants()
-		},
-		OnGatewayError: s.handleGatewayError,
-		BeforeIdentify: s.config.BeforeIdentify,
-		IgnoredEvents:  s.options.IgnoredEvents,
-		PresenceFunc:   s.currentPresence,
-		Flags:          s.options.Flags,
-		Compress:       s.options.Compress,
+		URL:                  s.config.Endpoint,
+		Token:                s.config.Token,
+		ShardID:              s.config.ShardID,
+		ShardCount:           s.config.ShardCount,
+		UserAgent:            s.options.UserAgent,
+		Browser:              s.options.Browser,
+		Resume:               &s.resume,
+		OnConnect:            s.attach,
+		OnDisconnect:         func() { s.attach(nil) },
+		OnSessionInvalidated: s.invalidateSession,
+		OnGatewayError:       s.handleGatewayError,
+		BeforeIdentify:       s.config.BeforeIdentify,
+		IgnoredEvents:        s.options.IgnoredEvents,
+		PresenceFunc:         s.currentPresence,
+		Flags:                s.options.Flags,
+		Compress:             s.options.Compress,
 	}
+}
+
+func (s *Session) invalidateSession() {
+	s.ready.Store(false)
+	s.stopMemberRequests()
+	s.stopCountRequests()
+	s.dropAllGrants()
 }
 
 // Latency is the Gateway heartbeat round trip of the live connection. It is
@@ -242,7 +251,7 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 	move := s.cache.Apply(event.Name, event.Data)
 	switch event.Name {
 	case gateway.EventReady:
-		s.dropAllGrants()
+		s.invalidateSession()
 		s.rememberSession(event)
 		s.ready.Store(true)
 		s.announceReady(false)

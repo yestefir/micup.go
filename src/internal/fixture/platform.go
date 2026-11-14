@@ -51,6 +51,8 @@ type Platform struct {
 	CountsRequested   atomic.Int64
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
+	HoldMembers       bool
+	MembersRequested  atomic.Int64
 	ReplayMemberChunk bool
 	RepeatMemberUser  bool
 	memberReplay      *memberReplay
@@ -136,6 +138,15 @@ func (p *Platform) Send(packet any) {
 	}
 }
 
+func (p *Platform) CloseGateway(code int) {
+	p.mu.Lock()
+	c := p.latest
+	p.mu.Unlock()
+	if c != nil {
+		c.close(code)
+	}
+}
+
 func (p *Platform) Event(name string, data any) {
 	p.mu.Lock()
 	c := p.latest
@@ -197,6 +208,13 @@ func (p *Platform) serve(ws *websocket.Conn) {
 		case gateway.OpHeartbeat:
 			c.send(map[string]any{"op": gateway.OpHeartbeatAck})
 		case gateway.OpRequestGuildMembers:
+			p.MembersRequested.Add(1)
+			p.mu.Lock()
+			holdMembers := p.HoldMembers
+			p.mu.Unlock()
+			if holdMembers {
+				continue
+			}
 			var guild, nonce string
 			_ = json.Unmarshal(fields["guild_id"], &guild)
 			_ = json.Unmarshal(fields["nonce"], &nonce)
@@ -328,6 +346,13 @@ func (p *Platform) holdCounts() bool {
 	p.mu.Unlock()
 	p.CountsRequested.Add(1)
 	return hold
+}
+
+// AllowRequestResponses enables future requests; held requests stay unanswered.
+func (p *Platform) AllowRequestResponses() {
+	p.mu.Lock()
+	p.HoldMembers, p.HoldCounts = false, false
+	p.mu.Unlock()
 }
 
 func (p *Platform) identify(c *peer, fields map[string]json.RawMessage) bool {

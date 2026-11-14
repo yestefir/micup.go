@@ -71,6 +71,10 @@ func (s *Session) request(ctx context.Context, opcode int, payload map[string]an
 	}
 	answer := make(chan []byte, 1)
 	s.mu.Lock()
+	if !s.Ready() {
+		s.mu.Unlock()
+		return nil, ErrNotReady
+	}
 	s.countRequests[nonce] = answer
 	s.mu.Unlock()
 	defer func() {
