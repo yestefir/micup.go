@@ -1,13 +1,13 @@
-# Latest cycle — 2026-11-14_11-21
+# Latest cycle — 2026-11-14_11-51
 
-**BUG FIX VERIFIED.** Member inventory workers stop obsolete pagination after lifecycle changes/cancellation and recheck before marking completion. Eight bounded regressions failed before the fix and pass afterward, including unavailable/cancelled terminal pages previously marked Complete.
+**BUG FIX VERIFIED.** New READY/invalid-session boundaries invalidate old voice joins with the existing ErrVoiceGrant. A consumed old grant cannot be stored after reset, and earlier caller cleanup cannot remove a replacement join. Resumable reconnects preserve pending joins; terminal shutdown behavior remains covered.
 
-Validated fix commit: `aeafe8e2cf419bcace1bcce0ab835de66c2d00f5`.
+Validated fix commit: `902adb4981dd093fff05c0e9e1c92853eb3116c1`.
 
-Four lifecycle probes make 4 total page lookups versus 12; two context probes make 1 versus 4. These are controlled callback counts, not production latency/request measurements. Added per-page mutex check overhead is unprofiled. Custom in-flight lookups must honor context themselves; earlier constructor/snapshot costs remain recorded.
+Before the fix, two deterministic consumed-result probes restored old grants, four empty/buffered probes missed invalidation and two local pending joins expired at their deadlines. All now pass. Resume control succeeds before/after. These are correctness observations, not latency measurements; reset-loop overhead is unprofiled and previous allocation costs remain recorded.
 
-Validation: 178 top-level race tests pass, 2 optional voice skips, 0 failures; vet/build/modified-file formatting pass. Full formatting reports 110 existing CRLF files. Targeted inventory/shutdown checks pass five repetitions.
+Validation: 182 top-level race tests pass, 2 optional voice skips, 0 failures; vet/build/modified-file formatting pass. Full formatting reports 110 existing CRLF files. Targeted voice/reset/shutdown checks pass five repetitions.
 
 Active recurring automation: `micup-go-engineering-autopilot`, every 30 minutes in this chat. Read the [runbook](RUNBOOK.md) and [state](STATE.md); acquire the overlap lock before changes. No pushes or deployments.
 
-Full evidence and next priorities: [execution report](reports/2026-11-14_11-21.md).
+Full evidence and next priorities: [execution report](reports/2026-11-14_11-51.md).

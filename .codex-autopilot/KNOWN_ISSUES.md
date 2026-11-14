@@ -5,13 +5,15 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 110 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by one after formatting the modified inventory file; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 110 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
 - `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
 
 ## Scope limitations
+
+- Voice session replacement now invalidates pending tickets and checks ticket ownership when committing a received grant. Resumable reconnects preserve tickets; terminal shutdown retains its prior reservation policy. Notification does not interrupt a JoinVoice still inside Send; it observes the queued result after that call returns. This does not tag upstream events with epochs or prove every concurrent rotation/terminal-shutdown interleaving. Reset-loop overhead is unprofiled.
 
 - Member inventory workers recheck context and target identity/availability at page boundaries and completion. They do not forcibly interrupt an already-started custom MemberLookup call; that implementation must honor its context. A lifecycle/context change just after admission may overlap the in-flight lookup. Added per-page mutex check overhead has not been profiled; lookup-count fixtures do not establish production speed.
 
@@ -83,3 +85,6 @@
 ## Resolved in cycle 2026-11-14_11-21
 
 - P2: Member enumeration checked its target identity only after all pages, so READY/guild sync/deletion/outage still allowed later page lookups. Outages retained the target pointer and could publish the obsolete enumeration as Complete. A custom lookup finishing successfully as its context ended could likewise trigger further pages and completion. Four bounded lifecycle probes made three calls each before the fix and now make one; pre-cancelled/mid-page cancellation made two calls each and now make zero/one. Short terminal-page outage/cancellation probes also published Complete before the fix. Page-boundary context/lifecycle checks plus completion checks now stop obsolete work and keep interrupted inventories incomplete, preserving existing retry/reconciliation behavior. Eight cases fail before the fix and pass afterward. No production request count, unbounded-loop or forced in-flight cancellation claim.
+## Resolved in cycle 2026-11-14_11-51
+
+- P2: New READY/invalid-session cleanup cleared stored voice grants but left pending joins and consumed results valid. Two deterministic consumed-result/reset/commit probes restored old grants; empty/buffered joins were not invalidated in four probes. Two local held-response joins waited for caller deadlines after session replacement. Reset now notifies old result channels with the existing ErrVoiceGrant, clears their ownership registrations/order and rejects a consumed result unless its channel still owns that guild's join. Deferred cleanup uses the same identity check so earlier callers cannot remove replacement joins. Resumable reconnect control still succeeds; terminal shutdown keeps its existing ErrGatewayClosed notification/reservation behavior. Regression probes fail before the fix and pass afterward, with additional replacement-cleanup coverage. No production incident, data-race trace or latency improvement is claimed.

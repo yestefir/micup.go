@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_11-51
+
+- Invalidated pending voice joins on new READY/invalid-session boundaries using existing ErrVoiceGrant. Extracted grant completion into a private helper and require the original result channel still to own the guild reservation before storing a consumed grant.
+- Deferred cleanup checks that same identity, preserving new joins after reset. Shared locked notification helper retains terminal shutdown ErrGatewayClosed/reservation behavior; resumable reconnects keep pending joins.
+- Before fix, two consumed-result probes restored old grants, four empty/buffered probes missed invalidation, and two local held-response joins waited for caller deadlines. All now pass; resume control passes before/after and replacement-cleanup coverage verifies a new join can commit normally.
+- Validation: 182 top-level race tests pass, 2 optional voice skips, no failures; targeted voice/reset/shutdown tests pass five repetitions. Vet/build/modified-file formatting/whitespace pass. Full formatting still reports 110 existing CRLF files.
+- No latency/throughput/allocation claim; reset-loop overhead unprofiled and prior costs remain recorded. Fix commit: `902adb4981dd093fff05c0e9e1c92853eb3116c1`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_11-21
 
 - Added member-inventory context/target checks before page lookups and cancellation/availability checks before completion. Workers stop obsolete pagination after READY, guild sync, guild deletion/outage or cancellation, while retaining existing epoch identity, retry and event-reconciliation rules.
