@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_05-21
+
+- Fixed session custom-status aliasing in initial options, `Presence()` snapshots and `UpdatePresence` input. A private nested copy helper isolates caller-owned and session-owned values while retaining presence validation, helpers and Gateway behavior.
+- Three mutation regressions failed before the fix; concurrent edits to eight returned snapshots emitted an actual DATA RACE. Targeted and full race tests now pass. Added snapshot ownership guidance to the Gateway docs.
+- Snapshot benchmarks (5 serial 200 ms samples/version) show plain 33.23 to 33.26 ns/op median, unchanged 32 B/1 allocation; custom 32.18 to 70.26 ns/op, 32 to 112 B, 1 to 2 allocations. The extra custom-status copy has an explicit correctness cost, not a speed claim.
+- Validation: 153 top-level tests pass with race detection, 2 optional voice tests skip, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 120 unrelated CRLF files.
+- Fix commit: `a0ee049f06baa44701a1afd4c64bce23e65f5869`. No push, deployment, production data/dependency or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_04-51
 
 - Fixed `CreateWebhook` rejecting valid multibyte names by forwarding to the existing `CreateWebhookWithAvatar` implementation with an empty avatar. The two methods now share the established 1-to-80-code-point limit and optional avatar omission.
