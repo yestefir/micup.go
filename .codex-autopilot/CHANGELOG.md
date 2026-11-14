@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_06-21
+
+- Fixed pending member requests outliving terminal session execution. `Session.Run` final cleanup now retires all registered member requests and queues the existing closed-connection error. Transient reconnects remain inside the run loop and retain their prior behavior.
+- Cleanup drains bounded response queues before sending the error, avoiding a blocked terminal signal or incomplete success after eviction of buffered data. It uses the same mutex as delivery, does not close channels and adds no goroutines.
+- Added a public local-Gateway regression with two independent caller contexts, plus empty/full queue shutdown coverage. Both tests failed before the fix; targeted and full race checks pass afterward. Gateway docs describe shutdown errors and partial results.
+- Validation: 157 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Whole formatting still reports 119 existing CRLF files. No runtime speed claim.
+- Fix commit: `f0549cc8be6ea17540c6e11989e18e3c81c828ce`. No push, deployment, dependency or automation edit.
+
 ## 2026-11-14 — Cycle 2026-11-14_05-51
 
 - Fixed silent member-chunk loss on a full request response queue. Overflow now atomically retires the request and queues an explicit incomplete-list error in reserved capacity, preventing missing completion or false complete results after lost data.
