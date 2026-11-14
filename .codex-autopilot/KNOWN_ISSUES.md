@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 113 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by one after formatting the modified request file; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 113 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -13,7 +13,7 @@
 
 ## Scope limitations
 
-- Gateway sends recheck context after obtaining write access, but write-lock acquisition itself is not cancellable and an already-started write is not actively interrupted by context cancellation. No responsiveness/production workload profile has been established. Do not describe the late-transmission fix as guaranteeing immediate cancellation while another writer is active.
+- Gateway queued write-access waits now end with context cancellation/deadlines. Already-started writes are not actively interrupted by caller cancellation and retain the five-second socket write timeout. Serialization before queue admission is also synchronous. The local stalled-writer regression checks a 500 ms response bound, not production latency. A per-connection channel adds 112 B and one constructor allocation (272 B/4 versus 160 B/3); constructor benchmark time also increased. Production effect is unmeasured.
 - New iterator progress guards detect an empty or unchanged next cursor. They do not deduplicate previously yielded items or detect arbitrary multi-page cursor cycles. A repeated page may be yielded once before termination, matching the existing member/thread iterator convention.
 - Discovery sampled each domain, documentation, tests and critical REST/session/Gateway paths. This cycle was not an exhaustive audit of every source line or dependency advisory.
 - Production-service latency, CPU, process memory usage and production throughput have no baseline. Controlled retry-exhaustion elapsed benchmarks use real sleeps and an in-process transport, one iteration per mode/version; they do not establish production latency distributions. Header/parsing/presence/cache microbenchmarks have controlled definitions, not production profiles. Independent custom presence snapshots cost an extra 80 B and one allocation. Fully populated cache-channel snapshots cost 1568 B/49 allocations versus the prior unsafe 48 B/1 allocation; populated role snapshots cost 96 B/7 allocations versus 0. Minimal channel/role snapshots still allocate zero. These ownership costs are measured and explicit; production impact is not established.
@@ -70,3 +70,6 @@
 ## Resolved in cycle 2026-11-14_09-51
 
 - P2: REST retries slept after their fifth/final failure even though no further attempt could occur. For retryable server/transport failures this added an unnecessary eight-second backoff, and cancellation during the final wait could hide the final API error. Both paths now return immediately after the last failure. A five-response 429 regression failed before the fix with context canceled and now returns the final global API error while preserving limiter pacing. Controlled five-attempt server/transport benchmarks fell from about 15.50 to 7.50 seconds, one iteration per mode/version. No production latency distribution is claimed.
+## Resolved in cycle 2026-11-14_10-21
+
+- P2: Gateway sends used an unconditional mutex wait after serialization/rate admission, so context cancellation/deadlines could not return until an earlier writer finished. A real local WebSocket with a stalled client transport reproduced all four command/heartbeat cancellation/deadline cases still waiting 500 ms after their contexts ended. Replaced only the writer mutex with a per-connection context-selectable gate, retaining the inside-gate context recheck and shared compressor/socket serialization. All four cases now return while the active write remains stalled, transmit no cancelled frame, and preserve that writer and following sends. Constructor cost increases by 112 B/one allocation per connection; active writes retain their existing timeout.

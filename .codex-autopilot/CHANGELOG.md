@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_10-21
+
+- Replaced the Gateway writer mutex with a context-selectable per-connection gate. Queued commands/heartbeats can return on cancellation/deadline while the active writer continues; shared compressor/socket writes remain serialized and contexts are rechecked inside the gate.
+- Four local stalled-transport cases failed before the fix at a 500 ms watchdog and pass afterward. Checks also retain the active write, following sends, absent cancelled frames and unchanged heartbeat state. Existing queued-send assertions are preserved with updated gate setup.
+- Constructor benchmark (three runs/version): allocation increases from 160 B/3 to 272 B/4 per connection. Observed times 86.59/89.35/93.65 ns before and 128.4/128.2/131.7 ns after; no throughput or production latency claim. This is a deliberate correctness cost, not a speed improvement.
+- Validation: 173 top-level race tests pass, 2 optional voice skips, no failures; targeted Gateway tests pass five repetitions. Vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 113 existing CRLF files.
+- Fix commit: `98c815ef6f488e45e6ef549e89012f2f006cb317`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_09-51
 
 - Removed terminal REST backoffs after the fifth/final transport or retryable API failure; retry count and final rate-limit pacing remain intact. Documented exhaustion behavior.
