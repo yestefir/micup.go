@@ -112,7 +112,11 @@ func (s *Session) handleMembersChunk(event gateway.Event) {
 	if !ok || chunk.Nonce == "" {
 		return
 	}
-	response := memberChunk{members: chunk.Members, last: chunk.ChunkIndex >= chunk.ChunkCount-1}
+	if chunk.ChunkCount <= 0 || chunk.ChunkIndex < 0 || chunk.ChunkIndex >= chunk.ChunkCount {
+		s.deliverChunk(chunk.Nonce, memberChunk{err: errors.New("Micup member response has an invalid chunk position; member list is incomplete")})
+		return
+	}
+	response := memberChunk{members: chunk.Members, last: chunk.ChunkIndex == chunk.ChunkCount-1}
 	if event.Sequence != nil {
 		response.sequence, response.hasSequence = *event.Sequence, true
 	}
