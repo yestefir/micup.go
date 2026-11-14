@@ -67,7 +67,7 @@ func (c *Client) call(ctx context.Context, r *request) error {
 		}
 		resp, err := c.send(ctx, r, body)
 		if err != nil {
-			if ctx.Err() != nil || !retryable {
+			if ctx.Err() != nil || !retryable || attempt+1 == maxAttempts {
 				return err
 			}
 			last = err
@@ -94,7 +94,7 @@ func (c *Client) call(ctx context.Context, r *request) error {
 		default:
 			return apiErr
 		}
-		if wait > maxRetryAfter {
+		if wait > maxRetryAfter || attempt+1 == maxAttempts {
 			return apiErr
 		}
 		if err = sleep(ctx, wait); err != nil {

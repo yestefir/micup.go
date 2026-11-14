@@ -69,7 +69,7 @@ The REST client handles Micup's limits for you:
 - After a response with `X-RateLimit-Remaining: 0`, the next request to the same route waits for `X-RateLimit-Reset-After`. Routes are keyed by method and path, with channel, guild and webhook IDs kept, so one channel's limit does not slow another.
 - A 423 (`RESOURCE_LOCKED`) waits `Retry-After` and retries.
 - 5xx responses and connection failures are retried with backoff only for `GET`, `PUT` and `DELETE`, and for message sends that carry a `Nonce`. Other `POST` and `PATCH` requests are not retried, so they are never applied twice.
-- At most 5 attempts are made, and every wait stops when the context ends.
+- At most 5 attempts are made, and every wait stops when the context ends. The final failed attempt returns its error without another backoff; rate-limit responses still update pacing.
 
 Routes that write the audit log take `micup.WithReason("text")`, which sends `X-Audit-Log-Reason` (up to 512 characters).
 
