@@ -75,6 +75,24 @@ func (s *Session) finishJoin(guildID, channelID string, pending chan joinResult,
 	if result.err != nil {
 		return model.VoiceServerUpdate{}, result.err
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	current := s.pending[guildID]
+	if current.results != pending {
+		return model.VoiceServerUpdate{}, ErrVoiceGrant
+	}
+	if current.closed {
+		return model.VoiceServerUpdate{}, gateway.ErrClosed
+	}
+	// A newer grant may have arrived after the caller received its result.
+	// Select and validate it under the same lock used by delivery and commit.
+	select {
+	case result = <-pending:
+	default:
+	}
+	if result.err != nil {
+		return model.VoiceServerUpdate{}, result.err
+	}
 	grant := result.grant
 	if grant.Endpoint == "" || grant.Token == "" {
 		return model.VoiceServerUpdate{}, ErrVoiceGrant
@@ -85,16 +103,11 @@ func (s *Session) finishJoin(guildID, channelID string, pending chan joinResult,
 	if grant.ChannelID != channelID {
 		return model.VoiceServerUpdate{}, ErrVoiceMoved
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	current := s.pending[guildID]
-	if current.results != pending {
-		return model.VoiceServerUpdate{}, ErrVoiceGrant
-	}
-	if current.closed {
-		return model.VoiceServerUpdate{}, gateway.ErrClosed
-	}
 	s.grants[guildID] = grant
+	// Further grants now belong to the established connection, even if the
+	// caller has not yet run its deferred cleanup.
+	delete(s.pending, guildID)
+	s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == guildID })
 	return grant, nil
 }
 
@@ -178,12 +191,20 @@ func (s *Session) handleVoiceServerUpdate(event gateway.Event) {
 		return
 	}
 	s.mu.Lock()
-	pending := s.pending[grant.GuildID].results
+	entry := s.pending[grant.GuildID]
+	pending := entry.results
 	if pending != nil {
-		s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == grant.GuildID })
-		select {
-		case pending <- joinResult{grant: grant}:
-		default:
+		if !entry.closed {
+			s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == grant.GuildID })
+			result := joinResult{grant: grant}
+			select {
+			case previous := <-pending:
+				if previous.err != nil {
+					result = previous
+				}
+			default:
+			}
+			pending <- result
 		}
 		s.mu.Unlock()
 		return

@@ -157,6 +157,8 @@ Pending joins are notified when `Run` ends even if their own caller contexts rem
 
 Micup sends a new grant without a request when the connection moves to another region or channel. With `OnVoiceGrant(grant)` set, the session stores that grant and passes it to the callback: reconnect the LiveKit room to `grant.Endpoint` with `grant.Token` and keep playing. Without `OnVoiceGrant`, an unrequested grant that replaces a stored one is reported through `OnVoiceLost`, as in earlier releases.
 
+If a newer grant arrives while a join is pending, completion validates and uses the latest received grant. A queued refusal remains an error. Successful completion retires the pending reservation together with storing the grant, so later updates use the established connection's rotation or voice-loss callback.
+
 ## Shard manager
 
 `micup.ShardForGuild(guildID, shardCount)` returns the shard that owns a guild, using the snowflake mapping `(guildID >> 22) % shardCount`.
