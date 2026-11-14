@@ -117,7 +117,11 @@ func (s *Session) ShardID() int { return s.config.ShardID }
 func (s *Session) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	var requests sync.WaitGroup
-	defer func() { cancel(); requests.Wait() }()
+	defer func() {
+		cancel()
+		s.stopMemberRequests()
+		requests.Wait()
+	}()
 	if s.options.TrackMembers {
 		for range 2 {
 			requests.Add(1)

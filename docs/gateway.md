@@ -125,6 +125,8 @@ Micup sends only the bot's own member and the members in voice channels with `GU
 
 If member responses arrive faster than the request can consume its bounded buffer, the call returns an error with any members already collected. Treat those results as incomplete. Other requests and Gateway event processing continue.
 
+When `Session.Run` stops, pending member requests are notified with `micup.ErrGatewayClosed`, even if their own contexts remain active. Already collected members may accompany that error. Transient reconnects keep `Run` active and do not trigger this shutdown cleanup.
+
 Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)` reads the cache and falls back to `GET /channels/{id}` once, then caches the answer. `b.REST.Channel(ctx, channelID)` performs that request directly.
 
 ### Voice channels

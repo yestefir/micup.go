@@ -126,6 +126,23 @@ func (s *Session) deliverChunk(nonce string, chunk memberChunk) {
 	}
 }
 
+func (s *Session) stopMemberRequests() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for nonce, chunks := range s.memberRequests {
+		delete(s.memberRequests, nonce)
+	drain:
+		for {
+			select {
+			case <-chunks:
+			default:
+				break drain
+			}
+		}
+		chunks <- memberChunk{err: gateway.ErrClosed}
+	}
+}
+
 func newNonce() (string, error) {
 	var b [12]byte
 	if _, err := rand.Read(b[:]); err != nil {
