@@ -36,6 +36,8 @@ Create the session with `b.NewSession(micup.SessionOptions{TrackMembers: true})`
 
 The session enumerates REST members in pages of 1,000 with two concurrent workers. Each guild enumeration has a 30-second deadline. Failed or malformed enumerations remain incomplete and retry after 10 seconds, in addition to REST rate-limit handling. Changes received during enumeration are merged into its result. READY, guild sync and guild rejoin invalidate older enumerations; RESUME keeps the inventory. Temporary guild outages set `Available` to false; leaving a guild removes it.
 
+Workers check cancellation and the guild's lifecycle before requesting another page and before publishing a complete result. An in-flight custom `MemberLookup.Members` call must itself honor its context for prompt cancellation.
+
 Keep member add/update/remove and guild lifecycle events enabled, and grant the bot the platform permissions needed to list members. `Complete` means an enumeration finished and subsequent received events were applied; missing platform events cannot be inferred. Only user IDs and bot flags are retained by this inventory. Role and voice state remain available through `s.State()`.
 
 Standalone `micup.NewSession` users must supply `SessionConfig.Members`, implementing `micup.MemberLookup`. `b.NewSession` and `b.NewShardManager` supply it automatically. Background workers are cancelled and joined when `Run` returns. This API is separate from opcode-8 `RequestGuildMembers`, which returns requested chunks without maintaining a complete inventory.
