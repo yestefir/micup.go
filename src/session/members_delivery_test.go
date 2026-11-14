@@ -1,9 +1,12 @@
 package session
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/model"
 )
 
@@ -43,6 +46,33 @@ func TestMemberChunkOverflowFailsInsteadOfDroppingData(t *testing.T) {
 				t.Fatalf("overflow affected another request: %+v", chunk)
 			}
 		})
+	}
+}
+
+func TestSessionShutdownFailsEmptyAndFullMemberQueues(t *testing.T) {
+	empty := make(chan memberChunk, 16)
+	full := make(chan memberChunk, 16)
+	for i := range cap(full) {
+		full <- memberChunk{last: i == cap(full)-1}
+	}
+	s := &Session{memberRequests: map[string]chan memberChunk{"empty": empty, "full": full}}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := s.Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+	for name, queue := range map[string]chan memberChunk{"empty": empty, "full": full} {
+		select {
+		case chunk := <-queue:
+			if !errors.Is(chunk.err, gateway.ErrClosed) || chunk.last {
+				t.Errorf("%s request did not receive shutdown error: %+v", name, chunk)
+			}
+		default:
+			t.Errorf("%s request did not receive a shutdown notification", name)
+		}
+	}
+	if len(s.memberRequests) != 0 {
+		t.Error("shutdown retained pending request registrations")
 	}
 }
 
