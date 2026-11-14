@@ -1,5 +1,12 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_05-51
+
+- Fixed silent member-chunk loss on a full request response queue. Overflow now atomically retires the request and queues an explicit incomplete-list error in reserved capacity, preventing missing completion or false complete results after lost data.
+- Added controlled middle/final overflow regressions, late-response rejection, independent-request checks and normal in-order delivery at the buffer boundary. Both overflow cases failed before the fix; targeted and full race checks pass afterward. Gateway docs now describe partial results with an overflow error.
+- Validation: 155 top-level tests pass with race detection, 2 optional voice skips, 0 failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 119 pre-existing CRLF files. No speed improvement or production occurrence rate claimed.
+- Fix commit: `6465cab84e7359d4351d3f6e4aab08720cf9a96b`. No push, deployment, dependency or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_05-21
 
 - Fixed session custom-status aliasing in initial options, `Presence()` snapshots and `UpdatePresence` input. A private nested copy helper isolates caller-owned and session-owned values while retaining presence validation, helpers and Gateway behavior.

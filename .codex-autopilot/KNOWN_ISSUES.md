@@ -5,12 +5,12 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 120 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the modified `session.go` this cycle reduced the remaining count from 121 to 120; unrelated files are untouched. Changed Go files are gofmt clean. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 119 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the modified `members.go` this cycle reduced the remaining count from 120 to 119; unrelated files are untouched. Changed Go files are gofmt clean. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
 - `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
-- Pending member requests survive a transport disconnect until their caller context ends, and delivery uses a bounded nonblocking chunk channel. Reproduce a lost/completed request scenario with a local Gateway fixture before proposing changes; existing documentation already asks callers to use bounded contexts.
+- Pending member requests survive a transport disconnect until their caller context ends. Validate terminal session shutdown separately from transient/resumable transport loss before changing this behavior; bounded caller contexts are already documented. The saturated-buffer delivery defect is now resolved below.
 
 ## Scope limitations
 
@@ -21,6 +21,10 @@
 ## Resolved in cycle 2026-11-14_05-21
 
 - P1: Session presence shallow copies leaked the nested `CustomStatus` pointer through constructor input, getter snapshots and `UpdatePresence` input. Caller edits silently changed stored state, bypassing update validation, and eight callers editing their returned snapshots reproduced a DATA RACE. A shared private copy helper now isolates all three boundaries; regression and full race tests pass.
+
+## Resolved in cycle 2026-11-14_05-51
+
+- P1: `deliverChunk` silently dropped responses when a request's 16-slot queue filled. Dropping a middle chunk could allow incomplete success after a later completion, while dropping completion/error could leave a request awaiting its context. Controlled middle/final overflow tests failed before the fix. Overflow now retires the request and reserves a queue slot for an explicit incomplete-list error under the existing mutex. Later responses are ignored; normal ordered responses and other requests remain intact.
 
 ## Resolved in cycle 2026-11-14_04-21
 
