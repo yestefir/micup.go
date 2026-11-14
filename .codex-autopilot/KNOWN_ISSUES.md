@@ -5,11 +5,11 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 123 remaining existing CRLF files | `core.autocrlf=true`; prior cycle verified CRLF-only formatting differences. Formatting the modified `errors.go` reduced the remaining count from 124 to 123; unrelated files are untouched. Changed Go files are gofmt clean. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 121 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the two webhook files modified this cycle reduced the remaining count from 123 to 121; unrelated files are untouched. Changed Go files are gofmt clean. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
-- `src/rest/webhooks.go`: `ExecuteWebhook` omits `anonymous` unlike the token-based methods. Creation variants also use different byte/rune length validation. These inconsistencies are visible in source; practical failures and intended platform requirements remain to be established.
+- `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
 
 ## Scope limitations
 
@@ -20,6 +20,10 @@
 ## Resolved in cycle 2026-11-14_04-21
 
 - P2: Extremely large REST retry/reset numbers overflowed to negative durations. `retry_after:1e100` became 1 ms, bypassing the documented 30-second retry cap; headers could also disable exhausted-bucket waiting. Local tests reproduced both unwanted second requests. Shared saturating conversion now preserves a positive maximum delay, rejects NaN/nonpositive inputs, and retains cancellation. Full race suite passes.
+
+## Resolved in cycle 2026-11-14_04-51
+
+- P2: `CreateWebhook` counted bytes against an 80-character limit, rejecting names already accepted by `CreateWebhookWithAvatar` and `webhookBody`. It now forwards to the shared creation implementation with an empty avatar. Local boundary tests failed for 80 accented letters and 80 emoji before the fix; all 14 constructor/boundary combinations pass afterward, including invalid-input rejection and preserved request options/auth/body.
 
 ## Resolved in cycle 2026-11-14_03-47
 

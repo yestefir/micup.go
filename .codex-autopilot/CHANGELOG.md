@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_04-51
+
+- Fixed `CreateWebhook` rejecting valid multibyte names by forwarding to the existing `CreateWebhookWithAvatar` implementation with an empty avatar. The two methods now share the established 1-to-80-code-point limit and optional avatar omission.
+- Added 14 local constructor/boundary combinations: 80 ASCII letters, accented letters and emoji; overlong ASCII/Unicode names; empty name; missing channel. Invalid inputs make no request; accepted inputs retain name, route, bot auth and audit reason. The two basic Unicode boundary cases failed before the fix and pass afterward.
+- Inspected the authorization candidate: an existing test explicitly requires bot Authorization on webhook execution. Preserved that tested behavior and deferred any change until new contract evidence exists.
+- Validation: 150 top-level tests pass under race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting reports 121 remaining pre-existing CRLF files. No speed claim or runtime performance comparison.
+- Fix commit: `8ac963e4149972b28b96228c39a41ea8e3ea2724`. No push, deployment, dependency change or automation edit.
+
 ## 2026-11-14 — Cycle 2026-11-14_04-21
 
 - Fixed REST delay overflow in `errors.go`: positive oversized body/header/reset durations saturate at the maximum `time.Duration` instead of becoming negative. This restores the existing retry cap and exhausted-bucket waits. NaN and nonpositive inputs yield zero; valid fractional durations and the body's 1 ms floor are preserved.
