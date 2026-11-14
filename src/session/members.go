@@ -109,14 +109,20 @@ func (s *Session) handleRateLimited(event gateway.Event) {
 
 func (s *Session) deliverChunk(nonce string, chunk memberChunk) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	chunks := s.memberRequests[nonce]
-	s.mu.Unlock()
 	if chunks == nil {
 		return
 	}
 	select {
 	case chunks <- chunk:
 	default:
+		delete(s.memberRequests, nonce)
+		select {
+		case <-chunks:
+		default:
+		}
+		chunks <- memberChunk{err: errors.New("Micup member response buffer overflow; member list is incomplete")}
 	}
 }
 
