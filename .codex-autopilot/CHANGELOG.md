@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_04-21
+
+- Fixed REST delay overflow in `errors.go`: positive oversized body/header/reset durations saturate at the maximum `time.Duration` instead of becoming negative. This restores the existing retry cap and exhausted-bucket waits. NaN and nonpositive inputs yield zero; valid fractional durations and the body's 1 ms floor are preserved.
+- Added four regression tests covering numeric boundaries, body/header decoding, unwanted retries and bucket cancellation. All bug scenarios failed against baseline source before passing with the fix.
+- Added `BenchmarkHeaderSeconds`, five 200 ms samples per input/version on the same machine, run serially. Median parsing time was 29.39 to 30.21 ns/op for `0.25` and 36.32 to 36.43 ns/op for `1e100`; both versions allocate 0 B/op and 0 allocs/op. Slightly slower observed medians with overlapping ranges; no speed improvement claimed.
+- Validation: 149 top-level tests pass under race detection, 2 optional voice tests skip, 0 failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 123 unrelated CRLF files.
+- Fix commit: `cb8ea97074fc5653614fff54390ab9d760c39735`. No push or deployment; recurring automation unchanged.
+
 ## 2026-11-14 — Cycle 2026-11-14_03-47
 
 - Fixed `EachMessage` and `EachAuditLogEntry` sharing cursor state across traversals. New tests failed before the fix, and race detection reported conflicting accesses at original `iterate.go:43`, `:45` and `:121`. Each traversal now starts from an immutable captured query.
