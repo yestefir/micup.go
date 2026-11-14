@@ -51,7 +51,7 @@ func NewManager(base session.Config, options Options) (*Manager, error) {
 	if interval <= 0 {
 		interval = DefaultIdentifyInterval
 	}
-	limiter := &identifyLimiter{interval: interval}
+	limiter := newIdentifyLimiter(interval)
 	m := &Manager{count: count, ids: ids, sessions: make(map[int]*session.Session, len(ids)), channels: base.Channels}
 	for _, id := range ids {
 		config := base

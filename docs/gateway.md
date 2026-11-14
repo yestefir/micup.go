@@ -187,6 +187,8 @@ Micup allows at most 2,500 guilds per bot shard and closes a shard with more wit
 
 The manager waits `IdentifyInterval` between new identifies, including re-identifies after an invalid session. RESUME is not delayed. Split shards across processes with `ShardIDs`, for example `{0, 1}` in one process and `{2, 3}` in another with `ShardCount: 4`; each process then paces only its own identifies.
 
+An identify wait that ends with its context does not reserve a later slot or extend the cooldown for other shards. Already admitted identifies keep their cooldown, including when the manager is stopped and run again.
+
 `Run` returns `nil` when the context ends.
 
 A handler error is a request to see the event again: the session does not acknowledge an event until its handler returns `nil`, so after the reconnect Micup replays it with RESUME. Return an error only for failures worth retrying, and log and return `nil` for events you want to skip. If any shard stops on a fatal close code, the manager stops every shard and returns that error wrapped with the shard ID; `errors.As(err, &closeErr)` still works. `Run` returns `micup.ErrShardManagerRunning` if it is already running.
