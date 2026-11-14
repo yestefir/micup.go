@@ -53,7 +53,7 @@ func (c *Cache) Channel(channelID string) (model.Channel, bool) {
 	defer c.mu.RUnlock()
 	channel, ok := c.channels[channelID]
 	if ok {
-		channel.PermissionOverwrites = slices.Clone(channel.PermissionOverwrites)
+		copyChannel(&channel)
 	}
 	return channel, ok
 }
@@ -66,6 +66,7 @@ func (c *Cache) Role(guildID, roleID string) (model.Role, bool) {
 		return model.Role{}, false
 	}
 	role, ok := g.roles[roleID]
+	copyRole(&role)
 	return role, ok
 }
 
