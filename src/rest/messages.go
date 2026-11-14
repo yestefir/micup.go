@@ -381,12 +381,14 @@ func (c *Client) SuppressEmbeds(ctx context.Context, channelID, messageID string
 	if err != nil {
 		return model.Message{}, err
 	}
-	flags := current.Flags &^ model.MessageFlagSuppressEmbeds
+	flags := current.Flags & settableMessageFlags &^ model.MessageFlagSuppressEmbeds
 	if suppress {
 		flags |= model.MessageFlagSuppressEmbeds
 	}
 	return c.EditMessage(ctx, channelID, messageID, model.MessageEdit{Flags: &flags})
 }
+
+const settableMessageFlags = model.MessageFlagSuppressEmbeds | model.MessageFlagSuppressNotifications | model.MessageFlagVoiceMessage
 
 func (c *Client) SearchMessages(ctx context.Context, search model.MessageSearch) (model.MessageSearchResult, error) {
 	if search.GuildID == "" && search.ChannelID == "" {

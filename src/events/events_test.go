@@ -21,6 +21,24 @@ var uncaptured = map[string]bool{
 	gateway.EventGuildBanAdd:       true,
 	gateway.EventGuildBanRemove:    true,
 	gateway.EventPresenceUpdate:    true,
+
+	gateway.EventGuildMemberListUpdate:     true,
+	gateway.EventGuildCountsUpdate:         true,
+	gateway.EventChannelRecipientAdd:       true,
+	gateway.EventChannelRecipientRemove:    true,
+	gateway.EventChannelMemberCountsUpdate: true,
+	gateway.EventPresenceUpdateBulk:        true,
+	gateway.EventPassiveUpdates:            true,
+	gateway.EventReactionAddMany:           true,
+	gateway.EventThreadMembersUpdate:       true,
+	gateway.EventThreadMemberListUpdate:    true,
+	gateway.EventCallCreate:                true,
+	gateway.EventCallUpdate:                true,
+	gateway.EventCallDelete:                true,
+	gateway.EventEntranceSoundPlay:         true,
+	gateway.EventRelationshipAdd:           true,
+	gateway.EventRelationshipUpdate:        true,
+	gateway.EventRelationshipRemove:        true,
 }
 
 func fixtures(t *testing.T) map[string][]string {
@@ -101,6 +119,37 @@ func decodeFirst[T any](t *testing.T, name string) T {
 		t.Fatal(err)
 	}
 	return value
+}
+
+func TestCapturedThreadAndEmojiPayloads(t *testing.T) {
+	created := decodeFirst[ThreadCreate](t, gateway.EventThreadCreate)
+	if !created.NewlyCreated || !created.IsThread() || created.ParentID == "" || created.ThreadMetadata == nil || created.Member == nil || created.Member.UserID == "" {
+		t.Errorf("thread create: %+v", created)
+	}
+	updated := decodeFirst[model.Channel](t, gateway.EventThreadUpdate)
+	if updated.ID == "" || updated.ThreadMetadata == nil {
+		t.Errorf("thread update: %+v", updated)
+	}
+	deleted := decodeFirst[ThreadDelete](t, gateway.EventThreadDelete)
+	if deleted.ID == "" || deleted.GuildID == "" || deleted.ParentID == "" || deleted.Type != model.ChannelTypePublicThread {
+		t.Errorf("thread delete: %+v", deleted)
+	}
+	member := decodeFirst[model.ThreadMember](t, gateway.EventThreadMemberUpdate)
+	if member.ID == "" || member.UserID == "" || member.GuildID == "" || member.Flags != model.ThreadMemberHasInteracted {
+		t.Errorf("thread member update: %+v", member)
+	}
+	sync := decodeFirst[ThreadListSync](t, gateway.EventThreadListSync)
+	if sync.GuildID == "" || len(sync.Threads) != 2 || len(sync.Members) != 1 || sync.Threads[0].Flags != model.ChannelFlagPinned || !sync.Threads[0].ThreadMetadata.Locked {
+		t.Errorf("thread list sync: %+v", sync)
+	}
+	stickers, err := As[GuildStickersUpdate](load(t, filepath.Join("testdata", gateway.EventGuildStickersUpdate+".1.json")))
+	if err != nil || len(stickers.Stickers) != 1 || len(stickers.Stickers[0].Tags) != 2 || stickers.Stickers[0].Description != "renamed" {
+		t.Errorf("stickers update: %+v %v", stickers, err)
+	}
+	emojis, err := As[GuildEmojisUpdate](load(t, filepath.Join("testdata", gateway.EventGuildEmojisUpdate+".1.json")))
+	if err != nil || emojis.GuildID == "" || len(emojis.Emojis) != 1 || emojis.Emojis[0].ID == "" {
+		t.Errorf("emojis update: %+v %v", emojis, err)
+	}
 }
 
 func TestCapturedPayloadFields(t *testing.T) {

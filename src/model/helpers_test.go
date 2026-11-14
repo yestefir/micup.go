@@ -123,3 +123,42 @@ func TestThreadAndForumFieldsDecode(t *testing.T) {
 		t.Fatalf("forum decoded as %+v", forum)
 	}
 }
+
+func TestMediaURLs(t *testing.T) {
+	media := Media{Base: "https://media.example"}
+	avatar, animated := "abc", "a_def"
+	user := User{ID: "1", Avatar: &avatar}
+	if got := media.UserAvatar(user, ImageOptions{Size: 256}); got != "https://media.example/avatars/1/abc.webp?size=256" {
+		t.Fatalf("avatar = %s", got)
+	}
+	if got := media.MemberAvatar("5", Member{User: &user, Avatar: &animated}, ImageOptions{Format: ImagePNG}); got != "https://media.example/guilds/5/users/1/avatars/a_def.png?animated=false" {
+		t.Fatalf("member avatar = %s", got)
+	}
+	if media.UserAvatar(User{ID: "1"}, ImageOptions{}) != "" || (Media{}).UserAvatar(user, ImageOptions{}) != "" {
+		t.Fatal("a missing avatar or media base must give no URL")
+	}
+	if got := media.EmojiImage(Emoji{ID: "9", Name: "x"}, ImageOptions{}); got != "https://media.example/emojis/9.webp" {
+		t.Fatalf("emoji = %s", got)
+	}
+	if got, _ := InviteURL("https://micup.gg/invite/", "abc"); got != "https://micup.gg/invite/abc" {
+		t.Fatalf("invite = %s", got)
+	}
+}
+
+func TestEmbedBuilderAndPermissionNames(t *testing.T) {
+	base := NewEmbed().WithTitle("t").WithField("a", "1", true)
+	extended := base.WithField("b", "2", false).WithColor(5).WithFooter("f", "")
+	if len(base.Fields) != 1 || len(extended.Fields) != 2 || extended.Color != 5 || extended.Footer.Text != "f" {
+		t.Fatal("embed builder must not share field slices between copies")
+	}
+	p := PermissionViewChannel | PermissionSendMessages
+	if p.String() != "VIEW_CHANNEL|SEND_MESSAGES" || PermissionAll.String() != "ALL" {
+		t.Fatalf("permission names: %s", p)
+	}
+	if p.Missing(PermissionSendMessages|PermissionConnect) != PermissionConnect || PermissionAdministrator.Missing(PermissionConnect) != 0 {
+		t.Fatal("missing permissions are wrong")
+	}
+	if got, ok := ParsePermission("ban_members"); !ok || got != PermissionBanMembers {
+		t.Fatal("permission name lookup failed")
+	}
+}

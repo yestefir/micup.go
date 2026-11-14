@@ -131,10 +131,13 @@ func (c *Client) ChannelFollowerStats(ctx context.Context, channelID string) (mo
 }
 
 func channelBody(edit model.ChannelEdit) (map[string]any, error) {
-	if name, ok := edit.Name.Value(); ok {
+	if name, _ := edit.Name.Value(); edit.Name.IsSet() {
 		if n := utf8.RuneCountInString(name); n == 0 || n > model.MaxChannelName {
 			return nil, fmt.Errorf("channel name must be 1 to %d characters", model.MaxChannelName)
 		}
+	}
+	if edit.Type.IsNull() {
+		return nil, errors.New("a channel type cannot be cleared")
 	}
 	if topic, ok := edit.Topic.Value(); ok && utf8.RuneCountInString(topic) > model.MaxForumTopic {
 		return nil, fmt.Errorf("channel topic is longer than %d characters", model.MaxForumTopic)

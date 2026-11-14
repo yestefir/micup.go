@@ -103,6 +103,30 @@ The table is generated from the registry. Captured means the payload type is tes
 | `APPLICATION_COMMANDS_UPDATE` | `micup.EventApplicationCommandsUpdate` | `micup.ApplicationCommandsUpdate` | yes |
 | `VOICE_STATE_UPDATE` | `micup.EventVoiceStateUpdate` | `micup.VoiceState` | yes |
 | `VOICE_SERVER_UPDATE` | `micup.EventVoiceServerUpdate` | `micup.VoiceServerUpdate` | yes |
+| `GUILD_EMOJIS_UPDATE` | `micup.EventGuildEmojisUpdate` | `micup.GuildEmojisUpdate` | yes |
+| `GUILD_STICKERS_UPDATE` | `micup.EventGuildStickersUpdate` | `micup.GuildStickersUpdate` | yes |
+| `GUILD_MEMBER_LIST_UPDATE` | `micup.EventGuildMemberListUpdate` | `micup.MemberListUpdate` | no |
+| `GUILD_COUNTS_UPDATE` | `micup.EventGuildCountsUpdate` | `micup.GuildCountsUpdate` | no |
+| `CHANNEL_RECIPIENT_ADD` | `micup.EventChannelRecipientAdd` | `micup.ChannelRecipient` | no |
+| `CHANNEL_RECIPIENT_REMOVE` | `micup.EventChannelRecipientRemove` | `micup.ChannelRecipient` | no |
+| `CHANNEL_MEMBER_COUNTS_UPDATE` | `micup.EventChannelMemberCountsUpdate` | `micup.ChannelMemberCountsUpdate` | no |
+| `PRESENCE_UPDATE_BULK` | `micup.EventPresenceUpdateBulk` | `micup.PresenceUpdateBulk` | no |
+| `PASSIVE_UPDATES` | `micup.EventPassiveUpdates` | `micup.PassiveUpdates` | no |
+| `MESSAGE_REACTION_ADD_MANY` | `micup.EventReactionAddMany` | `micup.ReactionAddMany` | no |
+| `THREAD_CREATE` | `micup.EventThreadCreate` | `micup.ThreadCreate` | yes |
+| `THREAD_UPDATE` | `micup.EventThreadUpdate` | `micup.Channel` | yes |
+| `THREAD_DELETE` | `micup.EventThreadDelete` | `micup.ThreadDelete` | yes |
+| `THREAD_LIST_SYNC` | `micup.EventThreadListSync` | `micup.ThreadListSync` | yes |
+| `THREAD_MEMBER_UPDATE` | `micup.EventThreadMemberUpdate` | `micup.ThreadMember` | yes |
+| `THREAD_MEMBERS_UPDATE` | `micup.EventThreadMembersUpdate` | `micup.ThreadMembersUpdate` | no |
+| `THREAD_MEMBER_LIST_UPDATE` | `micup.EventThreadMemberListUpdate` | `micup.ThreadMemberListUpdate` | no |
+| `CALL_CREATE` | `micup.EventCallCreate` | `micup.Call` | no |
+| `CALL_UPDATE` | `micup.EventCallUpdate` | `micup.Call` | no |
+| `CALL_DELETE` | `micup.EventCallDelete` | `micup.CallDelete` | no |
+| `ENTRANCE_SOUND_PLAY` | `micup.EventEntranceSoundPlay` | `micup.EntranceSoundPlay` | no |
+| `RELATIONSHIP_ADD` | `micup.EventRelationshipAdd` | `micup.Relationship` | no |
+| `RELATIONSHIP_UPDATE` | `micup.EventRelationshipUpdate` | `micup.Relationship` | no |
+| `RELATIONSHIP_REMOVE` | `micup.EventRelationshipRemove` | `micup.RelationshipRemove` | no |
 <!-- events:end -->
 
 ## How payloads are kept accurate

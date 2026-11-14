@@ -3,8 +3,10 @@
 `micup.go` is a standalone Go client for Micup bots, following the Fluxer API that Micup runs on. It covers:
 
 - **Gateway:** sessions that resume, replay unprocessed events and re-identify on the same socket; a shard manager for many shards in one process; optional zstd-stream compression; ignored events and presence; command pacing below Micup's limits.
-- **State:** guilds, channels with permission overwrites, roles, member roles and voice states, with permission computation.
-- **REST:** messages (send, edit, delete, bulk delete, list), buttons, select menus and their answers, reactions, pins, typing, DMs, files (multipart and presigned uploads), members, roles, moderation and webhooks, with Micup's error codes and rate limit rules.
+- **Gateway commands:** member requests, guild and channel member counts, Lazy Request subscriptions and voice state updates; every Micup dispatch event, including threads, calls, emojis, stickers and member lists, has a typed payload.
+- **State:** guilds with settings, emojis and stickers, channels and threads with permission overwrites, roles, member roles and voice states, with permission and role hierarchy checks.
+- **REST:** messages (send, edit, forward, crosspost, delete, bulk delete, list, search), buttons, select menus, modals and commands, reactions, pins, typing, DMs, files (multipart and presigned uploads), channels, threads and forums, roles, guild settings, members, invites, emojis, stickers, audit logs, bans, moderation and webhooks, with paging iterators, Micup's error codes and rate limit rules.
+- **Helpers:** mentions, timestamps, markdown escaping, an embed builder, media URLs, snowflake times and permission names.
 - **Voice:** the join handshake with fast refusal and permission checks, grant rotation, and Opus publishing to LiveKit.
 
 The module keeps platform transport separate from application behavior. It does not implement music search, queues, command syntax, persistence, or worker coordination.
@@ -18,7 +20,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v0.7.0
+go get github.com/yestefir/micup.go@v0.8.0
 ```
 
 ## Quick start
@@ -48,6 +50,8 @@ err = s.Run(ctx)
 ```
 
 Every event has a typed payload; see [Events and typed payloads](docs/events.md). Slash and context menu commands are registered over REST; see [Commands](docs/commands.md).
+
+Channels, roles, threads, invites, emojis and search are described in [Channels, roles, threads and invites](docs/channels.md), and mentions, embeds and media URLs in [Formatting](docs/formatting.md).
 
 Bots in many guilds use `b.NewShardManager(micup.ShardOptions{ShardCount: 4, Session: options})` instead of `b.NewSession`. See [Shards](docs/gateway.md#shard-manager).
 
@@ -97,6 +101,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v0.7.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v0.8.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

@@ -41,6 +41,8 @@ type Platform struct {
 	identifyLog       []Identify
 	lastIdentify      map[string]json.RawMessage
 	presences         []json.RawMessage
+	subscriptions     []json.RawMessage
+	voiceUpdates      []json.RawMessage
 	CloseCode         int
 	CloseShard        int
 	RefuseVoice       string
@@ -206,6 +208,31 @@ func (p *Platform) serve(ws *websocket.Conn) {
 					c.event(gateway.EventGuildMembersChunk, map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}})
 				}
 			}()
+		case gateway.OpRequestGuildCounts:
+			var ids []string
+			var nonce string
+			_ = json.Unmarshal(fields["guild_ids"], &ids)
+			_ = json.Unmarshal(fields["nonce"], &nonce)
+			counts := []map[string]any{}
+			for _, id := range ids {
+				counts = append(counts, map[string]any{"guild_id": id, "member_count": 10, "online_count": 3})
+			}
+			c.event(gateway.EventGuildCountsUpdate, map[string]any{"counts": counts, "nonce": nonce})
+		case gateway.OpRequestChannelMemberCounts:
+			var guild, nonce string
+			var ids []string
+			_ = json.Unmarshal(fields["guild_id"], &guild)
+			_ = json.Unmarshal(fields["channel_ids"], &ids)
+			_ = json.Unmarshal(fields["nonce"], &nonce)
+			counts := []map[string]any{}
+			for _, id := range ids {
+				counts = append(counts, map[string]any{"guild_id": guild, "channel_id": id, "member_count": 4, "online_count": 2})
+			}
+			c.event(gateway.EventChannelMemberCountsUpdate, map[string]any{"counts": counts, "nonce": nonce})
+		case gateway.OpLazyRequest:
+			p.mu.Lock()
+			p.subscriptions = append(p.subscriptions, append(json.RawMessage(nil), packet.D...))
+			p.mu.Unlock()
 		case gateway.OpPresenceUpdate:
 			p.mu.Lock()
 			p.presences = append(p.presences, append(json.RawMessage(nil), packet.D...))
@@ -221,6 +248,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			p.lastResumeSession.Store(session)
 			c.event(gateway.EventResumed, map[string]any{})
 		case gateway.OpVoiceStateUpdate:
+			p.mu.Lock()
+			p.voiceUpdates = append(p.voiceUpdates, append(json.RawMessage(nil), packet.D...))
+			p.mu.Unlock()
 			var guild, channel string
 			_ = json.Unmarshal(fields["guild_id"], &guild)
 			_ = json.Unmarshal(fields["channel_id"], &channel)
@@ -302,4 +332,16 @@ func (p *Platform) Presences() []json.RawMessage {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return append([]json.RawMessage(nil), p.presences...)
+}
+
+func (p *Platform) Subscriptions() []json.RawMessage {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return append([]json.RawMessage(nil), p.subscriptions...)
+}
+
+func (p *Platform) VoiceUpdates() []json.RawMessage {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return append([]json.RawMessage(nil), p.voiceUpdates...)
 }

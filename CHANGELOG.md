@@ -4,6 +4,31 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-12
+
+### Added
+
+- Channels: `CreateChannel`, `ModifyChannel`, `DeleteChannel`, `ModifyChannelPositions`, `SetChannelPermission`, `DeleteChannelPermission`, `FollowChannel` and `ChannelFollowerStats`. Edit structs use `micup.Optional[T]` (`micup.Set`, `micup.Clear`) so a field can be left out, changed or cleared. See [Channels, roles, threads and invites](docs/channels.md).
+- Roles: `CreateRole`, `ModifyRole`, `DeleteRole`, `ModifyRolePositions`, `ModifyRoleHoistPositions` and `ResetRoleHoistPositions`.
+- Guilds: `ModifyGuild`, `CurrentUserGuilds`, `LeaveGuild`, `AuditLog`, `Bans`, `VanityURL`, `ModifyVanityURL` and `GatewayInfo`; `Audit…` action constants and guild feature, verification and notification constants.
+- Members and users: `CurrentMember`, `ModifyCurrentMember`, `SetNickname`, `TimeoutMember`, `ClearTimeout`, `SearchMembers`, `MemberEdit.TimeoutReason`, `User`, `UserProfile` and `SendDM`.
+- Threads and forums: `StartThread`, `StartThreadFromMessage`, `CreateForumPost`, `ModifyThread`, `ArchiveThread`, `LockThread`, thread member routes, active, archived and searched thread lists, forum tags and `ForumPostData`. `Channel` gains thread, forum and voice fields.
+- Invites (`CreateInvite`, `Invite`, `ChannelInvites`, `GuildInvites`, `DeleteInvite`), emojis and stickers (list, create, bulk create, clone, modify, delete, metadata).
+- Messages: `ForwardMessage` and `MessageOptions.Forward`, `CrosspostMessage`, `CrosspostSource`, `ReactionUsers`, `DeleteAttachment`, `RefreshAttachmentURLs`, `SuppressEmbeds`, `SearchMessages`, `MessageEdit.KeepAttachments`, attachment titles and spoilers, and voice message fields. `Message` gains stickers, snapshots, channel mentions, calls and threads.
+- Webhooks: `Webhook`, `ModifyWebhook`, `CreateWebhookWithAvatar`, token routes that send no bot token, webhook message get, edit and delete, and forum posts through `ThreadName` and `AppliedTags`.
+- Interactions: `InteractionResponse`, `DeleteInteractionResponse`, `EditInteractionFollowup` and `DeleteInteractionFollowup`.
+- Paging iterators: `EachMessage`, `EachMember`, `EachGuild`, `EachReactionUser`, `EachAuditLogEntry`, `EachPin` and `EachThreadMember`.
+- Errors: `micup.ErrorCode`, `IsErrorCode`, `IsNotFound`, `IsForbidden`, `APIError.HasFieldCode` and `Code…` constants for Micup's common codes.
+- Gateway: typed payloads for `GUILD_EMOJIS_UPDATE`, `GUILD_STICKERS_UPDATE`, `GUILD_MEMBER_LIST_UPDATE`, `GUILD_COUNTS_UPDATE`, `CHANNEL_MEMBER_COUNTS_UPDATE`, `CHANNEL_RECIPIENT_ADD`/`REMOVE`, `PRESENCE_UPDATE_BULK`, `PASSIVE_UPDATES`, `MESSAGE_REACTION_ADD_MANY`, every thread event, calls, entrance sounds and relationships. `Close…` code constants, `OpVoiceSignal` and `OpRequestForumUnreads`.
+- Sessions and shards: `RequestGuildCounts`, `RequestChannelMemberCounts`, `Subscribe` (Lazy Request), `UpdateVoiceState`, `SessionID`, `SessionOptions.OnReady` and `OnDisconnect`; `ShardManager.Latency` and `Guilds`; `Bot.RecommendedShards` and `GuildCount`.
+- State cache: `Guild`, `GuildIDs`, `GuildChannels`, `Threads`, `Roles`, `Emojis`, `Stickers`, `Members`, `HighestRole` and `CanManage`. Threads follow their events and use the parent channel's overwrites for permissions.
+- Helpers: mentions, `FormatTimestamp`, `EscapeMarkdown`, `User.DisplayName`, `Member.TimedOut`, an embed builder (`NewEmbed().WithTitle(…)`), embed limit checks before sending, `ImageData`, media URLs through `Bot.Media()`, snowflake times and cursors, and permission names. See [Formatting](docs/formatting.md).
+- Discovery records Micup's media, static CDN and invite base URLs in `Endpoints`.
+
+### Fixed
+
+- Guild settings sent inside `properties` in `READY`, `GUILD_CREATE` and `GUILD_SYNC` (features, images, levels, system channel) are now decoded; only the owner and name were kept before.
+
 ## [0.7.0] - 2026-11-07
 
 ### Added
