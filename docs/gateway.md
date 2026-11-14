@@ -80,6 +80,8 @@ Each call sends opcode 3 and remembers the result, so the next IDENTIFY publishe
 | `UpdatePresence(ctx, presence)` | Replaces the whole presence. A nil `CustomStatus` clears the custom status |
 | `Presence()` | The presence the session publishes; `online` with no custom status before any change |
 
+The session copies custom status values supplied through initial options or `UpdatePresence`. `Presence()` returns an independent snapshot, including its custom status; editing it does not change the session. Use the update methods to publish a change.
+
 ```go
 status := micup.CustomStatus{Text: "Bakımdayız", EmojiName: "🔧"}.Until(time.Now().Add(30 * time.Minute))
 if err := shards.SetCustomStatus(ctx, status); err != nil {
