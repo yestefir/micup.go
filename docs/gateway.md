@@ -123,6 +123,8 @@ Micup sends only the bot's own member and the members in voice channels with `GU
 
 `Session.RequestGuildMembers(ctx, micup.MembersRequest{GuildID, Query, Limit, UserIDs, Presences})` sends opcode 8 with a nonce, collects every `GUILD_MEMBERS_CHUNK` page and returns the members, which are also added to the cache. An empty `Query` with `Limit` 0 asks for the full list, which needs `MANAGE_ROLES`, `KICK_MEMBERS` and `BAN_MEMBERS` and is allowed once every 30 seconds per guild; a refused request returns `*micup.MembersRateLimitedError` (`errors.Is(err, micup.ErrMembersRateLimited)`) with `RetryAfter`. Micup drops a request without permission silently, so bound the call with a context. Micup also silently drops an opcode 8 request when two are already being answered on the connection, so a session keeps at most two requests in flight and queues the rest; a queued call still ends with its context. `ShardManager.RequestGuildMembers` routes by guild.
 
+If member responses arrive faster than the request can consume its bounded buffer, the call returns an error with any members already collected. Treat those results as incomplete. Other requests and Gateway event processing continue.
+
 Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)` reads the cache and falls back to `GET /channels/{id}` once, then caches the answer. `b.REST.Channel(ctx, channelID)` performs that request directly.
 
 ### Voice channels
