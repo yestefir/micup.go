@@ -54,7 +54,7 @@ func (c *Client) call(ctx context.Context, r *request) error {
 	if !strings.HasPrefix(r.path, "/") || strings.HasPrefix(r.path, "//") {
 		return errors.New("REST path must be absolute to the API")
 	}
-	body, err := r.encode()
+	body, err := r.encode(ctx)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,10 @@ func (c *Client) send(ctx context.Context, r *request, body payload) (*http.Resp
 	return resp, nil
 }
 
-func (r *request) encode() (payload, error) {
+func (r *request) encode(ctx context.Context) (payload, error) {
+	if err := ctx.Err(); err != nil {
+		return payload{}, err
+	}
 	if len(r.files) == 0 {
 		if r.body == nil {
 			return payload{}, nil
@@ -167,7 +170,11 @@ func (r *request) encode() (payload, error) {
 		if err != nil {
 			return payload{}, err
 		}
-		if _, err = io.Copy(part, file.Reader); err != nil {
+		reader := file.Reader
+		if ctx.Done() != nil {
+			reader = requestReader{ctx: ctx, reader: reader}
+		}
+		if _, err = io.Copy(part, reader); err != nil {
 			return payload{}, err
 		}
 	}
@@ -175,6 +182,20 @@ func (r *request) encode() (payload, error) {
 		return payload{}, err
 	}
 	return payload{data: buf.Bytes(), contentType: form.FormDataContentType()}, nil
+}
+
+// requestReader checks cancellation between reads while buffering a request body.
+// The underlying reader is responsible for unblocking its own Read calls.
+type requestReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r requestReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.reader.Read(p)
 }
 
 func contentTypeOr(contentType string) string {

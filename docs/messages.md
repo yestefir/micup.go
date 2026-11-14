@@ -44,7 +44,7 @@ _, err := b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 })
 ```
 
-The whole multipart body is built in memory before it is sent. For large files, upload first; Micup recommends it whenever the instance allows presigned uploads:
+The whole multipart body is built in memory before it is sent. The client checks the request context before encoding and between file reads. A reader that can block should honor cancellation itself. For large files, upload first; Micup recommends it whenever the instance allows presigned uploads:
 
 ```go
 uploaded, err := b.REST.UploadAttachment(ctx, channelID, micup.Upload{
