@@ -89,7 +89,10 @@ func (s *Session) request(ctx context.Context, opcode int, payload map[string]an
 		return nil, ctx.Err()
 	case <-timer.C:
 		return nil, ErrNoResponse
-	case data := <-answer:
+	case data, open := <-answer:
+		if !open {
+			return nil, gateway.ErrClosed
+		}
 		return data, nil
 	}
 }
@@ -102,14 +105,29 @@ func (s *Session) handleCounts(event gateway.Event) {
 		return
 	}
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	answer := s.countRequests[envelope.Nonce]
-	s.mu.Unlock()
 	if answer == nil {
 		return
 	}
 	select {
-	case answer <- event.Data:
+	case answer <- slices.Clone(event.Data):
 	default:
+	}
+}
+
+func (s *Session) stopCountRequests() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for nonce, answer := range s.countRequests {
+		delete(s.countRequests, nonce)
+		// Each answer has one buffer slot. Discard an unconsumed response
+		// so pending callers observe shutdown rather than stale success.
+		select {
+		case <-answer:
+		default:
+		}
+		close(answer)
 	}
 }
 

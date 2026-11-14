@@ -47,6 +47,8 @@ type Platform struct {
 	CloseShard        int
 	RefuseVoice       string
 	HoldVoice         bool
+	HoldCounts        bool
+	CountsRequested   atomic.Int64
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
 	MemberInFlight    atomic.Int64
@@ -209,6 +211,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 				}
 			}()
 		case gateway.OpRequestGuildCounts:
+			if p.holdCounts() {
+				continue
+			}
 			var ids []string
 			var nonce string
 			_ = json.Unmarshal(fields["guild_ids"], &ids)
@@ -219,6 +224,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			}
 			c.event(gateway.EventGuildCountsUpdate, map[string]any{"counts": counts, "nonce": nonce})
 		case gateway.OpRequestChannelMemberCounts:
+			if p.holdCounts() {
+				continue
+			}
 			var guild, nonce string
 			var ids []string
 			_ = json.Unmarshal(fields["guild_id"], &guild)
@@ -274,6 +282,14 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			c.event(gateway.EventVoiceStateUpdate, map[string]string{"guild_id": guild, "user_id": BotID, "channel_id": channel})
 		}
 	}
+}
+
+func (p *Platform) holdCounts() bool {
+	p.mu.Lock()
+	hold := p.HoldCounts
+	p.mu.Unlock()
+	p.CountsRequested.Add(1)
+	return hold
 }
 
 func (p *Platform) identify(c *peer, fields map[string]json.RawMessage) bool {

@@ -141,6 +141,8 @@ The cache also follows `GUILD_EMOJIS_UPDATE`, `GUILD_STICKERS_UPDATE`, `THREAD_C
 
 Count requests wait up to 12 seconds and return `micup.ErrNoResponse` when Micup does not answer. `ShardManager` routes each call to the owning shards and has `Latency()` and `Guilds()` across shards. `SessionOptions.OnReady(resumed)` runs on its own goroutine after `READY` or `RESUMED`, so it may call Gateway requests; `OnDisconnect(err)` runs after each lost connection, and `Session.SessionID()` returns the current session.
 
+When `Session.Run` stops, pending count requests return `micup.ErrGatewayClosed` even if their caller contexts remain active. Transient reconnects keep those requests active, subject to their existing timeout and context.
+
 `b.RecommendedShards(ctx)` pages through the bot's guilds (one request per 200 guilds, since Micup's `/gateway/bot` always reports one shard) and suggests a shard count that keeps each shard well under `micup.MaxGuildsPerShard` (2,500). Close codes have constants such as `micup.CloseShardingRequired`.
 
 ### Member requests
