@@ -87,7 +87,7 @@ func New(config Config, options Options) (*Session, error) {
 		if err := options.Presence.Validate(time.Now()); err != nil {
 			return nil, err
 		}
-		presence := *options.Presence
+		presence := copyPresence(*options.Presence)
 		options.Presence = &presence
 	}
 	if options.MinBackoff <= 0 {
@@ -299,11 +299,7 @@ func (s *Session) changePresence(ctx context.Context, change func(*model.Presenc
 	s.presenceMu.Lock()
 	defer s.presenceMu.Unlock()
 	current := s.Presence()
-	if current.CustomStatus != nil {
-		custom := *current.CustomStatus
-		current.CustomStatus = &custom
-	}
-	presence := change(&current)
+	presence := copyPresence(change(&current))
 	if err := presence.Validate(time.Now()); err != nil {
 		return err
 	}
@@ -319,6 +315,14 @@ func (s *Session) currentPresence() *model.Presence {
 	if s.presence == nil {
 		return nil
 	}
-	presence := *s.presence
+	presence := copyPresence(*s.presence)
 	return &presence
+}
+
+func copyPresence(presence model.Presence) model.Presence {
+	if presence.CustomStatus != nil {
+		custom := *presence.CustomStatus
+		presence.CustomStatus = &custom
+	}
+	return presence
 }
