@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_12-21
+
+- Added terminal closure metadata to pending voice reservations. Shutdown notifications mark reservations closed under the existing mutex; consumed grant completion returns existing ErrGatewayClosed before storage, while same-guild reservations remain until caller cleanup.
+- Two empty/buffered consumed-result shutdown cases failed before the fix with nil error and a stored old grant; both now pass. Fresh reservation reuse, replacement ownership, resumable reconnect, normal join/rotation and terminal notification tests pass five repetitions.
+- Controlled Session.New + 512 reservations benchmark, three samples/version: median allocation 196840 -> 220764 B/op (+12.154%), 1058 allocations/op unchanged. Observed time median 123881 -> 134006 ns/op (+8.173%); raw samples in report. This is a deliberate correctness cost, not a speed improvement or retained-memory measurement.
+- Validation: 183 top-level race tests pass, 2 optional voice skips, no failures; vet/build/modified-file formatting/whitespace pass. Full formatting still reports 110 existing CRLF files.
+- Fix commit: `502a9c59e1585c4f800eabb95f9fed9709b184bf`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_11-51
 
 - Invalidated pending voice joins on new READY/invalid-session boundaries using existing ErrVoiceGrant. Extracted grant completion into a private helper and require the original result channel still to own the guild reservation before storing a consumed grant.
