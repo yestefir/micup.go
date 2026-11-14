@@ -126,6 +126,9 @@ func (s *memberInventory) guild(e events.GuildCreate) {
 type membersPage func(context.Context, string, string) ([]model.Member, error)
 
 func (s *memberInventory) syncOne(ctx context.Context, page membersPage) bool {
+	if ctx.Err() != nil {
+		return false
+	}
 	s.mu.Lock()
 	var id string
 	var target *inventoryGuild
@@ -145,6 +148,12 @@ func (s *memberInventory) syncOne(ctx context.Context, page membersPage) bool {
 	after := ""
 	var err error
 	for {
+		s.mu.Lock()
+		current := s.guilds[id] == target && target.available
+		s.mu.Unlock()
+		if !current || ctx.Err() != nil {
+			break
+		}
 		var members []model.Member
 		members, err = page(ctx, id, after)
 		if err != nil {
@@ -179,7 +188,7 @@ func (s *memberInventory) syncOne(ctx context.Context, page membersPage) bool {
 		return true
 	}
 	target.syncing = false
-	if err != nil {
+	if err != nil || ctx.Err() != nil || !target.available {
 		target.retry = time.Now().Add(10 * time.Second)
 		return true
 	}
