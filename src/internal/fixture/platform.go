@@ -44,6 +44,7 @@ type Platform struct {
 	CloseCode         int
 	CloseShard        int
 	RefuseVoice       string
+	HoldVoice         bool
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
 	MemberInFlight    atomic.Int64
@@ -51,6 +52,7 @@ type Platform struct {
 	Identifies        atomic.Int64
 	Resumes           atomic.Int64
 	Leaves            atomic.Int64
+	VoiceJoins        atomic.Int64
 	Connects          atomic.Int64
 	ChannelLookups    atomic.Int64
 	lastResumeSession atomic.Value
@@ -228,7 +230,12 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			}
 			p.mu.Lock()
 			refuse := p.RefuseVoice
+			hold := p.HoldVoice
 			p.mu.Unlock()
+			p.VoiceJoins.Add(1)
+			if hold {
+				continue
+			}
 			if refuse != "" {
 				c.send(map[string]any{"op": gateway.OpGatewayError, "d": map[string]string{"code": refuse, "message": "refused"}})
 				continue

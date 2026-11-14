@@ -120,6 +120,7 @@ func (s *Session) Run(ctx context.Context) error {
 	defer func() {
 		cancel()
 		s.stopMemberRequests()
+		s.stopVoiceJoins()
 		requests.Wait()
 	}()
 	if s.options.TrackMembers {
