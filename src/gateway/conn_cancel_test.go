@@ -60,8 +60,8 @@ func TestConnDoesNotSendCancelledQueuedCommands(t *testing.T) {
 			encoded := make(chan struct{})
 			done := make(chan error, 1)
 			func() {
-				c.mu.Lock()
-				defer c.mu.Unlock()
+				c.writeGate <- struct{}{}
+				defer func() { <-c.writeGate }()
 				go func() { done <- c.Send(ctx, opcode, queuedPayload{encoded: encoded, data: data}) }()
 				select {
 				case <-encoded:
