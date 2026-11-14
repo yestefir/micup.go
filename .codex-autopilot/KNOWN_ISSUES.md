@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 117 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the modified voice implementation and Gateway fixture reduced the remaining count from 119 to 117; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 116 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the deliberately modified cache implementation reduced the remaining count from 117 to 116; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -15,7 +15,11 @@
 
 - New iterator progress guards detect an empty or unchanged next cursor. They do not deduplicate previously yielded items or detect arbitrary multi-page cursor cycles. A repeated page may be yielded once before termination, matching the existing member/thread iterator convention.
 - Discovery sampled each domain, documentation, tests and critical REST/session/Gateway paths. This cycle was not an exhaustive audit of every source line or dependency advisory.
-- Runtime latency, CPU, process memory usage and production throughput have no baseline. Header-parsing and presence-snapshot microbenchmarks have controlled definitions, but are not production profiles. Independent custom presence snapshots cost an extra 80 B and one allocation per retained snapshot compared with unsafe pointer aliasing; this tradeoff is measured and intentional.
+- Runtime latency, CPU, process memory usage and production throughput have no baseline. Header/parsing/presence/cache microbenchmarks have controlled definitions, not production profiles. Independent custom presence snapshots cost an extra 80 B and one allocation. Fully populated cache-channel snapshots cost 1568 B/49 allocations versus the prior unsafe 48 B/1 allocation; populated role snapshots cost 96 B/7 allocations versus 0. Minimal channel/role snapshots still allocate zero. These ownership costs are measured and explicit; production impact is not established.
+
+## Resolved in cycle 2026-11-14_07-21
+
+- P1: Channel getters cloned only permission overwrites; role getters shallow-copied all fields. Newer pointer/map/slice metadata therefore remained shared with cached state and other callers. Four channel mutation groups plus role metadata mutation failed before the fix, and concurrent edits of separate snapshots emitted DATA RACE traces for thread metadata and role colors. Explicit private copies now isolate all current mutable references, including nested users/members/forum tags/role colors. Nil fields are preserved; mutation and full race checks pass. Added a fixture-completeness guard to highlight future reference fields requiring copy review.
 
 ## Resolved in cycle 2026-11-14_05-21
 

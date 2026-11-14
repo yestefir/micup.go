@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_07-21
+
+- Fixed cached channel/role snapshot aliasing. Getters now copy nested pointers, slices and maps, including forum/thread metadata, recipients, thread members and role colors. Helpers update local getter copies by pointer to avoid extra aggregate copies; cache writes remain event-driven.
+- Four channel mutation groups and role mutation checks failed before the fix. Concurrent edits of separate snapshots reproduced races in thread metadata and role colors. Added rich-fixture reference coverage, absent-field preservation and concurrent-edit regression coverage, plus ownership documentation.
+- Benchmarks (5 serial 200 ms samples/version): minimal channel 93.98 to 105 ns/op; minimal role 45.60 to 53.36 ns/op, both 0 allocations. Populated channel 131.6 to 1812 ns/op, 48 to 1568 B/op, 1 to 49 allocations; populated role 45.23 to 231.7 ns/op, 0 to 96 B/op, 0 to 7 allocations. Accepted explicit ownership cost; no performance improvement claimed.
+- Validation: 163 top-level race-test passes, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Whole formatting still reports 116 existing CRLF files.
+- Fix commit: `f299b78343833a89db91e76f0c8dc917e5d6653e`. No push, deployment, dependency, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_06-51
 
 - Fixed pending voice joins outliving terminal `Session.Run`. Final cleanup notifies each waiter with the existing closed-connection error and clears refusal ordering; reservations remain until each caller completes its existing deferred cleanup, avoiding premature guild reuse.
