@@ -12,12 +12,7 @@ import (
 )
 
 func (c *Client) CreateWebhook(ctx context.Context, channelID, name string, options ...RequestOption) (model.Webhook, error) {
-	if channelID == "" || name == "" || len(name) > 80 {
-		return model.Webhook{}, errors.New("channel ID and a webhook name of 1 to 80 characters are required")
-	}
-	var webhook model.Webhook
-	err := c.call(ctx, apply(&request{method: http.MethodPost, path: path("channels", url.PathEscape(channelID), "webhooks"), body: map[string]string{"name": name}, dest: &webhook}, options))
-	return webhook, err
+	return c.CreateWebhookWithAvatar(ctx, channelID, name, "", options...)
 }
 
 func (c *Client) ChannelWebhooks(ctx context.Context, channelID string) ([]model.Webhook, error) {

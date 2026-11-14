@@ -102,3 +102,5 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 | `ExecuteWebhook(ctx, id, token, micup.WebhookMessage{...})` | Post as the webhook; returns the message only when `Wait` is true |
 
 `WebhookMessage` embeds `MessageOptions` (without components) and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. The webhook token is a secret: anyone with the ID and token can post.
+
+`CreateWebhook` and `CreateWebhookWithAvatar` accept names of 1 to 80 Unicode code points. Both methods use the same name validation; the avatar is optional.
