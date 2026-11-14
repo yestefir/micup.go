@@ -1,5 +1,12 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_07-51
+
+- Fixed caller-owned ignored-event slice aliasing in `Session.New` with a construction-time clone. Later caller edits no longer alter stored filtering or invalidate future Gateway options. Shard manager construction already clones shard IDs and now inherits per-session ignored-event isolation.
+- Added post-construction mutation/validation and concurrent caller-edit regression tests. Baseline stored options became invalid and emitted actual race traces; targeted/full race tests pass after the fix. Gateway docs describe ownership after construction.
+- Validation: 165 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/root docs tests/changed-file formatting/whitespace checks pass. Full formatting still reports 116 existing CRLF files. No runtime speed claim or new timing trend.
+- Fix commit: `c6e7e6569cb96588d2bb770dc1cbb5594f9f5720`. No push, deployment, dependency, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_07-21
 
 - Fixed cached channel/role snapshot aliasing. Getters now copy nested pointers, slices and maps, including forum/thread metadata, recipients, thread members and role colors. Helpers update local getter copies by pointer to avoid extra aggregate copies; cache writes remain event-driven.

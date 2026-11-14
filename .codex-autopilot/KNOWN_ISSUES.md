@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 116 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the deliberately modified cache implementation reduced the remaining count from 117 to 116; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 116 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -20,6 +20,10 @@
 ## Resolved in cycle 2026-11-14_07-21
 
 - P1: Channel getters cloned only permission overwrites; role getters shallow-copied all fields. Newer pointer/map/slice metadata therefore remained shared with cached state and other callers. Four channel mutation groups plus role metadata mutation failed before the fix, and concurrent edits of separate snapshots emitted DATA RACE traces for thread metadata and role colors. Explicit private copies now isolate all current mutable references, including nested users/members/forum tags/role colors. Nil fields are preserved; mutation and full race checks pass. Added a fixture-completeness guard to highlight future reference fields requiring copy review.
+
+## Resolved in cycle 2026-11-14_07-51
+
+- P1: `Session.New` retained the caller's `IgnoredEvents` backing array after validation. Editing/reusing it after construction changed session filtering and could make previously valid Gateway options fail validation. Concurrent caller edits/session reads reproduced an actual DATA RACE. Constructor now uses `slices.Clone`; shard-created sessions inherit the fix, while shard ID inputs were already copied. Both regressions fail before the fix and pass afterward.
 
 ## Resolved in cycle 2026-11-14_05-21
 
