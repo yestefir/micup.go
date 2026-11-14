@@ -97,7 +97,7 @@ func TestEarlierJoinCleanupKeepsReplacementJoin(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.endJoin("g", old)
-	if s.pending["g"] != current || len(s.joinOrder) != 1 || s.joinOrder[0] != "g" {
+	if s.pending["g"].results != current || len(s.joinOrder) != 1 || s.joinOrder[0] != "g" {
 		t.Fatal("earlier caller cleanup removed the replacement join or its refusal ordering")
 	}
 	grant := model.VoiceServerUpdate{GuildID: "g", ChannelID: "v", ConnectionID: "new", Endpoint: "wss://voice.invalid", Token: "fixture-grant"}
