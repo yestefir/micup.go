@@ -129,13 +129,13 @@ func (s *Session) handleGatewayError(refusal gateway.GatewayError) {
 	guildID := s.joinOrder[0]
 	s.joinOrder = s.joinOrder[1:]
 	pending := s.pending[guildID]
-	s.mu.Unlock()
 	if pending != nil {
 		select {
 		case pending <- joinResult{err: &VoiceRefusedError{GuildID: guildID, Code: refusal.Code, Message: refusal.Message}}:
 		default:
 		}
 	}
+	s.mu.Unlock()
 }
 
 func (s *Session) handleBotVoiceMove(move *state.VoiceMove) {
@@ -162,11 +162,11 @@ func (s *Session) handleVoiceServerUpdate(event gateway.Event) {
 	pending := s.pending[grant.GuildID]
 	if pending != nil {
 		s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == grant.GuildID })
-		s.mu.Unlock()
 		select {
 		case pending <- joinResult{grant: grant}:
 		default:
 		}
+		s.mu.Unlock()
 		return
 	}
 	previous, had := s.grants[grant.GuildID]
@@ -183,6 +183,19 @@ func (s *Session) handleVoiceServerUpdate(event gateway.Event) {
 	case had:
 		s.voiceLost(grant.GuildID, previous.ConnectionID)
 	}
+}
+
+func (s *Session) stopVoiceJoins() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, pending := range s.pending {
+		select {
+		case <-pending:
+		default:
+		}
+		pending <- joinResult{err: gateway.ErrClosed}
+	}
+	s.joinOrder = nil
 }
 
 func (s *Session) dropAllGrants() {
