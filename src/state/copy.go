@@ -52,6 +52,46 @@ func copyMember(member *model.Member) {
 	member.Permissions = copyPointer(member.Permissions)
 }
 
+// Guild collections are assembled separately from guildInfo by the getter.
+func copyGuildInfo(guild *model.Guild) {
+	guild.Icon = copyPointer(guild.Icon)
+	guild.Banner = copyPointer(guild.Banner)
+	guild.Splash = copyPointer(guild.Splash)
+	guild.AFKChannelID = copyPointer(guild.AFKChannelID)
+	guild.SystemChannelID = copyPointer(guild.SystemChannelID)
+	guild.RulesChannelID = copyPointer(guild.RulesChannelID)
+	guild.VanityURLCode = copyPointer(guild.VanityURLCode)
+	guild.EmbedSplash = copyPointer(guild.EmbedSplash)
+	guild.ContentWarningText = copyPointer(guild.ContentWarningText)
+	guild.MessageHistoryCutoff = copyPointer(guild.MessageHistoryCutoff)
+	guild.Permissions = copyPointer(guild.Permissions)
+	guild.Features = slices.Clone(guild.Features)
+	guild.BadgeIDs = slices.Clone(guild.BadgeIDs)
+}
+
+func copyEmojis(emojis []model.Emoji) []model.Emoji {
+	emojis = slices.Clone(emojis)
+	for i := range emojis {
+		emojis[i].User = copyPointer(emojis[i].User)
+		if emojis[i].User != nil {
+			copyUser(emojis[i].User)
+		}
+	}
+	return emojis
+}
+
+func copyStickers(stickers []model.Sticker) []model.Sticker {
+	stickers = slices.Clone(stickers)
+	for i := range stickers {
+		stickers[i].Tags = slices.Clone(stickers[i].Tags)
+		stickers[i].User = copyPointer(stickers[i].User)
+		if stickers[i].User != nil {
+			copyUser(stickers[i].User)
+		}
+	}
+	return stickers
+}
+
 func copyChannel(channel *model.Channel) {
 	channel.Topic = copyPointer(channel.Topic)
 	channel.URL = copyPointer(channel.URL)
