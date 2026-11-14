@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_12-51
+
+- Pending voice delivery now replaces older queued grants while preserving queued errors and ignoring closed reservations. Completion selects/validates the latest result under the existing ownership/closure/commit mutex.
+- Successful commit retires the pending reservation/order entry atomically with caching, allowing subsequent updates to use established rotation/voice-loss callbacks. Existing ownership-aware deferred cleanup protects fresh reservations.
+- Six supersession cases (buffered/consumed x valid/missing-token/moved latest grant) and two post-commit callback cases fail before the fix and pass afterward. Buffered refusal control passes before/after; replacement/resume/shutdown and normal join/rotation checks pass five repetitions.
+- Validation: 186 top-level race tests pass, 2 optional voice skips, no failures; vet/build/modified-file formatting/whitespace pass. Full formatting still reports 110 existing CRLF files. No new speed or allocation claim; prior measured costs remain recorded.
+- Fix commit: `13f3bd5efab39e8c1a9f66b6f5b92820ed5f5245`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_12-21
 
 - Added terminal closure metadata to pending voice reservations. Shutdown notifications mark reservations closed under the existing mutex; consumed grant completion returns existing ErrGatewayClosed before storage, while same-guild reservations remain until caller cleanup.
