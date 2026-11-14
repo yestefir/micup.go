@@ -23,6 +23,7 @@ const (
 
 type memberChunk struct {
 	members     []model.Member
+	guildID     string
 	sequence    int64
 	index       int
 	count       int
@@ -94,6 +95,9 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 			if chunk.err != nil {
 				return members, chunk.err
 			}
+			if chunk.guildID != request.GuildID {
+				return members, errors.New("Micup member response has a mismatched guild; member list is incomplete")
+			}
 			if chunk.hasSequence {
 				if _, duplicate := seen[chunk.sequence]; duplicate {
 					continue
@@ -130,7 +134,7 @@ func (s *Session) handleMembersChunk(event gateway.Event) {
 		s.deliverChunk(chunk.Nonce, memberChunk{err: errors.New("Micup member response has an invalid chunk position; member list is incomplete")})
 		return
 	}
-	response := memberChunk{members: chunk.Members, index: chunk.ChunkIndex, count: chunk.ChunkCount, last: chunk.ChunkIndex == chunk.ChunkCount-1}
+	response := memberChunk{members: chunk.Members, guildID: chunk.GuildID, index: chunk.ChunkIndex, count: chunk.ChunkCount, last: chunk.ChunkIndex == chunk.ChunkCount-1}
 	if event.Sequence != nil {
 		response.sequence, response.hasSequence = *event.Sequence, true
 	}

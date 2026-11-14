@@ -57,6 +57,7 @@ type Platform struct {
 	RepeatMemberUser  bool
 	MemberChunkOrder  []int
 	MemberChunkCounts []int
+	MemberGuild       *string
 	memberReplay      *memberReplay
 	MemberInFlight    atomic.Int64
 	MemberDrops       atomic.Int64
@@ -238,6 +239,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			repeatUser := p.RepeatMemberUser
 			order := append([]int(nil), p.MemberChunkOrder...)
 			counts := append([]int(nil), p.MemberChunkCounts...)
+			if p.MemberGuild != nil {
+				guild = *p.MemberGuild
+			}
 			p.mu.Unlock()
 			go func() {
 				defer p.MemberInFlight.Add(-1)
