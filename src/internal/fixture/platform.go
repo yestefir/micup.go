@@ -51,6 +51,9 @@ type Platform struct {
 	CountsRequested   atomic.Int64
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
+	ReplayMemberChunk bool
+	RepeatMemberUser  bool
+	memberReplay      *memberReplay
 	MemberInFlight    atomic.Int64
 	MemberDrops       atomic.Int64
 	Identifies        atomic.Int64
@@ -66,6 +69,11 @@ type peer struct {
 	ws    *websocket.Conn
 	write sync.Mutex
 	seq   int64
+}
+
+type memberReplay struct {
+	packet map[string]any
+	tail   map[string]any
 }
 
 func New(t testing.TB) *Platform {
@@ -145,11 +153,15 @@ func (c *peer) send(packet any) {
 }
 
 func (c *peer) event(name string, data any) {
+	c.send(c.eventPacket(name, data))
+}
+
+func (c *peer) eventPacket(name string, data any) map[string]any {
 	c.write.Lock()
 	c.seq++
 	seq := c.seq
 	c.write.Unlock()
-	c.send(map[string]any{"op": gateway.OpDispatch, "t": name, "s": seq, "d": data})
+	return map[string]any{"op": gateway.OpDispatch, "t": name, "s": seq, "d": data}
 }
 
 func (c *peer) close(code int) {
@@ -202,12 +214,27 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			}
 			p.mu.Lock()
 			delay := p.MemberDelay
+			replay := p.ReplayMemberChunk
+			repeatUser := p.RepeatMemberUser
 			p.mu.Unlock()
 			go func() {
 				defer p.MemberInFlight.Add(-1)
 				time.Sleep(delay)
-				for i, user := range []string{"listener", "dj"} {
-					c.event(gateway.EventGuildMembersChunk, map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}})
+				users := []string{"listener", "dj"}
+				if repeatUser {
+					users[1] = users[0]
+				}
+				for i, user := range users {
+					data := map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": i, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": user}, "roles": []string{}}}}
+					if replay {
+						packet := c.eventPacket(gateway.EventGuildMembersChunk, data)
+						p.mu.Lock()
+						p.memberReplay = &memberReplay{packet: packet, tail: map[string]any{"guild_id": guild, "nonce": nonce, "chunk_index": 1, "chunk_count": 2, "members": []map[string]any{{"user": map[string]string{"id": users[1]}, "roles": []string{}}}}}
+						p.mu.Unlock()
+						c.send(packet)
+						return // The test's handler error forces RESUME before the tail.
+					}
+					c.event(gateway.EventGuildMembersChunk, data)
 				}
 			}()
 		case gateway.OpRequestGuildCounts:
@@ -254,6 +281,17 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			var session string
 			_ = json.Unmarshal(fields["session_id"], &session)
 			p.lastResumeSession.Store(session)
+			p.mu.Lock()
+			replay := p.memberReplay
+			p.memberReplay = nil
+			p.mu.Unlock()
+			if replay != nil {
+				c.write.Lock()
+				c.seq = replay.packet["s"].(int64)
+				c.write.Unlock()
+				c.send(replay.packet)
+				c.event(gateway.EventGuildMembersChunk, replay.tail)
+			}
 			c.event(gateway.EventResumed, map[string]any{})
 		case gateway.OpVoiceStateUpdate:
 			p.mu.Lock()

@@ -49,6 +49,15 @@ func TestMemberChunkOverflowFailsInsteadOfDroppingData(t *testing.T) {
 	}
 }
 
+var benchmarkMemberQueue chan memberChunk
+
+func BenchmarkMemberResponseQueue(b *testing.B) {
+	b.ReportAllocs()
+	for b.Loop() {
+		benchmarkMemberQueue = make(chan memberChunk, 16)
+	}
+}
+
 func TestSessionShutdownFailsEmptyAndFullMemberQueues(t *testing.T) {
 	empty := make(chan memberChunk, 16)
 	full := make(chan memberChunk, 16)

@@ -22,9 +22,11 @@ const (
 )
 
 type memberChunk struct {
-	members []model.Member
-	last    bool
-	err     error
+	members     []model.Member
+	sequence    int64
+	last        bool
+	hasSequence bool
+	err         error
 }
 
 type MembersRateLimitedError struct {
@@ -75,6 +77,7 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 		return nil, err
 	}
 	var members []model.Member
+	var seen map[int64]struct{}
 	for {
 		select {
 		case <-ctx.Done():
@@ -82,6 +85,15 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 		case chunk := <-chunks:
 			if chunk.err != nil {
 				return members, chunk.err
+			}
+			if chunk.hasSequence {
+				if _, duplicate := seen[chunk.sequence]; duplicate {
+					continue
+				}
+				if seen == nil {
+					seen = make(map[int64]struct{})
+				}
+				seen[chunk.sequence] = struct{}{}
 			}
 			members = append(members, chunk.members...)
 			if chunk.last {
@@ -96,7 +108,11 @@ func (s *Session) handleMembersChunk(event gateway.Event) {
 	if !ok || chunk.Nonce == "" {
 		return
 	}
-	s.deliverChunk(chunk.Nonce, memberChunk{members: chunk.Members, last: chunk.ChunkIndex >= chunk.ChunkCount-1})
+	response := memberChunk{members: chunk.Members, last: chunk.ChunkIndex >= chunk.ChunkCount-1}
+	if event.Sequence != nil {
+		response.sequence, response.hasSequence = *event.Sequence, true
+	}
+	s.deliverChunk(chunk.Nonce, response)
 }
 
 func (s *Session) handleRateLimited(event gateway.Event) {
