@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_08-51
+
+- Fixed multipart byte routing for numbered plans listed out of order. Parts now upload in numeric order, with exact expected count and consecutive 1-based numbering checked before file reads/data PUTs. Count-error messages are preserved; buffers and completion payloads are unchanged.
+- Reproduced wrong part bodies in a reversed local plan. Six of eight malformed-layout fixtures previously consumed/uploaded data; four completed under the permissive fixture. All structural cases now fail before file consumption/data uploads. Added short-reader/no-completion regression coverage and documentation.
+- Verified upstream numbering/part-size descriptions against the [official Fluxer upload guide](https://docs.fluxer.com/topics/uploads/). Sorting is defensive normalization; no claim that real instances return reversed plans or have suffered corruption.
+- Validation: 169 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 114 existing CRLF files. No runtime speed claim.
+- Fix commit: `de3ea3e8bdf7b64687f8a91d3b1d4d134f65493f`. No push, deployment, dependency, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_08-21
 
 - Fixed cancelled queued Gateway sends being transmitted after write access became available. `Conn.Send` now rechecks context inside the existing write lock before compression/timing state/socket writes.

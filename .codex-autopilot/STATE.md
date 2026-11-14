@@ -2,12 +2,12 @@
 
 - Repository: micup.go; scope is this checkout only.
 - First cycle: `2026-11-14_03-47` (Europe/Istanbul).
-- Latest cycle: `2026-11-14_08-21` (Europe/Istanbul).
-- Latest starting revision: `4c02a4b`; initial working tree was clean and no external commits followed the preceding cycle.
-- Latest validated code commit: `6c94709a1966787375c5b36bff939dda621423df`.
-- Verdict: **BUG FIX VERIFIED**. Gateway sends recheck context cancellation after obtaining write access, preventing a command cancelled while queued from being transmitted or changing heartbeat timing state.
-- Validation: 166 top-level tests passed under the race detector, 2 optional voice tests skipped, 0 failures; vet and build passed. Changed Go files pass formatting. Whole-checkout formatting still fails on 115 remaining pre-existing CRLF files; see known issues.
-- Performance: controlled local WebSocket tests measure cancelled-frame outcomes, not speed. Earlier benchmark definitions and ownership costs remain unchanged. No speed improvement claimed. Waiting for write access itself remains non-cancellable.
+- Latest cycle: `2026-11-14_08-51` (Europe/Istanbul).
+- Latest starting revision: `16212b0`; initial working tree was clean and no external commits followed the preceding cycle.
+- Latest validated code commit: `de3ea3e8bdf7b64687f8a91d3b1d4d134f65493f`.
+- Verdict: **BUG FIX VERIFIED**. Multipart uploads now honor part-number order and validate count/consecutive numbering before consuming file bytes or issuing data PUTs.
+- Validation: 169 top-level tests passed under the race detector, 2 optional voice tests skipped, 0 failures; vet and build passed. Changed Go files pass formatting. Whole-checkout formatting still fails on 114 remaining pre-existing CRLF files; see known issues.
+- Performance: deterministic upload-layout/wire-byte probes show invalid-layout side effects removed and reversed-plan assignment corrected; no runtime speed claim. Prior benchmark definitions/ownership costs remain unchanged. Buffers were not reused or replaced with streaming.
 - No production requests, load tests, pushes, deployments, dependency changes or public API additions/removals were made.
 - Recurring automation: `micup-go-engineering-autopilot`, active every 30 minutes in this chat. Local execution requires the computer and app to remain running.
 - Read `RUNBOOK.md`, `INSTRUCTIONS.md`, `latest.md` and `KNOWN_ISSUES.md` before the next cycle. Atomically claim `cycle.lock` before any modifications and release only your own lock.
@@ -18,7 +18,7 @@ Public packages at the root and `voice/` are facades, enforced by AST tests. Imp
 
 ## Next priorities
 
-1. Inspect REST upload size/plan boundaries using synthetic streams and local responses; establish failures before changing allocation or streaming behavior.
+1. Probe upload URL/key validation boundaries with local responses before extending preflight checks; count/numbering validation is now covered and should not be re-investigated without new evidence.
 2. Measure remaining cancellation responsiveness during write-lock waits/in-progress writes before considering a synchronization redesign; this cycle prevents late transmission but does not interrupt those waits.
 3. Close optional voice validation gaps with local FFmpeg/LiveKit when available; keep production credentials out of all tests. The low-priority Windows line-ending policy remains recorded separately.
 

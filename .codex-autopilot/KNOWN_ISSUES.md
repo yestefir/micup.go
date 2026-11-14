@@ -5,7 +5,7 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 115 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the deliberately modified Gateway connection file reduced the remaining count from 116 to 115; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 114 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Formatting the deliberately modified upload implementation reduced the remaining count from 115 to 114; unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
@@ -29,6 +29,10 @@
 ## Resolved in cycle 2026-11-14_08-21
 
 - P2: `Conn.Send` checked context only before serialization/queueing. A send cancelled while waiting for write access still returned nil and reached the local Gateway as an opcode 4 command or heartbeat. Rechecking after write-lock acquisition now returns the context error before compression, heartbeat timing changes or writing. Both wire-level regression cases failed before the fix and pass afterward; a following active command still arrives normally.
+
+## Resolved in cycle 2026-11-14_08-51
+
+- P2: Multipart file segments were assigned by response-array order instead of `part_number`. A reversed local plan sent `ef` to part 1 and `abcd` to part 2 for the six-byte fixture. Count-mismatched layouts read/uploaded partial data before failing, and duplicate/nonpositive/gapped numbering could complete under a permissive local server. Client now sorts by number and validates count/consecutive 1-based coverage before reads/data PUTs. Two valid-order cases, eight invalid layouts and a short-reader case pass. No production corruption incident or upstream response-order guarantee is claimed.
 
 ## Resolved in cycle 2026-11-14_05-21
 
