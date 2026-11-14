@@ -60,7 +60,7 @@ type Session struct {
 	mu             sync.Mutex
 	conn           *gateway.Conn
 	grants         map[string]model.VoiceServerUpdate
-	pending        map[string]chan joinResult
+	pending        map[string]voicePending
 	joinOrder      []string
 	presence       *model.Presence
 	presenceMu     sync.Mutex
@@ -103,7 +103,7 @@ func New(config Config, options Options) (*Session, error) {
 		options:        options,
 		cache:          state.New(config.BotID),
 		grants:         map[string]model.VoiceServerUpdate{},
-		pending:        map[string]chan joinResult{},
+		pending:        map[string]voicePending{},
 		memberRequests: map[string]chan memberChunk{},
 		memberSlots:    make(chan struct{}, maxMemberRequestsInFlight),
 		presence:       options.Presence,

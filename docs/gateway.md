@@ -149,7 +149,7 @@ Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)
 
 Micup reports only those three refusals. Other refusals, such as a missing CONNECT permission, send nothing, so always bound `JoinVoice` with a context deadline. Opcode 12 carries no guild ID; when several joins are pending, the session assigns a refusal to the oldest one.
 
-Pending joins are notified when `Run` ends even if their own caller contexts remain active. Resumable reconnects retain pending joins. An invalid session or a new READY invalidates old joins with `micup.ErrVoiceGrant`; an already received old grant cannot be stored after that reset. A new join can begin in the replacement session without an earlier caller's cleanup removing it.
+Pending joins are notified when `Run` ends even if their own caller contexts remain active. A grant received before shutdown cannot be stored afterward; the guild reservation remains until its caller finishes cleanup. Resumable reconnects retain pending joins. An invalid session or a new READY invalidates old joins with `micup.ErrVoiceGrant`; an already received old grant cannot be stored after that reset. A new join can begin in the replacement session without an earlier caller's cleanup removing it.
 
 `Session.Voice(guildID)` returns the current grant. `Session.LeaveVoice(guildID, connectionID)` sends the leave opcode only when the connection ID still matches the current grant, so a late leave cannot disconnect a newer connection.
 

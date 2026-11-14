@@ -40,6 +40,11 @@ type joinResult struct {
 	err   error
 }
 
+type voicePending struct {
+	results chan joinResult
+	closed  bool
+}
+
 func (s *Session) JoinVoice(ctx context.Context, guildID, channelID string, options VoiceJoin) (model.VoiceServerUpdate, error) {
 	if guildID == "" || channelID == "" {
 		return model.VoiceServerUpdate{}, errors.New("guild ID and voice channel ID are required")
@@ -82,8 +87,12 @@ func (s *Session) finishJoin(guildID, channelID string, pending chan joinResult,
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.pending[guildID] != pending {
+	current := s.pending[guildID]
+	if current.results != pending {
 		return model.VoiceServerUpdate{}, ErrVoiceGrant
+	}
+	if current.closed {
+		return model.VoiceServerUpdate{}, gateway.ErrClosed
 	}
 	s.grants[guildID] = grant
 	return grant, nil
@@ -111,11 +120,11 @@ func (s *Session) LeaveVoice(guildID, connectionID string) error {
 func (s *Session) beginJoin(guildID string) (chan joinResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.pending[guildID] != nil {
+	if s.pending[guildID].results != nil {
 		return nil, ErrVoiceJoinPending
 	}
 	pending := make(chan joinResult, 1)
-	s.pending[guildID] = pending
+	s.pending[guildID] = voicePending{results: pending}
 	s.joinOrder = append(s.joinOrder, guildID)
 	return pending, nil
 }
@@ -123,7 +132,7 @@ func (s *Session) beginJoin(guildID string) (chan joinResult, error) {
 func (s *Session) endJoin(guildID string, pending chan joinResult) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.pending[guildID] != pending {
+	if s.pending[guildID].results != pending {
 		return
 	}
 	delete(s.pending, guildID)
@@ -138,7 +147,7 @@ func (s *Session) handleGatewayError(refusal gateway.GatewayError) {
 	}
 	guildID := s.joinOrder[0]
 	s.joinOrder = s.joinOrder[1:]
-	pending := s.pending[guildID]
+	pending := s.pending[guildID].results
 	if pending != nil {
 		select {
 		case pending <- joinResult{err: &VoiceRefusedError{GuildID: guildID, Code: refusal.Code, Message: refusal.Message}}:
@@ -169,7 +178,7 @@ func (s *Session) handleVoiceServerUpdate(event gateway.Event) {
 		return
 	}
 	s.mu.Lock()
-	pending := s.pending[grant.GuildID]
+	pending := s.pending[grant.GuildID].results
 	if pending != nil {
 		s.joinOrder = slices.DeleteFunc(s.joinOrder, func(id string) bool { return id == grant.GuildID })
 		select {
@@ -204,12 +213,16 @@ func (s *Session) stopVoiceJoins() {
 // failVoiceJoins requires s.mu. Callers decide whether reservations remain
 // until caller cleanup (shutdown), or are invalidated (a replaced session).
 func (s *Session) failVoiceJoins(err error) {
-	for _, pending := range s.pending {
+	for guildID, pending := range s.pending {
+		// Keep ownership until caller cleanup, but invalidate even a result
+		// the caller already consumed before this notification.
+		pending.closed = true
+		s.pending[guildID] = pending
 		select {
-		case <-pending:
+		case <-pending.results:
 		default:
 		}
-		pending <- joinResult{err: err}
+		pending.results <- joinResult{err: err}
 	}
 	s.joinOrder = nil
 }
