@@ -184,7 +184,7 @@ func (r *request) encode(ctx context.Context) (payload, error) {
 	return payload{data: buf.Bytes(), contentType: form.FormDataContentType()}, nil
 }
 
-// requestReader checks cancellation between reads while buffering a request body.
+// requestReader checks cancellation before each read.
 // The underlying reader is responsible for unblocking its own Read calls.
 type requestReader struct {
 	ctx    context.Context

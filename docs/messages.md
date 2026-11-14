@@ -62,6 +62,8 @@ _, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 
 For multipart uploads, the client checks the part count and consecutive numbering against the declared file size before reading file data or uploading parts. It sends file segments in part-number order, even if the plan lists the parts in a different order.
 
+The client checks cancellation before buffering each upload part and between reads. A reader that can block should handle cancellation itself.
+
 Plans must provide a nonempty upload key and, for multipart uploads, an upload ID. Multipart part URLs are checked before reading file data. Upload URLs must use HTTP or HTTPS with a host and no embedded username/password; signed query strings are preserved.
 
 ## Reading and editing

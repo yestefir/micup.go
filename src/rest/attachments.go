@@ -86,13 +86,20 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 			}
 		}
 		remaining := upload.Size
+		reader := upload.Reader
+		if ctx.Done() != nil {
+			reader = requestReader{ctx: ctx, reader: reader}
+		}
 		for _, part := range item.Parts {
+			if err := ctx.Err(); err != nil {
+				return model.UploadedAttachment{}, err
+			}
 			size := min(item.PartSize, remaining)
 			if size <= 0 {
 				return model.UploadedAttachment{}, errors.New("Micup upload plan has more parts than the file")
 			}
 			chunk := make([]byte, size)
-			if _, err := io.ReadFull(upload.Reader, chunk); err != nil {
+			if _, err := io.ReadFull(reader, chunk); err != nil {
 				return model.UploadedAttachment{}, fmt.Errorf("reading upload part %d: %w", part.PartNumber, err)
 			}
 			if err := c.put(ctx, part.UploadURL, "", bytes.NewReader(chunk), size); err != nil {
@@ -114,6 +121,9 @@ func (c *Client) UploadAttachment(ctx context.Context, channelID string, upload 
 }
 
 func (c *Client) put(ctx context.Context, target, contentType string, body io.Reader, size int64) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if err := validateUploadURL(target); err != nil {
 		return err
 	}
