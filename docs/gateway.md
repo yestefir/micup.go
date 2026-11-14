@@ -21,6 +21,8 @@ Handlers receive a `micup.Event`. Every event name, its payload type, typed deco
 
 Use `micup.EventAs[T](event)` or a `micup.NewEventMux()` for typed payloads; see [Events and typed payloads](events.md).
 
+Queued sends recheck cancellation before writing. A cancelled queued send returns its context error without transmitting; it may still wait for an earlier writer to finish.
+
 Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpPresenceUpdate`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpRequestGuildMembers`, `OpInvalidSession`, `OpHello`, `OpHeartbeatAck`, `OpGatewayError`, `OpLazyRequest`, `OpRequestGuildCounts` and `OpRequestChannelMemberCounts`. Bots need no Lazy Request; Micup never treats bot sessions as passive.
 
 ## Session
