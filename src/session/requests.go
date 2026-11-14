@@ -29,7 +29,15 @@ func (s *Session) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]
 		return nil, err
 	}
 	update, err := events.As[events.GuildCountsUpdate](event)
-	return update.Counts, err
+	if err != nil {
+		return update.Counts, err
+	}
+	for _, count := range update.Counts {
+		if !slices.Contains(ids, count.GuildID) {
+			return nil, errors.New("Micup guild count response contains an unrequested guild")
+		}
+	}
+	return update.Counts, nil
 }
 
 func (s *Session) RequestChannelMemberCounts(ctx context.Context, guildID string, channelIDs []string) ([]events.ChannelMemberCount, error) {
@@ -42,7 +50,15 @@ func (s *Session) RequestChannelMemberCounts(ctx context.Context, guildID string
 		return nil, err
 	}
 	update, err := events.As[events.ChannelMemberCountsUpdate](event)
-	return update.Counts, err
+	if err != nil {
+		return update.Counts, err
+	}
+	for _, count := range update.Counts {
+		if count.GuildID != guildID || !slices.Contains(ids, count.ChannelID) {
+			return nil, errors.New("Micup channel count response contains an unrequested guild or channel")
+		}
+	}
+	return update.Counts, nil
 }
 
 func (s *Session) Subscribe(ctx context.Context, subscriptions map[string]gateway.Subscription) error {

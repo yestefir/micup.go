@@ -50,6 +50,8 @@ type Platform struct {
 	HoldCounts        bool
 	CountsRequested   atomic.Int64
 	SwapCountEvents   bool
+	CountGuild        *string
+	CountChannel      *string
 	RateLimitMembers  bool
 	MemberDelay       time.Duration
 	HoldMembers       bool
@@ -282,6 +284,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			_ = json.Unmarshal(fields["nonce"], &nonce)
 			counts := []map[string]any{}
 			for _, id := range ids {
+				if p.CountGuild != nil {
+					id = *p.CountGuild
+				}
 				counts = append(counts, map[string]any{"guild_id": id, "member_count": 10, "online_count": 3})
 			}
 			name := gateway.EventGuildCountsUpdate
@@ -299,7 +304,13 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			_ = json.Unmarshal(fields["channel_ids"], &ids)
 			_ = json.Unmarshal(fields["nonce"], &nonce)
 			counts := []map[string]any{}
+			if p.CountGuild != nil {
+				guild = *p.CountGuild
+			}
 			for _, id := range ids {
+				if p.CountChannel != nil {
+					id = *p.CountChannel
+				}
 				counts = append(counts, map[string]any{"guild_id": guild, "channel_id": id, "member_count": 4, "online_count": 2})
 			}
 			name := gateway.EventChannelMemberCountsUpdate
