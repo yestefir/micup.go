@@ -146,7 +146,15 @@ func (s *Session) handleRateLimited(event gateway.Event) {
 	if !ok || limited.Opcode != gateway.OpRequestGuildMembers || limited.Meta.Nonce == "" {
 		return
 	}
-	s.deliverChunk(limited.Meta.Nonce, memberChunk{err: &MembersRateLimitedError{GuildID: limited.Meta.GuildID, RetryAfter: time.Duration(limited.RetryAfter * float64(time.Second))}})
+	const maxDuration = time.Duration(1<<63 - 1)
+	nanoseconds := limited.RetryAfter * float64(time.Second)
+	var retryAfter time.Duration
+	if nanoseconds >= float64(maxDuration) {
+		retryAfter = maxDuration
+	} else if nanoseconds > 0 {
+		retryAfter = time.Duration(nanoseconds)
+	}
+	s.deliverChunk(limited.Meta.Nonce, memberChunk{err: &MembersRateLimitedError{GuildID: limited.Meta.GuildID, RetryAfter: retryAfter}})
 }
 
 func (s *Session) deliverChunk(nonce string, chunk memberChunk) {
