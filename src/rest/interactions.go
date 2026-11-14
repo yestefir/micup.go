@@ -154,6 +154,9 @@ func validateComponentInteraction(interaction model.Interaction) error {
 }
 
 func interactionMessageData(options model.MessageOptions, ephemeral bool) (map[string]any, error) {
+	if len(options.Files) != 0 || len(options.Attachments) != 0 {
+		return nil, errors.New("new interaction responses and follow-ups do not support file options")
+	}
 	if options.Content == "" && len(options.Embeds) == 0 {
 		return nil, errors.New("interaction response content or at least one embed is required")
 	}

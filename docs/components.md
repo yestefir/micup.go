@@ -162,3 +162,5 @@ _, err := b.REST.EditInteractionResponse(ctx, i, micup.MessageEdit{Content: &con
 ```
 
 `UpdateInteractionMessage` and `DeferInteractionUpdate` accept only component interactions, and an interaction update cannot carry files.
+
+`RespondToInteraction` and `SendInteractionFollowup` reject nonempty `MessageOptions.Files` or `MessageOptions.Attachments`. These creation methods currently encode text, embeds and components; file options return an error before sending.
