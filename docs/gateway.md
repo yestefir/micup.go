@@ -117,6 +117,8 @@ Without `bot`, build a session with `micup.NewSession(micup.SessionConfig{Endpoi
 | `Apply(name, data)` | Applies an event; returns a `*micup.VoiceMove` when the bot's own voice channel changed |
 | `Remember(channelID, guildID)` | Adds a channel learned elsewhere |
 
+`Channel` and `Role` return independent snapshots, including nested pointers, slices and maps. Editing a returned snapshot does not change cached state or another caller's snapshot.
+
 Micup sends only the bot's own member and the members in voice channels with `GUILD_CREATE`, so `Permissions` is known for the bot and voice users and grows as messages, member events and chunks arrive. It follows Micup's order: the owner has every permission, `ADMINISTRATOR` skips overwrites, then the `@everyone` overwrite, the member's role overwrites combined (an allow beats a deny), and the member's own overwrite. `micup.ComputePermissions` runs the same computation on your own data, and `Permissions.Has(micup.PermissionConnect | micup.PermissionSpeak)` checks bits.
 
 ### Member requests
