@@ -226,6 +226,9 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			_ = json.Unmarshal(fields["nonce"], &nonce)
 			p.mu.Lock()
 			limited := p.RateLimitMembers
+			if p.MemberGuild != nil {
+				guild = *p.MemberGuild
+			}
 			p.mu.Unlock()
 			if limited {
 				c.event(gateway.EventRateLimited, map[string]any{"opcode": gateway.OpRequestGuildMembers, "retry_after": 12.5, "meta": map[string]string{"guild_id": guild, "nonce": nonce}})
@@ -242,9 +245,6 @@ func (p *Platform) serve(ws *websocket.Conn) {
 			repeatUser := p.RepeatMemberUser
 			order := append([]int(nil), p.MemberChunkOrder...)
 			counts := append([]int(nil), p.MemberChunkCounts...)
-			if p.MemberGuild != nil {
-				guild = *p.MemberGuild
-			}
 			p.mu.Unlock()
 			go func() {
 				defer p.MemberInFlight.Add(-1)

@@ -93,6 +93,10 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 			return members, ctx.Err()
 		case chunk := <-chunks:
 			if chunk.err != nil {
+				var limited *MembersRateLimitedError
+				if errors.As(chunk.err, &limited) && limited.GuildID != "" && limited.GuildID != request.GuildID {
+					return members, errors.New("Micup member rate-limit response has a mismatched guild")
+				}
 				return members, chunk.err
 			}
 			if chunk.guildID != request.GuildID {
