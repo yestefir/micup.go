@@ -1,5 +1,13 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_10-51
+
+- Fixed cancelled shard IDENTIFY calls reserving future cooldown slots. Admission now remains serialized through the cooldown, supports context cancellation while queued and advances the next deadline only on success; already admitted cooldowns are retained.
+- Reproduced 20 seconds of extra scheduled delay from four cancellations in both pre-cancelled and mid-wait probes; each now adds zero. Added busy-admission cancellation coverage; full shard race tests pass five repetitions, including normal pacing and fatal shutdown.
+- Limiter-construction allocation increases from 48 B/1 to 160 B/2 per manager. Three observed ns/op samples: 29.52/30.04/28.29 before; 76.64/77.75/79.11 after. This deliberate reliability cost is not a speed improvement; schedule-state checks are not production latency measurements.
+- Validation: 175 top-level race tests pass, 2 optional voice skips, no failures; vet/build/modified-file formatting/whitespace checks pass. Full formatting reports 111 pre-existing CRLF files after formatting two modified shard files.
+- Fix commit: `08e80df6225cedd3d5978efab57d294fc58fc407`. No push, deployment, dependencies, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_10-21
 
 - Replaced the Gateway writer mutex with a context-selectable per-connection gate. Queued commands/heartbeats can return on cancellation/deadline while the active writer continues; shared compressor/socket writes remain serialized and contexts are rechecked inside the gate.

@@ -1,13 +1,13 @@
-# Latest cycle — 2026-11-14_10-21
+# Latest cycle — 2026-11-14_10-51
 
-**BUG FIX VERIFIED.** Gateway sends waiting for write access now return when their contexts end, while leaving the active writer running. Four command/heartbeat cancellation/deadline cases failed before the fix and pass afterward against a stalled local WebSocket transport. The cancelled frames are absent; active and following frames still arrive.
+**BUG FIX VERIFIED.** Cancelled shard IDENTIFY waits no longer reserve future slots or extend cooldowns for later shards. Four cancellations previously added 20 seconds to an existing schedule in each of two probes; now they add zero. This is deterministic schedule-state evidence, not measured production restart latency.
 
-Validated fix commit: `98c815ef6f488e45e6ef549e89012f2f006cb317`.
+Validated fix commit: `08e80df6225cedd3d5978efab57d294fc58fc407`.
 
-The channel gate costs 112 B and one additional allocation per connection (272 B/4 versus 160 B/3); constructor benchmark time also increased. No production latency/throughput improvement is claimed. Active writes retain the existing five-second socket timeout.
+Admission remains cancellable behind another waiter, and existing cooldowns, multi-shard pacing and fatal shutdown behavior pass. The per-manager gate adds 112 B/one allocation to limiter construction (160 B/2 versus 48 B/1), with slower observed constructor timings; no throughput claim.
 
-Validation: 173 top-level tests pass with race detection, 2 optional voice tests skip, 0 failures; vet/build/changed-file formatting pass. Full formatting reports 113 existing CRLF files. Targeted Gateway cases pass five repetitions.
+Validation: 175 top-level race tests pass, 2 optional voice tests skip, 0 failures; vet/build/modified-file formatting pass. Full formatting reports 111 existing CRLF files. Full shard race tests pass five repetitions.
 
 Active recurring automation: `micup-go-engineering-autopilot`, every 30 minutes in this chat. Read the [runbook](RUNBOOK.md) and [state](STATE.md); acquire the overlap lock before changes. No pushes or deployments.
 
-Full evidence and next priorities: [execution report](reports/2026-11-14_10-21.md).
+Full evidence and next priorities: [execution report](reports/2026-11-14_10-51.md).

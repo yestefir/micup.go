@@ -5,13 +5,15 @@
 | Priority | Issue | Impact and evidence | Next action |
 |---|---|---|---|
 | P2 | Optional voice integration checks skipped locally | `TestPCMTrackEncodesOpus` skips because FFmpeg is absent; `TestLocalLiveKitReceivesOpusAudio` skips because `LIVEKIT_TEST_BINARY` is unset. The remaining tests pass, but real audio encoding/delivery is not verified here. | Use local test dependencies when available; rerun those tests without production services. |
-| P3 | Full formatting check fails on 113 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count is unchanged this cycle; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
+| P3 | Full formatting check fails on 111 remaining existing CRLF files | `core.autocrlf=true`; initial cycle verified CRLF-only formatting differences. Count fell by two after formatting the modified shard files; modified Go files pass formatting and unrelated files are untouched. | Consider a focused LF attributes/checkout policy change, separately from behavior fixes. Do not claim `make check` passed. |
 
 ## Unverified candidates
 
 - `ExecuteWebhook` sends bot Authorization while token-based lookup/edit methods omit it. The existing `TestWebhookEndpoints` explicitly requires that execution behavior. No actual authorization failure has been reproduced; retain the tested contract and reopen only with new upstream evidence. The creation-name discrepancy is resolved below.
 
 ## Scope limitations
+
+- Shard IDENTIFY waiting now uses one admission channel per manager. The limiter constructor costs 160 B/2 allocations versus 48 B/1 allocation before; observed constructor times increased. Cancelled waits do not extend cooldowns, but a call already admitted before cancellation still consumes its interval. No strict shard ordering or end-to-end wire spacing guarantee is added; dialing/scheduling follow admission.
 
 - Gateway queued write-access waits now end with context cancellation/deadlines. Already-started writes are not actively interrupted by caller cancellation and retain the five-second socket write timeout. Serialization before queue admission is also synchronous. The local stalled-writer regression checks a 500 ms response bound, not production latency. A per-connection channel adds 112 B and one constructor allocation (272 B/4 versus 160 B/3); constructor benchmark time also increased. Production effect is unmeasured.
 - New iterator progress guards detect an empty or unchanged next cursor. They do not deduplicate previously yielded items or detect arbitrary multi-page cursor cycles. A repeated page may be yielded once before termination, matching the existing member/thread iterator convention.
@@ -73,3 +75,6 @@
 ## Resolved in cycle 2026-11-14_10-21
 
 - P2: Gateway sends used an unconditional mutex wait after serialization/rate admission, so context cancellation/deadlines could not return until an earlier writer finished. A real local WebSocket with a stalled client transport reproduced all four command/heartbeat cancellation/deadline cases still waiting 500 ms after their contexts ended. Replaced only the writer mutex with a per-connection context-selectable gate, retaining the inside-gate context recheck and shared compressor/socket serialization. All four cases now return while the active write remains stalled, transmit no cancelled frame, and preserve that writer and following sends. Constructor cost increases by 112 B/one allocation per connection; active writes retain their existing timeout.
+## Resolved in cycle 2026-11-14_10-51
+
+- P2: The shard IDENTIFY limiter reserved its next slot before waiting, and never reclaimed a slot when the context ended. Four already-cancelled calls and four calls cancelled while waiting each added 20 seconds to a seeded cooldown despite returning context.Canceled. This retained schedule can also affect a later manager Run. The limiter now serializes cancellable admission through the current cooldown and advances next only for successful admission, preserving earlier cooldowns. Both schedule regressions fail before the fix and pass afterward; busy-admission cancellation and existing multi-shard pacing/fatal shutdown tests pass. A per-manager channel adds 112 B/one limiter-construction allocation; no production restart latency is claimed.
