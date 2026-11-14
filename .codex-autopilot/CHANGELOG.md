@@ -1,5 +1,12 @@
 # Engineering audit changelog
 
+## 2026-11-14 — Cycle 2026-11-14_08-21
+
+- Fixed cancelled queued Gateway sends being transmitted after write access became available. `Conn.Send` now rechecks context inside the existing write lock before compression/timing state/socket writes.
+- Added controlled local WebSocket tests for a normal command and heartbeat. Baseline calls returned nil and emitted cancelled frames; fixed calls return `context.Canceled`, do not change heartbeat timing state, and preserve delivery of the next active command. Existing normal and compressed Gateway tests pass.
+- Validation: 166 top-level tests pass with race detection, 2 optional voice skips, no failures; vet/build/changed-file formatting/whitespace checks pass. Full formatting still reports 115 existing CRLF files. No speed claim; lock-wait/in-progress-write cancellation responsiveness remains a stated limitation.
+- Fix commit: `6c94709a1966787375c5b36bff939dda621423df`. No push, deployment, dependency, public API or automation changes.
+
 ## 2026-11-14 — Cycle 2026-11-14_07-51
 
 - Fixed caller-owned ignored-event slice aliasing in `Session.New` with a construction-time clone. Later caller edits no longer alter stored filtering or invalidate future Gateway options. Shard manager construction already clones shard IDs and now inherits per-session ignored-event isolation.
