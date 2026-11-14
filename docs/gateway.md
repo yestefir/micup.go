@@ -175,6 +175,8 @@ Pending joins are notified when `Run` ends even if their own caller contexts rem
 
 `Session.Voice(guildID)` returns the current grant. `Session.LeaveVoice(guildID, connectionID)` sends the leave opcode only when the connection ID still matches the current grant, so a late leave cannot disconnect a newer connection.
 
+If sending the leave fails, the current grant stays available for an application retry. After a successful send, cleanup removes the unchanged grant that was used for that leave.
+
 `OnVoiceLost(guildID, connectionID)` runs when the bot is disconnected from its voice channel, moved to a channel it holds no grant for, or loses its session (invalid session, new READY or a reset close). The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
 
 Micup sends a new grant without a request when the connection moves to another region or channel. With `OnVoiceGrant(grant)` set, the session stores that grant and passes it to the callback: reconnect the LiveKit room to `grant.Endpoint` with `grant.Token` and keep playing. Without `OnVoiceGrant`, an unrequested grant that replaces a stored one is reported through `OnVoiceLost`, as in earlier releases.

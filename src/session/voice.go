@@ -126,9 +126,16 @@ func (s *Session) LeaveVoice(guildID, connectionID string) error {
 		s.mu.Unlock()
 		return nil
 	}
-	delete(s.grants, guildID)
 	s.mu.Unlock()
-	return s.Send(context.Background(), gateway.OpVoiceStateUpdate, map[string]any{"guild_id": guildID, "channel_id": nil, "connection_id": connectionID})
+	if err := s.Send(context.Background(), gateway.OpVoiceStateUpdate, map[string]any{"guild_id": guildID, "channel_id": nil, "connection_id": connectionID}); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	if current, ok := s.grants[guildID]; ok && current == grant {
+		delete(s.grants, guildID)
+	}
+	s.mu.Unlock()
+	return nil
 }
 
 func (s *Session) UpdateVoiceState(ctx context.Context, guildID string, options VoiceJoin) error {
