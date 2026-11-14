@@ -21,7 +21,7 @@ Handlers receive a `micup.Event`. Every event name, its payload type, typed deco
 
 Use `micup.EventAs[T](event)` or a `micup.NewEventMux()` for typed payloads; see [Events and typed payloads](events.md).
 
-Queued sends recheck cancellation before writing. A cancelled queued send returns its context error without transmitting; it may still wait for an earlier writer to finish.
+Queued sends stop waiting for write access when their context ends and return its error without transmitting. Cancellation of a queued send leaves the active writer running. Once a write starts, the existing five-second socket write timeout applies.
 
 Opcodes are `micup.OpDispatch`, `OpHeartbeat`, `OpIdentify`, `OpPresenceUpdate`, `OpVoiceStateUpdate`, `OpResume`, `OpReconnect`, `OpRequestGuildMembers`, `OpInvalidSession`, `OpHello`, `OpHeartbeatAck`, `OpGatewayError`, `OpLazyRequest`, `OpRequestGuildCounts` and `OpRequestChannelMemberCounts`. Bots need no Lazy Request; Micup never treats bot sessions as passive.
 

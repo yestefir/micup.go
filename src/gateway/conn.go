@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -15,7 +14,7 @@ const writeTimeout = 5 * time.Second
 
 type Conn struct {
 	ws        *websocket.Conn
-	mu        sync.Mutex
+	writeGate chan struct{}
 	commands  *windowLimiter
 	presences *windowLimiter
 	zstd      *zstdWriter
@@ -36,7 +35,7 @@ func (c *Conn) acknowledged() {
 }
 
 func newConn(ws *websocket.Conn) *Conn {
-	return &Conn{ws: ws, commands: newWindowLimiter(commandBudget, commandWindow), presences: newWindowLimiter(presenceBudget, presenceWindow)}
+	return &Conn{ws: ws, writeGate: make(chan struct{}, 1), commands: newWindowLimiter(commandBudget, commandWindow), presences: newWindowLimiter(presenceBudget, presenceWindow)}
 }
 
 func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
@@ -60,8 +59,14 @@ func (c *Conn) Send(ctx context.Context, opcode int, data any) error {
 			return err
 		}
 	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// Serialize both the compressor and socket writes, while allowing queued
+	// callers to leave without waiting for the active writer.
+	select {
+	case c.writeGate <- struct{}{}:
+		defer func() { <-c.writeGate }()
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
