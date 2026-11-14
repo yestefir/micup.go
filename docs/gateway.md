@@ -117,13 +117,31 @@ Without `bot`, build a session with `micup.NewSession(micup.SessionConfig{Endpoi
 | `Role(guildID, roleID)`, `MemberRoles(guildID, userID)`, `OwnerID(guildID)` | Cached roles, a member's role IDs and the owner |
 | `Permissions(guildID, channelID, userID)`, `BotPermissions(guildID, channelID)` | The computed permission mask and whether the cache knew enough to compute it |
 | `VoiceChannel(guildID, userID)`, `VoiceMembers(guildID, channelID)`, `BotVoiceChannel(guildID)` | Voice state |
-| `Unavailable(guildID)`, `Guilds()`, `Channels()` | Outage flag and cache sizes |
+| `Guild(guildID)`, `GuildIDs()`, `Roles(guildID)`, `Emojis(guildID)`, `Stickers(guildID)` | Guild settings, roles (highest first) and expressions |
+| `GuildChannels(guildID)`, `Threads(guildID)` | Channels in position order and active threads |
+| `HighestRole(guildID, userID)`, `CanManage(guildID, actorID, targetID)` | Role hierarchy checks before kicking, banning or editing roles |
+| `Unavailable(guildID)`, `Guilds()`, `Channels()`, `Members(guildID)` | Outage flag and cache sizes |
 | `Apply(name, data)` | Applies an event; returns a `*micup.VoiceMove` when the bot's own voice channel changed |
 | `Remember(channelID, guildID)` | Adds a channel learned elsewhere |
 
 `Channel` and `Role` return independent snapshots, including nested pointers, slices and maps. Editing a returned snapshot does not change cached state or another caller's snapshot.
 
 Micup sends only the bot's own member and the members in voice channels with `GUILD_CREATE`, so `Permissions` is known for the bot and voice users and grows as messages, member events and chunks arrive. It follows Micup's order: the owner has every permission, `ADMINISTRATOR` skips overwrites, then the `@everyone` overwrite, the member's role overwrites combined (an allow beats a deny), and the member's own overwrite. `micup.ComputePermissions` runs the same computation on your own data, and `Permissions.Has(micup.PermissionConnect | micup.PermissionSpeak)` checks bits.
+
+The cache also follows `GUILD_EMOJIS_UPDATE`, `GUILD_STICKERS_UPDATE`, `THREAD_CREATE`, `THREAD_UPDATE`, `THREAD_DELETE` and `THREAD_LIST_SYNC`, and drops a channel's threads when the channel is deleted, because Micup sends no `THREAD_DELETE` for them.
+
+### Counts, subscriptions and session hooks
+
+| Method | Opcode |
+|---|---|
+| `RequestGuildCounts(ctx, guildIDs)` | 15; returns `[]micup.GuildCount` with member and online counts |
+| `RequestChannelMemberCounts(ctx, guildID, channelIDs)` | 16; needs `VIEW_CHANNEL_MEMBERS` per channel |
+| `Subscribe(ctx, map[string]micup.Subscription{...})` | 14 (Lazy Request): `Active`, `Sync`, `Typing`, `MemberListChannels`, `Members`, `Threads`, `ThreadMemberLists` |
+| `UpdateVoiceState(ctx, guildID, micup.VoiceJoin{SelfMute, SelfDeaf})` | 4; changes mute and deafen on the current connection |
+
+Count requests wait up to 12 seconds and return `micup.ErrNoResponse` when Micup does not answer. `ShardManager` routes each call to the owning shards and has `Latency()` and `Guilds()` across shards. `SessionOptions.OnReady(resumed)` runs on its own goroutine after `READY` or `RESUMED`, so it may call Gateway requests; `OnDisconnect(err)` runs after each lost connection, and `Session.SessionID()` returns the current session.
+
+`b.RecommendedShards(ctx)` pages through the bot's guilds (one request per 200 guilds, since Micup's `/gateway/bot` always reports one shard) and suggests a shard count that keeps each shard well under `micup.MaxGuildsPerShard` (2,500). Close codes have constants such as `micup.CloseShardingRequired`.
 
 ### Member requests
 

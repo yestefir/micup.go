@@ -48,7 +48,7 @@ func eventsTable(t *testing.T) string {
 
 func constantName(name string) string {
 	switch name {
-	case gateway.EventReactionAdd, gateway.EventReactionRemove, gateway.EventReactionRemoveAll, gateway.EventReactionRemoveEmoji:
+	case gateway.EventReactionAdd, gateway.EventReactionAddMany, gateway.EventReactionRemove, gateway.EventReactionRemoveAll, gateway.EventReactionRemoveEmoji:
 		name = strings.TrimPrefix(name, "MESSAGE_")
 	}
 	var b strings.Builder

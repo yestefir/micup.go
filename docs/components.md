@@ -148,6 +148,8 @@ Answer every click promptly, or the user sees the click fail. When the work may 
 | `RespondToInteraction(ctx, i, micup.MessageOptions{...}, ephemeral)` | 4 | Posts a new reply; `true` shows it only to the clicker |
 | `DeferInteraction(ctx, i, ephemeral)` | 5 | Shows a "thinking" reply to fill in with `EditInteractionResponse` |
 | `SendInteractionFollowup(ctx, i, options, ephemeral)` | webhook | Posts another message after the first answer |
+| `InteractionResponse(ctx, i)`, `DeleteInteractionResponse(ctx, i)` | `…/messages/@original` | Reads or removes the first answer |
+| `EditInteractionFollowup(ctx, i, messageID, edit)`, `DeleteInteractionFollowup(ctx, i, messageID)` | `…/messages/{id}` | Changes or removes a follow-up |
 
 Deferring and editing afterwards:
 

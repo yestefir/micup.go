@@ -9,6 +9,7 @@ import (
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/internal/httpx"
 	"github.com/yestefir/micup.go/src/internal/version"
+	"github.com/yestefir/micup.go/src/model"
 	"github.com/yestefir/micup.go/src/rest"
 	"github.com/yestefir/micup.go/src/session"
 	"github.com/yestefir/micup.go/src/shard"
@@ -84,6 +85,8 @@ func (b *Bot) identify(ctx context.Context) error {
 
 func (b *Bot) Endpoints() discovery.Endpoints { return b.endpoints }
 
+func (b *Bot) Media() model.Media { return model.Media{Base: b.endpoints.Media} }
+
 func (b *Bot) SessionConfig() session.Config {
 	return session.Config{
 		Endpoint:   b.endpoints.Gateway,
@@ -111,4 +114,32 @@ func (b *Bot) NewSession(options session.Options) (*session.Session, error) {
 
 func (b *Bot) NewShardManager(options shard.Options) (*shard.Manager, error) {
 	return shard.NewManager(b.SessionConfig(), options)
+}
+
+const (
+	MaxGuildsPerShard    = 2500
+	targetGuildsPerShard = 2000
+)
+
+func (b *Bot) GuildCount(ctx context.Context) (int, error) {
+	count := 0
+	for _, err := range b.REST.EachGuild(ctx) {
+		if err != nil {
+			return count, err
+		}
+		count++
+	}
+	return count, nil
+}
+
+func (b *Bot) RecommendedShards(ctx context.Context) (int, error) {
+	guilds, err := b.GuildCount(ctx)
+	if err != nil {
+		return 0, err
+	}
+	shards := max((guilds+targetGuildsPerShard-1)/targetGuildsPerShard, 1)
+	if info, err := b.REST.GatewayInfo(ctx); err == nil {
+		shards = max(shards, info.Shards)
+	}
+	return shards, nil
 }

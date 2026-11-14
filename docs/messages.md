@@ -74,7 +74,14 @@ Plans must provide a nonempty upload key and, for multipart uploads, an upload I
 | `DeleteMessage(ctx, channelID, messageID, micup.WithReason("..."))` | Delete one message |
 | `BulkDeleteMessages(ctx, channelID, ids, ...)` | 1 to 100 messages of any age, needs `MANAGE_MESSAGES` |
 | `TriggerTyping(ctx, channelID)` | Show the typing indicator |
-| `CreateDM(ctx, userID)` | Open (or return) the DM channel with a user |
+| `CreateDM(ctx, userID)`, `SendDM(ctx, userID, options)` | Open (or return) the DM channel with a user, or send to it. Micup does not let bots list their DMs |
+| `ForwardMessage(ctx, channelID, micup.MessageForward{ChannelID, MessageID})` | Forward a message, optionally only some `AttachmentIDs` or `EmbedIndices` |
+| `CrosspostMessage`, `CrosspostSource` | Publish an announcement, or find where a published copy came from |
+| `DeleteAttachment(ctx, channelID, messageID, attachmentID)` | Remove one attachment from the bot's message |
+| `SuppressEmbeds(ctx, channelID, messageID, true)` | Hide or show link previews |
+| `RefreshAttachmentURLs(ctx, urls)` | Re-sign up to 50 attachment URLs that are about to expire |
+
+`MessageEdit.KeepAttachments` lists existing attachments to keep (with a new title or alt text); attachments left out are removed, and an empty, non-nil list removes all of them. Without `KeepAttachments`, `Files` or `Attachments`, an edit leaves attachments alone. `File` and `UploadedAttachment` take `Title`, `Description` and `Spoiler`; a voice message upload also takes `Duration` and `Waveform`.
 
 Only `DEFAULT` and `REPLY` messages can be edited, pinned or replied to.
 
@@ -91,6 +98,7 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 | `RemoveEmojiReactions`, `RemoveAllReactions` | Clear one emoji or every reaction |
 | `PinMessage`, `UnpinMessage` | Needs `PIN_MESSAGES`; accept `WithReason` |
 | `PinnedMessages(ctx, ch, micup.PinQuery{Limit, Before})` | A page of pins; pass the last `PinnedAt` as `Before` for the next page |
+| `ReactionUsers(ctx, ch, msg, emoji, micup.ReactionUsersQuery{Limit, After})` | Who reacted; `EachReactionUser` pages through all of them |
 
 ## Gateway payloads
 
@@ -103,8 +111,11 @@ Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(
 | `CreateWebhook(ctx, channelID, name, ...)` | Creates a webhook and returns it with its token; needs `MANAGE_WEBHOOKS` |
 | `ChannelWebhooks(ctx, channelID)`, `GuildWebhooks(ctx, guildID)` | List webhooks |
 | `DeleteWebhook(ctx, webhookID, ...)` | Delete a webhook |
+| `Webhook`, `ModifyWebhook(ctx, id, micup.WebhookEdit{Name, Avatar, ChannelID})`, `CreateWebhookWithAvatar` | Read, rename, change the avatar or move a webhook |
+| `WebhookWithToken`, `ModifyWebhookWithToken`, `DeleteWebhookWithToken` | The same with only the webhook token; no bot token is sent |
+| `WebhookMessage`, `EditWebhookMessage`, `DeleteWebhookMessage` | Manage a message the webhook posted; edits change content, embeds and flags |
 | `ExecuteWebhook(ctx, id, token, micup.WebhookMessage{...})` | Post as the webhook; returns the message only when `Wait` is true |
 
-`WebhookMessage` embeds `MessageOptions` (without components) and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. The webhook token is a secret: anyone with the ID and token can post.
+`WebhookMessage` embeds `MessageOptions` (without components) and adds `Username` and `AvatarURL` for that message only, and `ThreadID` to post in a thread. In a forum, `ThreadName` and `AppliedTags` create a new post. The webhook token is a secret: anyone with the ID and token can post.
 
 `CreateWebhook` and `CreateWebhookWithAvatar` accept names of 1 to 80 Unicode code points. Both methods use the same name validation; the avatar is optional.

@@ -4,9 +4,10 @@ import "github.com/yestefir/micup.go/src/model"
 
 type MessageCreate struct {
 	model.Message
-	ChannelType int           `json:"channel_type"`
-	MentionHere bool          `json:"mention_here,omitempty"`
-	Member      *model.Member `json:"member,omitempty"`
+	ChannelType int               `json:"channel_type"`
+	MentionHere bool              `json:"mention_here,omitempty"`
+	Member      *model.Member     `json:"member,omitempty"`
+	Nicks       map[string]string `json:"nicks,omitempty"`
 }
 
 type MessageUpdate = MessageCreate

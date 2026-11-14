@@ -72,12 +72,6 @@ func (c *Client) UserProfile(ctx context.Context, userID string, query model.Use
 	return profile, err
 }
 
-func (c *Client) DMChannels(ctx context.Context) ([]model.Channel, error) {
-	var channels []model.Channel
-	err := c.call(ctx, &request{method: http.MethodGet, path: "/users/@me/channels", dest: &channels})
-	return channels, err
-}
-
 func (c *Client) SendDM(ctx context.Context, userID string, options model.MessageOptions) (model.Message, error) {
 	channel, err := c.CreateDM(ctx, userID)
 	if err != nil {

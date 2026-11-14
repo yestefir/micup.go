@@ -76,9 +76,7 @@ func routeKey(method, path string) string {
 		previous := parts[i-1]
 		switch {
 		case previous == "reactions":
-			if parts[i] != "" {
-				parts[i] = "{emoji}"
-			}
+			parts[i] = "{emoji}"
 		case isSnowflake(parts[i]) && !majorParameters[previous]:
 			parts[i] = "{id}"
 		case previous != "" && i >= 2 && parts[i-2] == "webhooks" && isSnowflake(previous):

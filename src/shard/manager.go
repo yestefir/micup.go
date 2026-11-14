@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/yestefir/micup.go/src/events"
 	"github.com/yestefir/micup.go/src/gateway"
 	"github.com/yestefir/micup.go/src/model"
 	"github.com/yestefir/micup.go/src/session"
@@ -247,4 +248,109 @@ func (m *Manager) RequestGuildMembers(ctx context.Context, request model.Members
 		return nil, err
 	}
 	return s.RequestGuildMembers(ctx, request)
+}
+
+func (m *Manager) UpdateVoiceState(ctx context.Context, guildID string, options session.VoiceJoin) error {
+	s, err := m.ForGuild(guildID)
+	if err != nil {
+		return err
+	}
+	return s.UpdateVoiceState(ctx, guildID, options)
+}
+
+func (m *Manager) RequestGuildCounts(ctx context.Context, guildIDs []string) ([]events.GuildCount, error) {
+	ids := session.UniqueIDs(guildIDs)
+	if len(ids) == 0 {
+		return nil, errors.New("a guild count request needs at least one guild ID")
+	}
+	byShard, err := m.groupByShard(ids)
+	if err != nil {
+		return nil, err
+	}
+	var counts []events.GuildCount
+	for _, id := range m.ids {
+		if len(byShard[id]) == 0 {
+			continue
+		}
+		part, err := m.sessions[id].RequestGuildCounts(ctx, byShard[id])
+		if err != nil {
+			return counts, fmt.Errorf("Micup shard %d: %w", id, err)
+		}
+		counts = append(counts, part...)
+	}
+	return counts, nil
+}
+
+func (m *Manager) groupByShard(guildIDs []string) (map[int][]string, error) {
+	byShard := map[int][]string{}
+	for _, guildID := range guildIDs {
+		id, err := ForGuild(guildID, m.count)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := m.sessions[id]; !ok {
+			return nil, ErrNotOwned
+		}
+		byShard[id] = append(byShard[id], guildID)
+	}
+	return byShard, nil
+}
+
+func (m *Manager) RequestChannelMemberCounts(ctx context.Context, guildID string, channelIDs []string) ([]events.ChannelMemberCount, error) {
+	s, err := m.ForGuild(guildID)
+	if err != nil {
+		return nil, err
+	}
+	return s.RequestChannelMemberCounts(ctx, guildID, channelIDs)
+}
+
+func (m *Manager) Subscribe(ctx context.Context, subscriptions map[string]gateway.Subscription) error {
+	if err := gateway.ValidateSubscriptions(subscriptions); err != nil {
+		return err
+	}
+	guildIDs := make([]string, 0, len(subscriptions))
+	for guildID := range subscriptions {
+		guildIDs = append(guildIDs, guildID)
+	}
+	byShard, err := m.groupByShard(guildIDs)
+	if err != nil {
+		return err
+	}
+	var errs []error
+	for _, id := range m.ids {
+		if len(byShard[id]) == 0 {
+			continue
+		}
+		part := make(map[string]gateway.Subscription, len(byShard[id]))
+		for _, guildID := range byShard[id] {
+			part[guildID] = subscriptions[guildID]
+		}
+		if err := m.sessions[id].Subscribe(ctx, part); err != nil {
+			errs = append(errs, fmt.Errorf("Micup shard %d: %w", id, err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (m *Manager) Latency() time.Duration {
+	var total time.Duration
+	var measured int
+	for _, s := range m.sessions {
+		if latency := s.Latency(); latency > 0 {
+			total += latency
+			measured++
+		}
+	}
+	if measured == 0 {
+		return 0
+	}
+	return total / time.Duration(measured)
+}
+
+func (m *Manager) Guilds() int {
+	total := 0
+	for _, s := range m.sessions {
+		total += s.State().Guilds()
+	}
+	return total
 }

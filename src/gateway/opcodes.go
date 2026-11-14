@@ -13,9 +13,11 @@ const (
 	OpHello                      = 10
 	OpHeartbeatAck               = 11
 	OpGatewayError               = 12
+	OpVoiceSignal                = 13
 	OpLazyRequest                = 14
 	OpRequestGuildCounts         = 15
 	OpRequestChannelMemberCounts = 16
+	OpRequestForumUnreads        = 28
 )
 
 const (

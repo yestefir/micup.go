@@ -40,6 +40,8 @@ type Options struct {
 	TrackMembers  bool
 	OnVoiceLost   func(guildID, connectionID string)
 	OnVoiceGrant  func(grant model.VoiceServerUpdate)
+	OnReady       func(resumed bool)
+	OnDisconnect  func(err error)
 	IgnoredEvents []string
 	Presence      *model.Presence
 	Flags         int
@@ -66,6 +68,9 @@ type Session struct {
 	presenceMu     sync.Mutex
 	memberRequests map[string]chan memberChunk
 	memberSlots    chan struct{}
+	countRequests  map[string]chan []byte
+	countSlots     chan struct{}
+	sessionID      atomic.Value
 }
 
 func New(config Config, options Options) (*Session, error) {
@@ -106,6 +111,8 @@ func New(config Config, options Options) (*Session, error) {
 		pending:        map[string]voicePending{},
 		memberRequests: map[string]chan memberChunk{},
 		memberSlots:    make(chan struct{}, maxMemberRequestsInFlight),
+		countRequests:  map[string]chan []byte{},
+		countSlots:     make(chan struct{}, 1),
 		presence:       options.Presence,
 	}, nil
 }
@@ -141,6 +148,9 @@ func (s *Session) Run(ctx context.Context) error {
 			return s.dispatch(ctx, event)
 		})
 		s.ready.Store(false)
+		if s.options.OnDisconnect != nil && ctx.Err() == nil {
+			s.options.OnDisconnect(err)
+		}
 		var closed *gateway.CloseError
 		if errors.As(err, &closed) && closed.Fatal() {
 			return closed
@@ -232,9 +242,14 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 	switch event.Name {
 	case gateway.EventReady:
 		s.dropAllGrants()
+		s.rememberSession(event)
 		s.ready.Store(true)
+		s.announceReady(false)
 	case gateway.EventResumed:
 		s.ready.Store(true)
+		s.announceReady(true)
+	case gateway.EventGuildCountsUpdate, gateway.EventChannelMemberCountsUpdate:
+		s.handleCounts(event)
 	case gateway.EventVoiceStateUpdate:
 		s.handleBotVoiceMove(move)
 	case gateway.EventVoiceServerUpdate:
@@ -248,6 +263,26 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 		return nil
 	}
 	return s.options.Handler(ctx, event)
+}
+
+func (s *Session) SessionID() string {
+	id, _ := s.sessionID.Load().(string)
+	return id
+}
+
+func (s *Session) rememberSession(event gateway.Event) {
+	var ready struct {
+		SessionID string `json:"session_id"`
+	}
+	if event.Decode(&ready) == nil {
+		s.sessionID.Store(ready.SessionID)
+	}
+}
+
+func (s *Session) announceReady(resumed bool) {
+	if s.options.OnReady != nil {
+		go s.options.OnReady(resumed)
+	}
 }
 
 func sleep(ctx context.Context, wait time.Duration) error {

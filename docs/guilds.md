@@ -13,6 +13,11 @@ All methods are on `b.REST`. Routes that write the audit log accept `micup.WithR
 | `AddMemberRole`, `RemoveMemberRole` | One role, needs `MANAGE_ROLES` and a higher role |
 | `KickMember(ctx, guildID, userID, ...)` | Needs `KICK_MEMBERS` |
 | `BanMember(ctx, guildID, userID, micup.Ban{DeleteMessageSeconds, DurationSeconds, Reason}, ...)`, `UnbanMember` | `DeleteMessageSeconds` 0 to 604,800; `DurationSeconds` 0 (permanent) or 60 to 63,072,000 |
+| `Bans(ctx, guildID)` | Every ban as `micup.BanEntry`, with reason, moderator and expiry |
+| `TimeoutMember(ctx, guildID, userID, duration, reason)`, `ClearTimeout` | Up to 365 days; needs `MODERATE_MEMBERS` |
+| `CurrentMember`, `ModifyCurrentMember(ctx, guildID, micup.CurrentMemberEdit{...})`, `SetNickname` | The bot's own membership and guild profile |
+| `SearchMembers(ctx, guildID, micup.MemberSearch{Query, RoleIDs, IsBot, ...})` | Searches by name, role and join data |
+| `User(ctx, userID)`, `UserProfile(ctx, userID, micup.UserProfileQuery{GuildID})` | Any account and its profile |
 
 `MemberEdit` uses pointers so that unset fields stay unchanged:
 
