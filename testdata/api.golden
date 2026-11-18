@@ -512,6 +512,7 @@ micup.func.SnowflakeAt
 micup.func.SnowflakeTime
 micup.func.StringSelect
 micup.func.SuccessButton
+micup.func.TokenID
 micup.func.UserSelect
 micup.func.ValidateSubscriptions
 micup.func.WithReason
@@ -613,6 +614,7 @@ micup.type.InteractionHandler
 micup.type.Invite
 micup.type.InviteCreate
 micup.type.InviteDelete
+micup.type.InviteOptions
 micup.type.KeptAttachment
 micup.type.Media
 micup.type.Member
@@ -660,6 +662,7 @@ micup.type.PresenceUpdate
 micup.type.PresenceUpdateBulk
 micup.type.ProfileBadge
 micup.type.ProfileDetails
+micup.type.PublicApplication
 micup.type.RESTClient
 micup.type.RESTConfig
 micup.type.RateLimited

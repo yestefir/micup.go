@@ -33,7 +33,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("create bot: %w", err)
 	}
-	_, err = b.REST.SetGuildCommands(ctx, b.ApplicationID, guildID, []micup.ApplicationCommand{
+	_, err = b.REST.SetGuildCommands(ctx, "", guildID, []micup.ApplicationCommand{
 		{Name: "panel", Description: "Post a counter panel"},
 		{Name: "feedback", Description: "Send feedback"},
 	})

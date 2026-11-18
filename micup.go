@@ -28,14 +28,16 @@ const DefaultOrigin = discovery.DefaultOrigin
 type Endpoints = discovery.Endpoints
 
 type (
-	RESTClient    = rest.Client
-	RESTConfig    = rest.Config
-	APIError      = rest.APIError
-	FieldError    = rest.FieldError
-	Application   = rest.Application
-	RequestOption = rest.RequestOption
-	File          = rest.File
-	Upload        = rest.Upload
+	RESTClient        = rest.Client
+	RESTConfig        = rest.Config
+	APIError          = rest.APIError
+	FieldError        = rest.FieldError
+	Application       = rest.Application
+	PublicApplication = rest.PublicApplication
+	InviteOptions     = bot.InviteOptions
+	RequestOption     = rest.RequestOption
+	File              = rest.File
+	Upload            = rest.Upload
 )
 
 func EmojiString(emoji Emoji) string { return rest.EmojiString(emoji) }
@@ -110,6 +112,8 @@ func FormatTimestamp(at time.Time, style string) string { return model.FormatTim
 func EscapeMarkdown(text string) string { return model.EscapeMarkdown(text) }
 
 func NewREST(config RESTConfig) (*RESTClient, error) { return rest.New(config) }
+
+func TokenID(token string) (string, bool) { return rest.TokenID(token) }
 
 func WithReason(reason string) RequestOption { return rest.WithReason(reason) }
 

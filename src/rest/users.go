@@ -12,9 +12,14 @@ import (
 const messageContentIntent = (1 << 18) | (1 << 19)
 
 type Application struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Flags *uint64 `json:"flags"`
+	ID                  string      `json:"id"`
+	Name                string      `json:"name"`
+	Icon                *string     `json:"icon,omitempty"`
+	Description         *string     `json:"description,omitempty"`
+	BotPublic           bool        `json:"bot_public,omitempty"`
+	BotRequireCodeGrant bool        `json:"bot_require_code_grant,omitempty"`
+	Owner               *model.User `json:"owner,omitempty"`
+	Flags               *uint64     `json:"flags"`
 }
 
 func (a Application) MessageContentEnabled() *bool {

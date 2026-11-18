@@ -33,6 +33,8 @@ type Client struct {
 	token   string
 	http    *http.Client
 	limits  *limiter
+
+	identity identityCache
 }
 
 func ValidToken(token string) bool { return token != "" && !strings.ContainsAny(token, "\r\n") }

@@ -6,6 +6,13 @@ Notable changes to micup.go are recorded here.
 
 ### Added
 
+- Bot identity: `micup.New` fills `Bot.OwnerID` next to `ID` and `ApplicationID`. `RESTClient.Self`, `SelfID`, `Application` and `ApplicationID` cache the lookups, `PublicApplication` reads the public application record, and `micup.TokenID` reads the bot user ID from a token without a request. See [Bot identity](docs/quickstart.md#bot-identity).
+- Command methods accept an empty application ID and use the bot's own, so `SetGuildCommands(ctx, "", guildID, commands)` works without storing an ID.
+- `Bot.InviteURL(micup.InviteOptions{…})` builds the link that adds the bot to a guild.
+- `Application` gains `Icon`, `Description`, `BotPublic`, `BotRequireCodeGrant` and `Owner`.
+
+### Added
+
 - Guild tags: `User.TagGuildID`, `Guild.GuildTag` and `Guild.GuildTagBadge`, and `EventMux.OnGuildTagChange` with `micup.GuildTagChange`, which reports a user showing, changing or clearing a guild tag. See [Guild tags](docs/events.md#guild-tags) and the [guild tag example](examples/guild-tag/main.go).
 
 ## [1.0.1] - 2026-11-18

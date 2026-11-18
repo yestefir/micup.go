@@ -51,6 +51,32 @@ func TestNewDiscoversBotAndReadsIntent(t *testing.T) {
 	}
 }
 
+func TestNewLearnsOwnerAndBuildsInviteURL(t *testing.T) {
+	origin := platform(t, `{"id":"bot-id","bot":true}`, `{"id":"app-id","owner":{"id":"owner-id"}}`)
+	b, err := bot.New(context.Background(), bot.Config{Token: "fixture", Origin: origin})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.OwnerID != "owner-id" {
+		t.Fatalf("OwnerID = %q", b.OwnerID)
+	}
+	link, err := b.InviteURL(bot.InviteOptions{Permissions: 8, GuildID: "g1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := origin + "/oauth2/authorize?client_id=app-id&guild_id=g1&permissions=8&scope=bot"
+	if link != want {
+		t.Fatalf("InviteURL = %s, want %s", link, want)
+	}
+	plain, err := b.InviteURL(bot.InviteOptions{Scopes: []string{"bot", "applications.commands"}})
+	if err != nil || plain != origin+"/oauth2/authorize?client_id=app-id&scope=bot+applications.commands" {
+		t.Fatalf("plain InviteURL = %s, %v", plain, err)
+	}
+	if _, err := b.InviteURL(bot.InviteOptions{Scopes: []string{"bad scope"}}); err == nil {
+		t.Fatal("scope with a space was accepted")
+	}
+}
+
 func TestNewToleratesMissingApplication(t *testing.T) {
 	b, err := bot.New(context.Background(), bot.Config{Token: "fixture", Origin: platform(t, `{"id":"bot-id","bot":true}`, "")})
 	if err != nil || b.MessageContentEnabled != nil || b.ApplicationID != "bot-id" {

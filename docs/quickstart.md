@@ -61,6 +61,25 @@ A failed request returns `*micup.APIError`:
 | `RequestID` | The `X-Request-ID` header, for bug reports |
 | `RetryAfter`, `Global` | Set on rate limits and cooldowns |
 
+## Bot identity
+
+A bot never has to type its own IDs. `micup.New` asks Micup who the token belongs to and fills in:
+
+| Field | Meaning |
+|---|---|
+| `b.ID` | The bot user ID |
+| `b.ApplicationID` | The application ID (on Micup it equals the bot user ID) |
+| `b.OwnerID` | The user who owns the application, for owner-only commands |
+| `b.MessageContentEnabled` | Whether the message content grant is known to be enabled |
+
+Command methods accept an empty application ID and use the bot's own: `b.REST.SetGuildCommands(ctx, "", guildID, commands)`. A `micup.NewREST` client that was not built through `micup.New` has the same lookups, cached after the first success: `Self(ctx)`, `SelfID(ctx)`, `Application(ctx)`, `ApplicationID(ctx)` and `PublicApplication(ctx, "")`, which returns the scopes and bot profile that others see.
+
+`micup.TokenID(token)` reads the bot user ID from the token itself without any request, so a process can name its logs and metrics before it connects.
+
+`b.InviteURL(micup.InviteOptions{Permissions: micup.PermissionAdministrator, GuildID: guildID})` builds the link that adds the bot to a guild: `https://micup.gg/oauth2/authorize?client_id=…&scope=bot&permissions=…`. `Scopes` defaults to `bot`, `Permissions` and `GuildID` are optional, and the host follows `Config.Origin`.
+
+Micup refuses several account-only routes to bot tokens, and the module does not wrap them: reading or changing the bot's own profile through `PATCH /users/@me` or `PATCH /oauth2/applications/{id}/bot`, `GET /users/@me/channels`, and the channel slowmode and RTC region routes all answered 403 for a bot.
+
 ## Rate limits and retries
 
 The REST client handles Micup's limits for you:

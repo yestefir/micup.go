@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/yestefir/micup.go/src/discovery"
 	"github.com/yestefir/micup.go/src/gateway"
@@ -29,8 +32,10 @@ type Bot struct {
 	REST                  *rest.Client
 	ID                    string
 	ApplicationID         string
+	OwnerID               string
 	MessageContentEnabled *bool
 	endpoints             discovery.Endpoints
+	origin                *url.URL
 	config                Config
 }
 
@@ -57,7 +62,7 @@ func New(ctx context.Context, config Config) (*Bot, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := &Bot{REST: client, endpoints: endpoints, config: config}
+	b := &Bot{REST: client, endpoints: endpoints, origin: origin, config: config}
 	if err = b.identify(ctx); err != nil {
 		return nil, err
 	}
@@ -65,19 +70,20 @@ func New(ctx context.Context, config Config) (*Bot, error) {
 }
 
 func (b *Bot) identify(ctx context.Context) error {
-	user, err := b.REST.CurrentUser(ctx)
+	user, err := b.REST.Self(ctx)
 	if err != nil {
 		return err
 	}
-	if user.ID == "" || !user.Bot {
+	if !user.Bot {
 		return errors.New("credential must belong to a Micup bot")
 	}
 	b.ID = user.ID
 	b.ApplicationID = user.ID
-	if app, err := b.REST.CurrentApplication(ctx); err == nil {
+	if app, err := b.REST.Application(ctx); err == nil {
 		b.MessageContentEnabled = app.MessageContentEnabled()
-		if app.ID != "" {
-			b.ApplicationID = app.ID
+		b.ApplicationID = app.ID
+		if app.Owner != nil {
+			b.OwnerID = app.Owner.ID
 		}
 	}
 	return nil
@@ -142,4 +148,35 @@ func (b *Bot) RecommendedShards(ctx context.Context) (int, error) {
 		shards = max(shards, info.Shards)
 	}
 	return shards, nil
+}
+
+type InviteOptions struct {
+	Permissions model.Permissions
+	GuildID     string
+	Scopes      []string
+}
+
+func (b *Bot) InviteURL(options InviteOptions) (string, error) {
+	scopes := options.Scopes
+	if len(scopes) == 0 {
+		scopes = []string{"bot"}
+	}
+	for _, scope := range scopes {
+		if scope == "" || strings.ContainsAny(scope, " \t\r\n") {
+			return "", errors.New("invite scopes must be non-empty words")
+		}
+	}
+	query := url.Values{}
+	query.Set("client_id", b.ApplicationID)
+	query.Set("scope", strings.Join(scopes, " "))
+	if options.Permissions != 0 {
+		query.Set("permissions", strconv.FormatUint(uint64(options.Permissions), 10))
+	}
+	if options.GuildID != "" {
+		query.Set("guild_id", options.GuildID)
+	}
+	link := *b.origin
+	link.Path = "/oauth2/authorize"
+	link.RawQuery = query.Encode()
+	return link.String(), nil
 }

@@ -52,7 +52,7 @@ func run() error {
 		return fmt.Errorf("create bot: %w", err)
 	}
 	maxLength := 2000
-	_, err = b.REST.SetGuildCommands(ctx, b.ApplicationID, guildID, []micup.ApplicationCommand{
+	_, err = b.REST.SetGuildCommands(ctx, "", guildID, []micup.ApplicationCommand{
 		{
 			Name:        "play",
 			Description: "Play a file or URL in your voice channel",

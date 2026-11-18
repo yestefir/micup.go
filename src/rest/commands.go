@@ -89,6 +89,10 @@ func (c *Client) SetGuildCommands(ctx context.Context, applicationID, guildID st
 }
 
 func (c *Client) listCommands(ctx context.Context, applicationID, guildID string) ([]model.ApplicationCommand, error) {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return nil, err
+	}
 	p, err := commandsPath(applicationID, guildID)
 	if err != nil {
 		return nil, err
@@ -99,6 +103,10 @@ func (c *Client) listCommands(ctx context.Context, applicationID, guildID string
 }
 
 func (c *Client) command(ctx context.Context, applicationID, guildID, commandID string) (model.ApplicationCommand, error) {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return model.ApplicationCommand{}, err
+	}
 	p, err := commandPath(applicationID, guildID, commandID)
 	if err != nil {
 		return model.ApplicationCommand{}, err
@@ -109,6 +117,10 @@ func (c *Client) command(ctx context.Context, applicationID, guildID, commandID 
 }
 
 func (c *Client) createCommand(ctx context.Context, applicationID, guildID string, command model.ApplicationCommand) (model.ApplicationCommand, error) {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return model.ApplicationCommand{}, err
+	}
 	p, err := commandsPath(applicationID, guildID)
 	if err != nil {
 		return model.ApplicationCommand{}, err
@@ -122,6 +134,10 @@ func (c *Client) createCommand(ctx context.Context, applicationID, guildID strin
 }
 
 func (c *Client) editCommand(ctx context.Context, applicationID, guildID, commandID string, command model.ApplicationCommand) (model.ApplicationCommand, error) {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return model.ApplicationCommand{}, err
+	}
 	p, err := commandPath(applicationID, guildID, commandID)
 	if err != nil {
 		return model.ApplicationCommand{}, err
@@ -132,6 +148,10 @@ func (c *Client) editCommand(ctx context.Context, applicationID, guildID, comman
 }
 
 func (c *Client) deleteCommand(ctx context.Context, applicationID, guildID, commandID string) error {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return err
+	}
 	p, err := commandPath(applicationID, guildID, commandID)
 	if err != nil {
 		return err
@@ -140,6 +160,10 @@ func (c *Client) deleteCommand(ctx context.Context, applicationID, guildID, comm
 }
 
 func (c *Client) setCommands(ctx context.Context, applicationID, guildID string, commands []model.ApplicationCommand) ([]model.ApplicationCommand, error) {
+	applicationID, err := c.resolveApplicationID(ctx, applicationID)
+	if err != nil {
+		return nil, err
+	}
 	p, err := commandsPath(applicationID, guildID)
 	if err != nil {
 		return nil, err

@@ -85,9 +85,6 @@ func TestCommandEndpointsRejectBadInput(t *testing.T) {
 	c, rec := recordingClient(t, nil)
 	ctx := context.Background()
 	valid := model.ApplicationCommand{Name: "ping", Description: "Ping"}
-	if _, err := c.CreateGlobalCommand(ctx, "", valid); err == nil {
-		t.Error("missing application ID accepted")
-	}
 	if _, err := c.CreateGuildCommand(ctx, "app", "", valid); err == nil {
 		t.Error("missing guild ID accepted")
 	}
