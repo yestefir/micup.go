@@ -4,6 +4,12 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-18
+
+First stable release. The public API recorded in `TestPublicAPIIsStable` is covered by Go's compatibility promise for the v1 line: breaking changes will only ship in a new major version. The default User-Agent is now `micup.go/1.0.0`.
+
+micup.go is used in production by [mitune.net](https://mitune.net), one of the largest music bots on Micup.
+
 ## [0.8.0] - 2026-11-12
 
 ### Added

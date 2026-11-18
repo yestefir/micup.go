@@ -23,7 +23,10 @@ const (
 
 type memberChunk struct {
 	members     []model.Member
+	guildID     string
 	sequence    int64
+	index       int
+	count       int
 	last        bool
 	hasSequence bool
 	err         error
@@ -82,13 +85,22 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 	}
 	var members []model.Member
 	var seen map[int64]struct{}
+	indexes := make(map[int]struct{})
+	var count int
 	for {
 		select {
 		case <-ctx.Done():
 			return members, ctx.Err()
 		case chunk := <-chunks:
 			if chunk.err != nil {
+				var limited *MembersRateLimitedError
+				if errors.As(chunk.err, &limited) && limited.GuildID != "" && limited.GuildID != request.GuildID {
+					return members, errors.New("Micup member rate-limit response has a mismatched guild")
+				}
 				return members, chunk.err
+			}
+			if chunk.guildID != request.GuildID {
+				return members, errors.New("Micup member response has a mismatched guild; member list is incomplete")
 			}
 			if chunk.hasSequence {
 				if _, duplicate := seen[chunk.sequence]; duplicate {
@@ -99,8 +111,18 @@ func (s *Session) RequestGuildMembers(ctx context.Context, request model.Members
 				}
 				seen[chunk.sequence] = struct{}{}
 			}
+			if count == 0 {
+				count = chunk.count
+			}
+			if chunk.count != count {
+				return members, errors.New("Micup member response changed its chunk count; member list is incomplete")
+			}
+			if _, duplicate := indexes[chunk.index]; duplicate {
+				continue
+			}
+			indexes[chunk.index] = struct{}{}
 			members = append(members, chunk.members...)
-			if chunk.last {
+			if len(indexes) == count {
 				return members, nil
 			}
 		}
@@ -112,7 +134,11 @@ func (s *Session) handleMembersChunk(event gateway.Event) {
 	if !ok || chunk.Nonce == "" {
 		return
 	}
-	response := memberChunk{members: chunk.Members, last: chunk.ChunkIndex >= chunk.ChunkCount-1}
+	if chunk.ChunkCount <= 0 || chunk.ChunkIndex < 0 || chunk.ChunkIndex >= chunk.ChunkCount {
+		s.deliverChunk(chunk.Nonce, memberChunk{err: errors.New("Micup member response has an invalid chunk position; member list is incomplete")})
+		return
+	}
+	response := memberChunk{members: chunk.Members, guildID: chunk.GuildID, index: chunk.ChunkIndex, count: chunk.ChunkCount, last: chunk.ChunkIndex == chunk.ChunkCount-1}
 	if event.Sequence != nil {
 		response.sequence, response.hasSequence = *event.Sequence, true
 	}
@@ -124,7 +150,15 @@ func (s *Session) handleRateLimited(event gateway.Event) {
 	if !ok || limited.Opcode != gateway.OpRequestGuildMembers || limited.Meta.Nonce == "" {
 		return
 	}
-	s.deliverChunk(limited.Meta.Nonce, memberChunk{err: &MembersRateLimitedError{GuildID: limited.Meta.GuildID, RetryAfter: time.Duration(limited.RetryAfter * float64(time.Second))}})
+	const maxDuration = time.Duration(1<<63 - 1)
+	nanoseconds := limited.RetryAfter * float64(time.Second)
+	var retryAfter time.Duration
+	if nanoseconds >= float64(maxDuration) {
+		retryAfter = maxDuration
+	} else if nanoseconds > 0 {
+		retryAfter = time.Duration(nanoseconds)
+	}
+	s.deliverChunk(limited.Meta.Nonce, memberChunk{err: &MembersRateLimitedError{GuildID: limited.Meta.GuildID, RetryAfter: retryAfter}})
 }
 
 func (s *Session) deliverChunk(nonce string, chunk memberChunk) {
