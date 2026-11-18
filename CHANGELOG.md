@@ -4,6 +4,8 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-18
+
 ### Added
 
 - Bot identity: `micup.New` fills `Bot.OwnerID` next to `ID` and `ApplicationID`. `RESTClient.Self`, `SelfID`, `Application` and `ApplicationID` cache the lookups, `PublicApplication` reads the public application record, and `micup.TokenID` reads the bot user ID from a token without a request. See [Bot identity](docs/quickstart.md#bot-identity).
