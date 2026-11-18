@@ -44,7 +44,7 @@ _, err := b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 })
 ```
 
-The whole multipart body is built in memory before it is sent. The client checks the request context before encoding and between file reads. A reader that can block should honor cancellation itself. For large files, upload first; Micup recommends it whenever the instance allows presigned uploads:
+The whole multipart body is built in memory before it is sent. For large files, upload first; Micup recommends it whenever the instance allows presigned uploads:
 
 ```go
 uploaded, err := b.REST.UploadAttachment(ctx, channelID, micup.Upload{
@@ -61,8 +61,6 @@ _, err = b.REST.SendMessageWithOptions(ctx, channelID, micup.MessageOptions{
 `UploadAttachment` asks Micup for an upload plan, sends the bytes to the returned URLs (in 10 MiB parts above 10 MiB) without the bot token, and completes multipart uploads. `Size` must be the exact byte count. Upload URLs are secrets until they expire; the library never logs them. A bot can attach files up to 50 MiB unless the instance changes the limit, and at most 10 per message.
 
 For multipart uploads, the client checks the part count and consecutive numbering against the declared file size before reading file data or uploading parts. It sends file segments in part-number order, even if the plan lists the parts in a different order.
-
-The client checks cancellation before buffering each upload part and between reads. A reader that can block should handle cancellation itself.
 
 Plans must provide a nonempty upload key and, for multipart uploads, an upload ID. Multipart part URLs are checked before reading file data. Upload URLs must use HTTP or HTTPS with a host and no embedded username/password; signed query strings are preserved.
 

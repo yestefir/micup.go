@@ -124,7 +124,7 @@ Without `bot`, build a session with `micup.NewSession(micup.SessionConfig{Endpoi
 | `Apply(name, data)` | Applies an event; returns a `*micup.VoiceMove` when the bot's own voice channel changed |
 | `Remember(channelID, guildID)` | Adds a channel learned elsewhere |
 
-`Channel`, `Role`, `Guild`, `GuildChannels`, `Threads`, `Roles`, `HighestRole`, `Emojis` and `Stickers` return independent snapshots, including nested pointers, slices and maps. Editing a returned snapshot does not change cached state or another caller's snapshot.
+`Channel` and `Role` return independent snapshots, including nested pointers, slices and maps. Editing a returned snapshot does not change cached state or another caller's snapshot.
 
 Micup sends only the bot's own member and the members in voice channels with `GUILD_CREATE`, so `Permissions` is known for the bot and voice users and grows as messages, member events and chunks arrive. It follows Micup's order: the owner has every permission, `ADMINISTRATOR` skips overwrites, then the `@everyone` overwrite, the member's role overwrites combined (an allow beats a deny), and the member's own overwrite. `micup.ComputePermissions` runs the same computation on your own data, and `Permissions.Has(micup.PermissionConnect | micup.PermissionSpeak)` checks bits.
 
@@ -141,8 +141,6 @@ The cache also follows `GUILD_EMOJIS_UPDATE`, `GUILD_STICKERS_UPDATE`, `THREAD_C
 
 Count requests wait up to 12 seconds and return `micup.ErrNoResponse` when Micup does not answer. `ShardManager` routes each call to the owning shards and has `Latency()` and `Guilds()` across shards. `SessionOptions.OnReady(resumed)` runs on its own goroutine after `READY` or `RESUMED`, so it may call Gateway requests; `OnDisconnect(err)` runs after each lost connection, and `Session.SessionID()` returns the current session.
 
-When `Session.Run` stops, or its Gateway session is replaced by an invalid session, a new READY or a reset close (4007/4009), registered count requests return `micup.ErrGatewayClosed` even if their caller contexts remain active. Resumable reconnects keep those requests active, subject to their existing timeout and context.
-
 `b.RecommendedShards(ctx)` pages through the bot's guilds (one request per 200 guilds, since Micup's `/gateway/bot` always reports one shard) and suggests a shard count that keeps each shard well under `micup.MaxGuildsPerShard` (2,500). Close codes have constants such as `micup.CloseShardingRequired`.
 
 ### Member requests
@@ -151,9 +149,7 @@ When `Session.Run` stops, or its Gateway session is replaced by an invalid sessi
 
 If member responses arrive faster than the request can consume its bounded buffer, the call returns an error with any members already collected. Treat those results as incomplete. Other requests and Gateway event processing continue.
 
-A pending member request ignores replayed chunk events with a Gateway sequence it already collected. Application handlers still receive those replayed events. Distinct event sequences remain separate responses, even if they contain the same user ID.
-
-When `Session.Run` stops, or its Gateway session is replaced by an invalid session, a new READY or a reset close (4007/4009), registered member requests are notified with `micup.ErrGatewayClosed`, even if their own contexts remain active. Already collected members may accompany that error. Resumable reconnects keep pending requests active. Requests waiting for a concurrency slot recheck readiness before registering.
+When `Session.Run` stops, pending member requests are notified with `micup.ErrGatewayClosed`, even if their own contexts remain active. Already collected members may accompany that error. Transient reconnects keep `Run` active and do not trigger this shutdown cleanup.
 
 Native Micup messages can omit `guild_id`. `Session.ResolveGuild(ctx, channelID)` reads the cache and falls back to `GET /channels/{id}` once, then caches the answer. `b.REST.Channel(ctx, channelID)` performs that request directly.
 
@@ -175,9 +171,7 @@ Pending joins are notified when `Run` ends even if their own caller contexts rem
 
 `Session.Voice(guildID)` returns the current grant. `Session.LeaveVoice(guildID, connectionID)` sends the leave opcode only when the connection ID still matches the current grant, so a late leave cannot disconnect a newer connection.
 
-If sending the leave fails, the current grant stays available for an application retry. After a successful send, cleanup removes the unchanged grant that was used for that leave.
-
-`OnVoiceLost(guildID, connectionID)` runs when the bot is disconnected from its voice channel, moved to a channel it holds no grant for, or loses its session (invalid session, new READY or a reset close). The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
+`OnVoiceLost(guildID, connectionID)` runs when the bot is disconnected from its voice channel, moved to a channel it holds no grant for, or loses its session (invalid session or a new READY). The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
 
 Micup sends a new grant without a request when the connection moves to another region or channel. With `OnVoiceGrant(grant)` set, the session stores that grant and passes it to the callback: reconnect the LiveKit room to `grant.Endpoint` with `grant.Token` and keep playing. Without `OnVoiceGrant`, an unrequested grant that replaces a stored one is reported through `OnVoiceLost`, as in earlier releases.
 

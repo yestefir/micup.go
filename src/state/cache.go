@@ -198,12 +198,12 @@ func (c *Cache) Guild(guildID string) (model.Guild, bool) {
 		return model.Guild{}, false
 	}
 	guild := g.info
-	copyGuildInfo(&guild)
 	guild.ID = guildID
 	guild.OwnerID = g.ownerID
+	guild.Features = slices.Clone(guild.Features)
 	guild.Roles = sortedRoles(g.roles)
-	guild.Emojis = copyEmojis(g.emojis)
-	guild.Stickers = copyStickers(g.stickers)
+	guild.Emojis = slices.Clone(g.emojis)
+	guild.Stickers = slices.Clone(g.stickers)
 	return guild, true
 }
 
@@ -239,7 +239,6 @@ func (c *Cache) Roles(guildID string) []model.Role {
 func sortedRoles(byID map[string]model.Role) []model.Role {
 	roles := make([]model.Role, 0, len(byID))
 	for _, role := range byID {
-		copyRole(&role)
 		roles = append(roles, role)
 	}
 	slices.SortFunc(roles, func(a, b model.Role) int {
@@ -255,7 +254,7 @@ func (c *Cache) Emojis(guildID string) []model.Emoji {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if g := c.guilds[guildID]; g != nil {
-		return copyEmojis(g.emojis)
+		return slices.Clone(g.emojis)
 	}
 	return nil
 }
@@ -264,7 +263,7 @@ func (c *Cache) Stickers(guildID string) []model.Sticker {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if g := c.guilds[guildID]; g != nil {
-		return copyStickers(g.stickers)
+		return slices.Clone(g.stickers)
 	}
 	return nil
 }
@@ -285,11 +284,7 @@ func (c *Cache) HighestRole(guildID, userID string) (model.Role, bool) {
 	if g == nil {
 		return model.Role{}, false
 	}
-	role, ok := g.highestRole(guildID, userID)
-	if ok {
-		copyRole(&role)
-	}
-	return role, ok
+	return g.highestRole(guildID, userID)
 }
 
 func (c *Cache) CanManage(guildID, actorID, targetID string) bool {
@@ -329,7 +324,7 @@ func (c *Cache) selectChannels(keep func(model.Channel) bool) []model.Channel {
 	var channels []model.Channel
 	for _, channel := range c.channels {
 		if keep(channel) {
-			copyChannel(&channel)
+			channel.PermissionOverwrites = slices.Clone(channel.PermissionOverwrites)
 			channels = append(channels, channel)
 		}
 	}
