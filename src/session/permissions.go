@@ -16,5 +16,6 @@ func (s *Session) checkVoicePermissions(guildID, channelID string) error {
 	if !known || permissions.Has(voiceJoinPermissions) {
 		return nil
 	}
+	s.logger().Warn("bot lacks permission to join the voice channel", "guild", guildID, "channel", channelID, "needs", "VIEW_CHANNEL, CONNECT")
 	return fmt.Errorf("%w: needs VIEW_CHANNEL and CONNECT in channel %s", ErrVoicePermission, channelID)
 }

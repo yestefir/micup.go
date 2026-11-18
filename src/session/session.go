@@ -1,9 +1,9 @@
 package session
 
 import (
-	"log/slog"
 	"context"
 	"errors"
+	"log/slog"
 	"slices"
 	"sync"
 	"sync/atomic"
@@ -152,7 +152,7 @@ func (s *Session) Run(ctx context.Context) error {
 		})
 		s.ready.Store(false)
 		if ctx.Err() == nil {
-			s.logger().Warn("gateway disconnected", "shard", s.config.ShardID, "error", err, "retry_in", delay)
+			s.logger().Info("gateway disconnected", "shard", s.config.ShardID, "error", err, "retry_in", delay)
 			if s.options.OnDisconnect != nil {
 				s.options.OnDisconnect(err)
 			}

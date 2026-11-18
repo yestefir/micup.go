@@ -7,6 +7,7 @@ Notable changes to micup.go are recorded here.
 ### Added
 
 - Bot identity: `micup.New` fills `Bot.OwnerID` next to `ID` and `ApplicationID`. `RESTClient.Self`, `SelfID`, `Application` and `ApplicationID` cache the lookups, `PublicApplication` reads the public application record, and `micup.TokenID` reads the bot user ID from a token without a request. See [Bot identity](docs/quickstart.md#bot-identity).
+- `Config.Logger` and `RESTConfig.Logger`: a warning names the request or voice join that failed because the bot lacks a permission in a guild, once a minute per route. `micup.New` prints only warnings to standard error by default.
 - Command methods accept an empty application ID and use the bot's own, so `SetGuildCommands(ctx, "", guildID, commands)` works without storing an ID.
 - `Bot.InviteURL(micup.InviteOptions{…})` builds the link that adds the bot to a guild.
 - `Application` gains `Icon`, `Description`, `BotPublic`, `BotRequireCodeGrant` and `Owner`.

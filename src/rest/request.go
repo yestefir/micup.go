@@ -82,6 +82,7 @@ func (c *Client) call(ctx context.Context, r *request) error {
 		}
 		apiErr := readAPIError(resp)
 		last = apiErr
+		c.notePermissionDenied(r, apiErr)
 		var wait time.Duration
 		switch {
 		case resp.StatusCode == http.StatusTooManyRequests:

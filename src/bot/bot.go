@@ -3,8 +3,10 @@ package bot
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -26,6 +28,7 @@ type Config struct {
 	HTTP       *http.Client
 	ShardID    int
 	ShardCount int
+	Logger     *slog.Logger
 }
 
 type Bot struct {
@@ -36,6 +39,7 @@ type Bot struct {
 	MessageContentEnabled *bool
 	endpoints             discovery.Endpoints
 	origin                *url.URL
+	logger                *slog.Logger
 	config                Config
 }
 
@@ -58,11 +62,14 @@ func New(ctx context.Context, config Config) (*Bot, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := rest.New(rest.Config{BaseURL: endpoints.API, Token: config.Token, HTTP: config.HTTP})
+	if config.Logger == nil {
+		config.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn}))
+	}
+	client, err := rest.New(rest.Config{BaseURL: endpoints.API, Token: config.Token, HTTP: config.HTTP, Logger: config.Logger})
 	if err != nil {
 		return nil, err
 	}
-	b := &Bot{REST: client, endpoints: endpoints, origin: origin, config: config}
+	b := &Bot{REST: client, endpoints: endpoints, origin: origin, logger: config.Logger, config: config}
 	if err = b.identify(ctx); err != nil {
 		return nil, err
 	}
@@ -115,10 +122,16 @@ func (b *Bot) Gateway(ctx context.Context, handler gateway.Handler) error {
 }
 
 func (b *Bot) NewSession(options session.Options) (*session.Session, error) {
+	if options.Logger == nil {
+		options.Logger = b.logger
+	}
 	return session.New(b.SessionConfig(), options)
 }
 
 func (b *Bot) NewShardManager(options shard.Options) (*shard.Manager, error) {
+	if options.Session.Logger == nil {
+		options.Session.Logger = b.logger
+	}
 	return shard.NewManager(b.SessionConfig(), options)
 }
 

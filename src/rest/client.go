@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -26,6 +27,7 @@ type Config struct {
 	BaseURL string
 	Token   string
 	HTTP    *http.Client
+	Logger  *slog.Logger
 }
 
 type Client struct {
@@ -34,7 +36,9 @@ type Client struct {
 	http    *http.Client
 	limits  *limiter
 
-	identity identityCache
+	identity    identityCache
+	logger      *slog.Logger
+	permissions permissionLog
 }
 
 func ValidToken(token string) bool { return token != "" && !strings.ContainsAny(token, "\r\n") }
@@ -52,6 +56,7 @@ func New(config Config) (*Client, error) {
 		token:   config.Token,
 		http:    httpx.NoRedirects(config.HTTP),
 		limits:  newLimiter(),
+		logger:  config.Logger,
 	}, nil
 }
 

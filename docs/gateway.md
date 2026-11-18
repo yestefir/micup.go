@@ -181,6 +181,8 @@ If a newer grant arrives while a join is pending, completion validates and uses 
 
 ### Logging
 
+`micup.Config.Logger` takes a `*slog.Logger` for the bot. REST requests that Micup refuses with `MISSING_PERMISSIONS` or `MISSING_ACCESS`, and voice joins that the cache shows the bot cannot make, are logged as warnings that name the method, path, guild and channel, so a guild that did not grant the bot a permission is easy to spot. The same request is logged at most once a minute. Without `Config.Logger`, `micup.New` prints only warnings to standard error; pass `slog.New(slog.DiscardHandler)` to silence them, or any logger to route them. `b.NewSession` and `b.NewShardManager` use that logger unless `SessionOptions.Logger` is set. A `micup.NewREST` client logs nothing unless `RESTConfig.Logger` is set.
+
 `SessionOptions.Logger` takes a `*slog.Logger`. The session logs when the Gateway becomes ready (with `resumed`), when a connection is lost (with the error and the retry delay) and when Micup invalidates the session. Without a logger the session writes nothing. `ShardOptions.Session.Logger` sets the same logger for every shard, and each entry carries its `shard` ID.
 
 ## Shard manager
