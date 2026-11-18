@@ -78,7 +78,7 @@ mux.OnGuildTagChange(func(ctx context.Context, change micup.GuildTagChange) erro
 | `Previous` | The tag guild last seen for the user, empty when none was seen |
 | `Current` | The tag guild now shown, empty when the tag was cleared |
 
-Each registration keeps its own record of the last tag seen per user, and calls the handler only when `Current` differs from `Previous`. `GUILD_MEMBERS_CHUNK` fills that record without calling the handler, so a member request does not look like many changes. A user first seen with a tag already set reports `Previous` as empty. The record lives in memory and starts empty on each process start.
+Each registration keeps its own record of the last tag seen per user, and calls the handler only when `Current` differs from `Previous`. `GUILD_MEMBERS_CHUNK` fills that record without calling the handler, so a member request does not look like many changes. Micup sends a tag change as two identical `GUILD_MEMBER_UPDATE` events; the handler runs once for them. `TagGuildID` is the ID of the guild whose tag is shown. A user first seen with a tag already set reports `Previous` as empty. The record lives in memory and starts empty on each process start.
 
 ## Payload types
 
