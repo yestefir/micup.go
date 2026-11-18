@@ -91,6 +91,8 @@ type (
 	ApplicationCommandsUpdate = events.ApplicationCommandsUpdate
 	EventMux                  = events.Mux
 	EventListener             = events.Listener
+	EventRouter               = events.Router
+	InteractionHandler        = events.InteractionHandler
 )
 
 func KnownEvents() []string { return gateway.KnownEvents() }
@@ -100,6 +102,10 @@ func DecodeEvent(event Event) (any, error) { return events.Decode(event) }
 func EventAs[T any](event Event) (T, error) { return events.As[T](event) }
 
 func NewEventMux() *EventMux { return events.NewMux() }
+
+func NewEventRouter() *EventRouter { return events.NewRouter() }
+
+var ErrNoRoute = events.ErrNoRoute
 
 func Listen[T any](fn func(context.Context, T) error) EventListener { return events.Listen(fn) }
 

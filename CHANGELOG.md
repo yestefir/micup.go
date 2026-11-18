@@ -4,6 +4,21 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-18
+
+### Added
+
+- `micup.NewEventRouter()`: routes commands, autocomplete requests, components and modals to handlers by name, with `*` prefix keys and `micup.ErrNoRoute`. See [Routing interactions](docs/commands.md#routing-interactions).
+- `SessionOptions.Logger` (`*slog.Logger`) logs Gateway ready, disconnect and session invalidation, and `voice.LiveKit.Logger` replaces the global logger for audio start.
+- `SessionOptions.OnVoiceEmpty(guildID, channelID)` runs when the last other member leaves the bot's voice channel. `VoiceMove` now reports every user's move and carries `UserID`.
+- `voice.Player` plays PCM from any reader with pacing, pause, resume, skip and volume; `voice.OpenSource` decodes a file or URL through FFmpeg; `voice.ScaleVolume` scales a frame. See [Playing audio](docs/voice.md#playing-audio).
+- Runnable examples for a button and modal panel and for a voice player, and `Example` tests that appear on pkg.go.dev.
+- `.gitattributes` keeps text files on LF so `make check` passes on Windows checkouts.
+
+### Fixed
+
+- Presence, cache snapshots, REST iterators, uploads, member requests, Gateway sends, shard identify waits and voice grant ownership received the correctness fixes recorded in the development history.
+
 ## [1.0.0] - 2026-11-18
 
 First stable release. The public API recorded in `TestPublicAPIIsStable` is covered by Go's compatibility promise for the v1 line: breaking changes will only ship in a new major version. The default User-Agent is now `micup.go/1.0.0`.

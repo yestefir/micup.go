@@ -53,6 +53,33 @@ To verify delivery against a real local LiveKit server, set `LIVEKIT_TEST_BINARY
 
 A grant is valid for 600 seconds and is only needed to connect. When Micup moves the connection to another region or channel it sends a new grant; set `SessionOptions.OnVoiceGrant` and reconnect the room with it (see [the Gateway guide](gateway.md#voice-channels)).
 
+## Playing audio
+
+`voice.OpenSource(ctx, input, voice.SourceOptions{})` starts FFmpeg and returns a reader of 48 kHz stereo signed 16-bit PCM from a file path or an `http(s)` URL. `SourceOptions.Start` seeks to an offset and `SourceOptions.FFmpeg` sets the executable. Inputs that are empty or start with `-` are rejected, and FFmpeg may only open `file`, `http` and `https` inputs. `Close` stops the decoder.
+
+`voice.NewPlayer(track)` reads PCM from any `io.Reader`, paces it in 20 ms frames and writes it to the track:
+
+```go
+source, err := voice.OpenSource(ctx, url, voice.SourceOptions{})
+if err != nil {
+	return err
+}
+defer source.Close()
+
+player := voice.NewPlayer(track)
+player.SetVolume(0.8)
+err = player.Play(ctx, source)
+```
+
+| Method | Behavior |
+|---|---|
+| `Play(ctx, pcm)` | Blocks until the reader ends, the context ends, an error occurs or the track is skipped. Returns `voice.ErrBusy` when the player is already playing |
+| `Pause()`, `Resume()` | Hold and continue playback without losing the position; pacing restarts on resume |
+| `Skip()` | Ends the current `Play` with `voice.ErrSkipped`; returns whether a track was playing |
+| `SetVolume(factor)` | Scales samples between `voice.MinVolume` (0) and `voice.MaxVolume` (2), clamping the value, and returns the applied factor |
+
+`voice.ScaleVolume(frame, factor)` applies the same saturating scaling to a frame you manage yourself. Queues, track metadata and what to play next stay with the application.
+
 Limits that the module does not work around:
 
 - Channels with encrypted call media send an `e2ee_key` and need an E2EE-capable LiveKit client. This publisher does not encrypt, so it cannot play in those channels.

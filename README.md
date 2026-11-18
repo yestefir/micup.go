@@ -1,13 +1,17 @@
 # micup.go
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/yestefir/micup.go.svg)](https://pkg.go.dev/github.com/yestefir/micup.go)
+[![CI](https://github.com/yestefir/micup.go/actions/workflows/ci.yml/badge.svg)](https://github.com/yestefir/micup.go/actions/workflows/ci.yml)
+
 `micup.go` is a standalone Go client for Micup bots, following the Fluxer API that Micup runs on. It covers:
 
 - **Gateway:** sessions that resume, replay unprocessed events and re-identify on the same socket; a shard manager for many shards in one process; optional zstd-stream compression; ignored events and presence; command pacing below Micup's limits.
 - **Gateway commands:** member requests, guild and channel member counts, Lazy Request subscriptions and voice state updates; every Micup dispatch event, including threads, calls, emojis, stickers and member lists, has a typed payload.
 - **State:** guilds with settings, emojis and stickers, channels and threads with permission overwrites, roles, member roles and voice states, with permission and role hierarchy checks.
 - **REST:** messages (send, edit, forward, crosspost, delete, bulk delete, list, search), buttons, select menus, modals and commands, reactions, pins, typing, DMs, files (multipart and presigned uploads), channels, threads and forums, roles, guild settings, members, invites, emojis, stickers, audit logs, bans, moderation and webhooks, with paging iterators, Micup's error codes and rate limit rules.
+- **Routing:** an interaction router for commands, autocomplete, components and modals, next to the typed event mux, and optional `slog` logging.
 - **Helpers:** mentions, timestamps, markdown escaping, an embed builder, media URLs, snowflake times and permission names.
-- **Voice:** the join handshake with fast refusal and permission checks, grant rotation, and Opus publishing to LiveKit.
+- **Voice:** the join handshake with fast refusal and permission checks, grant rotation, Opus publishing to LiveKit, and a player with FFmpeg sources, pause, skip and volume.
 
 The module keeps platform transport separate from application behavior. It does not implement music search, queues, command syntax, persistence, or worker coordination.
 
@@ -24,7 +28,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v1.0.0
+go get github.com/yestefir/micup.go@v1.0.1
 ```
 
 ## Quick start
@@ -105,6 +109,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v1.0.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v1.0.1`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

@@ -27,6 +27,7 @@ type guild struct {
 
 type VoiceMove struct {
 	GuildID  string
+	UserID   string
 	Previous string
 	Current  string
 }

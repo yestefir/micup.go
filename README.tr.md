@@ -1,5 +1,8 @@
 # micup.go
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/yestefir/micup.go.svg)](https://pkg.go.dev/github.com/yestefir/micup.go)
+[![CI](https://github.com/yestefir/micup.go/actions/workflows/ci.yml/badge.svg)](https://github.com/yestefir/micup.go/actions/workflows/ci.yml)
+
 `micup.go`, Micup botları için bağımsız bir Go istemcisidir ve Micup'ın üzerinde çalıştığı Fluxer API'sini izler:
 
 - **Gateway:** kaldığı yerden süren, işlenmemiş olayları yeniden alan ve aynı soketten yeniden IDENTIFY yapan oturumlar; tek süreçte çok shard; isteğe bağlı zstd-stream sıkıştırma; yok sayılan olaylar ve durum; Micup sınırlarının altında komut hızı.
@@ -7,7 +10,8 @@
 - **Önbellek:** ayarları, emojileri ve çıkartmalarıyla guild'ler, izin geçersiz kılmalı kanallar ve thread'ler, roller, üye rolleri, ses durumları; izin ve rol hiyerarşisi kontrolleri.
 - **REST:** mesajlar (gönderme, düzenleme, iletme, yayınlama, silme, toplu silme, listeleme, arama), butonlar, seçim menüleri, modallar ve komutlar, tepkiler, sabitleme, yazıyor göstergesi, DM, dosyalar, kanallar, thread ve forumlar, roller, guild ayarları, üyeler, davetler, emojiler, çıkartmalar, denetim kayıtları, yasaklar, moderasyon ve webhook'lar; sayfalama yineleyicileri, Micup hata kodları ve rate limit kurallarıyla.
 - **Yardımcılar:** bahsetmeler, zaman damgaları, markdown kaçışı, embed oluşturucu, medya URL'leri, snowflake zamanları ve izin adları.
-- **Ses:** hızlı ret ve izin kontrolüyle katılma, yetki yenileme ve LiveKit'e Opus yayını.
+- **Yönlendirme:** komut, otomatik tamamlama, bileşen ve modal etkileşimleri için yönlendirici ve isteğe bağlı `slog` günlüğü.
+- **Ses:** hızlı ret ve izin kontrolüyle katılma, yetki yenileme, LiveKit'e Opus yayını ve FFmpeg kaynağı, duraklatma, atlama ve ses seviyesi olan bir oynatıcı.
 
 Modül Micup taşımasını uygulama mantığından ayırır. Müzik arama ve kuyruğu, komut sözdizimi, veritabanı ve worker yönetimi kapsam dışındadır.
 
@@ -22,7 +26,7 @@ Micup'taki en büyük müzik botlarından biri olan [mitune.net](https://mitune.
 - Ses yayını için `libopus` destekli FFmpeg
 
 ```sh
-go get github.com/yestefir/micup.go@v1.0.0
+go get github.com/yestefir/micup.go@v1.0.1
 ```
 
 ## Başlangıç
@@ -96,6 +100,6 @@ Değişiklik göndermeden önce `make check` çalıştırın; CI aynı kontrolle
 
 Proje MIT lisansıyla ücretsiz kullanılabilir. Ticari kullanım, değiştirme ve yeniden dağıtım serbesttir; kopyalarda telif ve lisans bildirimi korunmalıdır. Ayrıntılar [LICENSE](LICENSE) dosyasındadır.
 
-Güncel sürüm `v1.0.0`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
+Güncel sürüm `v1.0.1`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

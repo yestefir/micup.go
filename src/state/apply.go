@@ -304,10 +304,7 @@ func (c *Cache) applyVoiceState(data json.RawMessage) *VoiceMove {
 	if voice.Member != nil {
 		g.members[voice.UserID] = voice.Member.Roles
 	}
-	if voice.UserID != c.botID {
-		return nil
-	}
-	return &VoiceMove{GuildID: voice.GuildID, Previous: previous, Current: voice.ChannelID}
+	return &VoiceMove{GuildID: voice.GuildID, UserID: voice.UserID, Previous: previous, Current: voice.ChannelID}
 }
 
 func (c *Cache) applyMembersChunk(data json.RawMessage) {

@@ -173,9 +173,15 @@ Pending joins are notified when `Run` ends even if their own caller contexts rem
 
 `OnVoiceLost(guildID, connectionID)` runs when the bot is disconnected from its voice channel, moved to a channel it holds no grant for, or loses its session (invalid session or a new READY). The connection ID can be empty when no grant was stored. Close the matching LiveKit room. See [the voice guide](voice.md).
 
+`OnVoiceEmpty(guildID, channelID)` runs when the last other member leaves the voice channel the bot is in, either by disconnecting or by moving elsewhere. Use it to leave an empty channel after a delay.
+
 Micup sends a new grant without a request when the connection moves to another region or channel. With `OnVoiceGrant(grant)` set, the session stores that grant and passes it to the callback: reconnect the LiveKit room to `grant.Endpoint` with `grant.Token` and keep playing. Without `OnVoiceGrant`, an unrequested grant that replaces a stored one is reported through `OnVoiceLost`, as in earlier releases.
 
 If a newer grant arrives while a join is pending, completion validates and uses the latest received grant. A queued refusal remains an error. Successful completion retires the pending reservation together with storing the grant, so later updates use the established connection's rotation or voice-loss callback.
+
+### Logging
+
+`SessionOptions.Logger` takes a `*slog.Logger`. The session logs when the Gateway becomes ready (with `resumed`), when a connection is lost (with the error and the retry delay) and when Micup invalidates the session. Without a logger the session writes nothing. `ShardOptions.Session.Logger` sets the same logger for every shard, and each entry carries its `shard` ID.
 
 ## Shard manager
 

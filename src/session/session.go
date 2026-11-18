@@ -1,6 +1,7 @@
 package session
 
 import (
+	"log/slog"
 	"context"
 	"errors"
 	"slices"
@@ -42,6 +43,8 @@ type Options struct {
 	OnVoiceGrant  func(grant model.VoiceServerUpdate)
 	OnReady       func(resumed bool)
 	OnDisconnect  func(err error)
+	OnVoiceEmpty  func(guildID, channelID string)
+	Logger        *slog.Logger
 	IgnoredEvents []string
 	Presence      *model.Presence
 	Flags         int
@@ -148,8 +151,11 @@ func (s *Session) Run(ctx context.Context) error {
 			return s.dispatch(ctx, event)
 		})
 		s.ready.Store(false)
-		if s.options.OnDisconnect != nil && ctx.Err() == nil {
-			s.options.OnDisconnect(err)
+		if ctx.Err() == nil {
+			s.logger().Warn("gateway disconnected", "shard", s.config.ShardID, "error", err, "retry_in", delay)
+			if s.options.OnDisconnect != nil {
+				s.options.OnDisconnect(err)
+			}
 		}
 		var closed *gateway.CloseError
 		if errors.As(err, &closed) && closed.Fatal() {
@@ -203,6 +209,7 @@ func (s *Session) gatewayOptions() gateway.Options {
 		OnConnect:    s.attach,
 		OnDisconnect: func() { s.attach(nil) },
 		OnSessionInvalidated: func() {
+			s.logger().Info("gateway session invalidated", "shard", s.config.ShardID)
 			s.ready.Store(false)
 			s.dropAllGrants()
 		},
@@ -244,14 +251,17 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 		s.dropAllGrants()
 		s.rememberSession(event)
 		s.ready.Store(true)
+		s.logger().Info("gateway ready", "shard", s.config.ShardID, "resumed", false)
 		s.announceReady(false)
 	case gateway.EventResumed:
 		s.ready.Store(true)
+		s.logger().Info("gateway ready", "shard", s.config.ShardID, "resumed", true)
 		s.announceReady(true)
 	case gateway.EventGuildCountsUpdate, gateway.EventChannelMemberCountsUpdate:
 		s.handleCounts(event)
 	case gateway.EventVoiceStateUpdate:
 		s.handleBotVoiceMove(move)
+		s.handleVoiceEmpty(move)
 	case gateway.EventVoiceServerUpdate:
 		s.handleVoiceServerUpdate(event)
 	case gateway.EventGuildMembersChunk:
@@ -264,6 +274,15 @@ func (s *Session) dispatch(ctx context.Context, event gateway.Event) error {
 	}
 	return s.options.Handler(ctx, event)
 }
+
+func (s *Session) logger() *slog.Logger {
+	if s.options.Logger != nil {
+		return s.options.Logger
+	}
+	return discardLogger
+}
+
+var discardLogger = slog.New(slog.DiscardHandler)
 
 func (s *Session) SessionID() string {
 	id, _ := s.sessionID.Load().(string)

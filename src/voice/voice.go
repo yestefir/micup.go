@@ -52,6 +52,7 @@ type LiveKit struct {
 	FFmpeg    string
 	TrackName string
 	Bitrate   int
+	Logger    *slog.Logger
 }
 
 type room struct {
@@ -59,6 +60,7 @@ type room struct {
 	ffmpeg    string
 	trackName string
 	bitrate   int
+	logger    *slog.Logger
 	connected atomic.Bool
 	once      sync.Once
 }
@@ -85,7 +87,7 @@ func (l LiveKit) Connect(ctx context.Context, grant Grant) (Room, error) {
 	if l.TrackName == "" {
 		l.TrackName = "micup.go"
 	}
-	r := &room{ffmpeg: l.FFmpeg, trackName: l.TrackName, bitrate: clampBitrate(l.Bitrate)}
+	r := &room{ffmpeg: l.FFmpeg, trackName: l.TrackName, bitrate: clampBitrate(l.Bitrate), logger: l.Logger}
 	client, err := lksdk.ConnectToRoomWithToken(endpoint, grant.Token, &lksdk.RoomCallback{OnDisconnected: func() { r.connected.Store(false) }}, lksdk.WithAutoSubscribe(false), lksdk.WithConnectTimeout(timeout))
 	if err != nil {
 		return nil, errors.New("LiveKit join failed")
@@ -120,7 +122,9 @@ func (r *room) OpenTrack(parent context.Context) (Track, error) {
 		err := track.WriteSample(media.Sample{Data: packet, Duration: FrameDuration}, nil)
 		if err == nil && first {
 			first = false
-			slog.Info("Micup audio packets started", "track_id", publication.SID())
+			if r.logger != nil {
+				r.logger.Info("Micup audio packets started", "track_id", publication.SID())
+			}
 		}
 		return err
 	}, r.Connected, func() { _ = track.Close(); _ = r.client.LocalParticipant.UnpublishTrack(publication.SID()) })

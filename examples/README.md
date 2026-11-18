@@ -1,11 +1,13 @@
 # Runnable examples
 
-These programs use only the public `micup` package. Run them from the repository root with Go 1.26.8 or newer. They use the checked-out library, so they also demonstrate APIs newer than the latest release. No FFmpeg or voice setup is needed.
+These programs use only the public `micup` package. Run them from the repository root with Go 1.26.8 or newer. They use the checked-out library, so they also demonstrate APIs newer than the latest release. Only the voice player needs FFmpeg and a voice channel.
 
 | Example | Demonstrates |
 |---|---|
 | [Ping](ping/main.go) | Typed message events and a `!ping` reply; setup below |
 | [Slash echo](slash-echo/README.md) | Guild command registration, typed options, and private interaction responses |
+| [Panel](panel/main.go) | `micup.NewEventRouter`, a button that updates its own message, and a modal |
+| [Voice player](voice-player/main.go) | Joining voice, `voice.Player`, pause, skip, and leaving an empty channel; needs FFmpeg |
 
 ## Ping bot
 

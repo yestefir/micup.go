@@ -89,6 +89,34 @@ mux.On(micup.EventInteractionCreate, micup.Listen(func(ctx context.Context, i mi
 
 Resolved channels and the invoking `Member` carry the `Permissions` Micup computed for that channel. The interaction also holds `Channel`, `Guild` (ID, locale, features), `Context` (`micup.InteractionContextGuild`, `…BotDM`, `…PrivateChannel`), `Locale`, `AppPermissions` and `AttachmentSizeLimit`.
 
+## Routing interactions
+
+`micup.NewEventRouter()` maps commands, autocomplete requests, components and modals to handlers by name, so a bot does not need one large type switch.
+
+```go
+router := micup.NewEventRouter()
+router.Command("ping", func(ctx context.Context, i micup.Interaction) error {
+	return b.REST.RespondToInteraction(ctx, i, micup.MessageOptions{Content: "pong"}, false)
+})
+router.Command("queue add", addToQueue)
+router.Autocomplete("queue add", suggestTracks)
+router.Component("skip", skipTrack)
+router.Component("page:*", changePage)
+router.Modal("feedback", saveFeedback)
+
+mux := micup.NewEventMux()
+mux.On(micup.EventInteractionCreate, router.Listener())
+```
+
+| Method | Matches |
+|---|---|
+| `Command(path, handler)` | Slash command path; subcommands and groups are joined with spaces, such as `queue add` |
+| `Autocomplete(path, handler)` | The same paths for autocomplete interactions |
+| `Component(customID, handler)` | A button or select menu `custom_id` |
+| `Modal(customID, handler)` | A modal submit `custom_id` |
+
+A key ending in `*` matches every value with that prefix, and the longest prefix wins. An exact key always wins over a prefix. Registering an empty key or a nil handler panics. `router.Handle(ctx, interaction)` returns `micup.ErrNoRoute` when nothing matches, while `router.Listener()` ignores unrouted interactions and returns every handler error.
+
 ## Answering
 
 A command is answered with the same calls as a button, except that it has no message to update:

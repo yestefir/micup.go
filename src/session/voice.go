@@ -182,7 +182,7 @@ func (s *Session) handleGatewayError(refusal gateway.GatewayError) {
 }
 
 func (s *Session) handleBotVoiceMove(move *state.VoiceMove) {
-	if move == nil || move.Previous == "" || move.Previous == move.Current {
+	if move == nil || move.UserID != s.config.BotID || move.Previous == "" || move.Previous == move.Current {
 		return
 	}
 	s.mu.Lock()
@@ -194,6 +194,21 @@ func (s *Session) handleBotVoiceMove(move *state.VoiceMove) {
 	delete(s.grants, move.GuildID)
 	s.mu.Unlock()
 	s.voiceLost(move.GuildID, grant.ConnectionID)
+}
+
+func (s *Session) handleVoiceEmpty(move *state.VoiceMove) {
+	if move == nil || s.options.OnVoiceEmpty == nil || move.UserID == s.config.BotID || move.Previous == "" || move.Previous == move.Current {
+		return
+	}
+	if s.cache.BotVoiceChannel(move.GuildID) != move.Previous {
+		return
+	}
+	for _, user := range s.cache.VoiceMembers(move.GuildID, move.Previous) {
+		if user != s.config.BotID {
+			return
+		}
+	}
+	s.options.OnVoiceEmpty(move.GuildID, move.Previous)
 }
 
 func (s *Session) handleVoiceServerUpdate(event gateway.Event) {

@@ -491,6 +491,7 @@ micup.func.New
 micup.func.NewActionRow
 micup.func.NewEmbed
 micup.func.NewEventMux
+micup.func.NewEventRouter
 micup.func.NewREST
 micup.func.NewSelectOption
 micup.func.NewSelectRow
@@ -575,6 +576,7 @@ micup.type.Event
 micup.type.EventHandler
 micup.type.EventListener
 micup.type.EventMux
+micup.type.EventRouter
 micup.type.ExpressionFailure
 micup.type.ExpressionMetadata
 micup.type.FieldError
@@ -606,6 +608,7 @@ micup.type.GuildUpdate
 micup.type.ImageOptions
 micup.type.Interaction
 micup.type.InteractionGuild
+micup.type.InteractionHandler
 micup.type.Invite
 micup.type.InviteCreate
 micup.type.InviteDelete
@@ -737,6 +740,7 @@ micup.type.WebhooksUpdate
 micup.var.ErrGatewayClosed
 micup.var.ErrMembersRateLimited
 micup.var.ErrNoResponse
+micup.var.ErrNoRoute
 micup.var.ErrNotInVoice
 micup.var.ErrNotReady
 micup.var.ErrReconnectRequested
@@ -752,9 +756,18 @@ voice.const.DefaultBitrate
 voice.const.FrameDuration
 voice.const.FrameSamples
 voice.const.MaxBitrate
+voice.const.MaxVolume
 voice.const.MinBitrate
+voice.const.MinVolume
 voice.const.SampleRate
+voice.func.NewPlayer
+voice.func.OpenSource
 voice.type.Grant
 voice.type.LiveKit
+voice.type.Player
 voice.type.Room
+voice.type.SourceOptions
 voice.type.Track
+voice.var.ErrBusy
+voice.var.ErrSkipped
+voice.var.ScaleVolume

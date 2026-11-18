@@ -32,7 +32,7 @@ func TestCacheTracksGuildsChannelsAndVoice(t *testing.T) {
 	if move == nil || move.Previous != "" || move.Current != "voice" || c.BotVoiceChannel("g") != "voice" {
 		t.Fatalf("bot voice move not reported: %+v", move)
 	}
-	if c.Apply(gateway.EventVoiceStateUpdate, raw(t, map[string]string{"guild_id": "g", "user_id": "u", "channel_id": ""})) != nil || c.VoiceChannel("g", "u") != "" {
+	if left := c.Apply(gateway.EventVoiceStateUpdate, raw(t, map[string]string{"guild_id": "g", "user_id": "u", "channel_id": ""})); left == nil || left.UserID != "u" || c.VoiceChannel("g", "u") != "" {
 		t.Fatal("user voice leave was not applied")
 	}
 	c.Apply(gateway.EventGuildDelete, raw(t, map[string]any{"id": "g", "unavailable": true}))
