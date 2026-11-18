@@ -15,10 +15,10 @@ const snapshotChannel = `{
 	"topic":"topic","url":"url","icon":"icon","rtc_region":"region","nsfw_override":true,
 	"content_warning_text":"warning","last_pin_timestamp":"pin","permissions":"1024",
 	"permission_overwrites":[{"id":"guild","type":0,"allow":"1024","deny":"0"}],
-	"recipients":[{"id":"user","username":"name","global_name":"global","avatar":"avatar","avatar_color":1,"banner":"banner","banner_color":2,"accent_color":3,"bio":"bio","pronouns":"pronouns"}],
+	"recipients":[{"id":"user","username":"name","global_name":"global","avatar":"avatar","avatar_color":1,"banner":"banner","banner_color":2,"accent_color":3,"bio":"bio","pronouns":"pronouns","tag_guild_id":"tag-guild"}],
 	"nicks":{"user":"nick"},"applied_tags":["tag"],"member_ids_preview":["user"],
 	"thread_metadata":{"archived":false,"auto_archive_duration":60,"invitable":true},
-	"member":{"user_id":"user","flags":1,"member":{"user":{"id":"user","username":"name","global_name":"global","avatar":"avatar","avatar_color":1,"banner":"banner","banner_color":2,"accent_color":3,"bio":"bio","pronouns":"pronouns"},"nick":"nick","avatar":"avatar","banner":"banner","accent_color":1,"roles":["role"],"communication_disabled_until":"until","permissions":"1024"}},
+	"member":{"user_id":"user","flags":1,"member":{"user":{"id":"user","username":"name","global_name":"global","avatar":"avatar","avatar_color":1,"banner":"banner","banner_color":2,"accent_color":3,"bio":"bio","pronouns":"pronouns","tag_guild_id":"tag-guild"},"nick":"nick","avatar":"avatar","banner":"banner","accent_color":1,"roles":["role"],"communication_disabled_until":"until","permissions":"1024"}},
 	"available_tags":[{"id":"tag","name":"tag","emoji_id":"emoji","emoji_name":"name"}],
 	"default_reaction_emoji":{"emoji_id":"emoji","emoji_name":"name"},"default_sort_order":1
 }`
@@ -27,7 +27,7 @@ const snapshotRole = `{"guild_id":"guild","role":{"id":"role","name":"role","per
 
 func mutateSnapshotUser(user *model.User) {
 	user.Username = "changed"
-	*user.GlobalName, *user.Avatar, *user.Banner, *user.Bio, *user.Pronouns = "changed", "changed", "changed", "changed", "changed"
+	*user.GlobalName, *user.Avatar, *user.Banner, *user.Bio, *user.Pronouns, *user.TagGuildID = "changed", "changed", "changed", "changed", "changed", "changed"
 	*user.AvatarColor, *user.BannerColor, *user.AccentColor = 9, 9, 9
 }
 

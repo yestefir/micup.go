@@ -4,6 +4,10 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+### Added
+
+- Guild tags: `User.TagGuildID`, `Guild.GuildTag` and `Guild.GuildTagBadge`, and `EventMux.OnGuildTagChange` with `micup.GuildTagChange`, which reports a user showing, changing or clearing a guild tag. See [Guild tags](docs/events.md#guild-tags) and the [guild tag example](examples/guild-tag/main.go).
+
 ## [1.0.1] - 2026-11-18
 
 ### Added

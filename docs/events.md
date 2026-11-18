@@ -53,6 +53,33 @@ s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
 
 Handlers for one event run in order on the session's goroutine; a slow handler delays the next event.
 
+## Guild tags
+
+A user can show the tag of one guild next to their name. Micup sends this as `tag_guild_id` on the user object (`micup.User.TagGuildID`, `nil` when no tag is shown). A guild's own tag text and badge are `micup.Guild.GuildTag` and `GuildTagBadge`, delivered with `GUILD_CREATE` and `GUILD_UPDATE`. Micup has no dedicated guild tag event: a changed tag arrives inside `GUILD_MEMBER_UPDATE` (any member) or `USER_UPDATE` (the bot itself).
+
+`mux.OnGuildTagChange` turns those updates into changes:
+
+```go
+mux := micup.NewEventMux()
+mux.OnGuildTagChange(func(ctx context.Context, change micup.GuildTagChange) error {
+	if change.Cleared() {
+		log.Printf("%s removed their tag (was %s)", change.UserID, change.Previous)
+		return nil
+	}
+	log.Printf("%s now shows the tag of guild %s", change.UserID, change.Current)
+	return nil
+})
+```
+
+| Field | Meaning |
+|---|---|
+| `UserID` | The user whose tag changed |
+| `GuildID` | The guild of the member event; empty for `USER_UPDATE` |
+| `Previous` | The tag guild last seen for the user, empty when none was seen |
+| `Current` | The tag guild now shown, empty when the tag was cleared |
+
+Each registration keeps its own record of the last tag seen per user, and calls the handler only when `Current` differs from `Previous`. `GUILD_MEMBERS_CHUNK` fills that record without calling the handler, so a member request does not look like many changes. A user first seen with a tag already set reports `Previous` as empty. The record lives in memory and starts empty on each process start.
+
 ## Payload types
 
 The table is generated from the registry. Captured means the payload type is tested against an anonymized payload recorded from Micup.

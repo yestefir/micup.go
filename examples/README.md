@@ -7,6 +7,7 @@ These programs use only the public `micup` package. Run them from the repository
 | [Ping](ping/main.go) | Typed message events and a `!ping` reply; setup below |
 | [Slash echo](slash-echo/README.md) | Guild command registration, typed options, and private interaction responses |
 | [Panel](panel/main.go) | `micup.NewEventRouter`, a button that updates its own message, and a modal |
+| [Guild tag](guild-tag/main.go) | `OnGuildTagChange` and the guild's own tag from `GUILD_UPDATE` |
 | [Voice player](voice-player/main.go) | Joining voice, `voice.Player`, pause, skip, and leaving an empty channel; needs FFmpeg |
 
 ## Ping bot

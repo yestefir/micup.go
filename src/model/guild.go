@@ -37,6 +37,8 @@ type Guild struct {
 	Permissions                 *Permissions `json:"permissions,omitempty"`
 	ApproximateMemberCount      int          `json:"approximate_member_count,omitempty"`
 	ApproximatePresenceCount    int          `json:"approximate_presence_count,omitempty"`
+	GuildTag                    *string      `json:"guild_tag,omitempty"`
+	GuildTagBadge               *string      `json:"guild_tag_badge,omitempty"`
 }
 
 func (g Guild) HasFeature(feature string) bool {

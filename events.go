@@ -92,6 +92,7 @@ type (
 	EventMux                  = events.Mux
 	EventListener             = events.Listener
 	EventRouter               = events.Router
+	GuildTagChange            = events.GuildTagChange
 	InteractionHandler        = events.InteractionHandler
 )
 

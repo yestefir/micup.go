@@ -16,6 +16,7 @@ type User struct {
 	AccentColor   *int    `json:"accent_color,omitempty"`
 	Bio           *string `json:"bio,omitempty"`
 	Pronouns      *string `json:"pronouns,omitempty"`
+	TagGuildID    *string `json:"tag_guild_id,omitempty"`
 }
 
 const (

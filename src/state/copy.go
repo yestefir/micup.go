@@ -36,6 +36,7 @@ func copyUser(user *model.User) {
 	user.AccentColor = copyPointer(user.AccentColor)
 	user.Bio = copyPointer(user.Bio)
 	user.Pronouns = copyPointer(user.Pronouns)
+	user.TagGuildID = copyPointer(user.TagGuildID)
 }
 
 func copyMember(member *model.Member) {

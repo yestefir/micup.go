@@ -604,6 +604,7 @@ micup.type.GuildMemberRemove
 micup.type.GuildMembers
 micup.type.GuildQuery
 micup.type.GuildStickersUpdate
+micup.type.GuildTagChange
 micup.type.GuildUpdate
 micup.type.ImageOptions
 micup.type.Interaction

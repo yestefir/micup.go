@@ -57,6 +57,32 @@ func ExampleNewEventMux() {
 	// <nil>
 }
 
+func ExampleEventMux_OnGuildTagChange() {
+	mux := micup.NewEventMux()
+	mux.OnGuildTagChange(func(ctx context.Context, change micup.GuildTagChange) error {
+		if change.Cleared() {
+			fmt.Printf("%s removed their tag\n", change.UserID)
+			return nil
+		}
+		fmt.Printf("%s now shows the tag of guild %s\n", change.UserID, change.Current)
+		return nil
+	})
+	update := func(tag string) micup.Event {
+		data := `{"guild_id":"10","roles":[],"user":{"id":"20","username":"u","tag_guild_id":` + tag + `}}`
+		return micup.Event{Name: micup.EventGuildMemberUpdate, Data: json.RawMessage(data)}
+	}
+	ctx := context.Background()
+	fmt.Println(mux.Handle(ctx, update(`"30"`)))
+	fmt.Println(mux.Handle(ctx, update(`"30"`)))
+	fmt.Println(mux.Handle(ctx, update(`null`)))
+	// Output:
+	// 20 now shows the tag of guild 30
+	// <nil>
+	// <nil>
+	// 20 removed their tag
+	// <nil>
+}
+
 func ExampleFormatTimestamp() {
 	fmt.Println(micup.FormatTimestamp(time.Unix(1700000000, 0), micup.TimestampRelative))
 	// Output:
