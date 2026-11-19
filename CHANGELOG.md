@@ -4,6 +4,12 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-19
+
+### Changed
+
+- Package documentation: the `micup` and `voice` packages and every package under `src/` have a `doc.go` that pkg.go.dev shows as the package description, with an overview, examples and limits. Go files otherwise stay free of comments.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

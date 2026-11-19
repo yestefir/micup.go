@@ -26,7 +26,7 @@ Micup'taki en büyük müzik botlarından biri olan [mitune.net](https://mitune.
 - Ses yayını için `libopus` destekli FFmpeg
 
 ```sh
-go get github.com/yestefir/micup.go@v1.1.0
+go get github.com/yestefir/micup.go@v1.1.1
 ```
 
 ## Başlangıç
@@ -94,12 +94,12 @@ src/
 
 Paket bağımlılıkları tek yönlüdür ve bir testle korunur ([Mimari](docs/architecture.md)). v0.3'ten geçiş için [geçiş rehberine](docs/migration.md) bakın.
 
-Değişiklik göndermeden önce `make check` çalıştırın; CI aynı kontrolleri Linux, macOS ve Windows'ta yapar. Go kaynaklarında yorum satırı kullanılmaz; açıklamalar Markdown belgelerindedir.
+Değişiklik göndermeden önce `make check` çalıştırın; CI aynı kontrolleri Linux, macOS ve Windows'ta yapar. Go kaynaklarında yorum satırı kullanılmaz (her paketin `doc.go` dosyasındaki paket açıklaması hariç); açıklamalar Markdown belgelerindedir.
 
 ## Lisans
 
 Proje MIT lisansıyla ücretsiz kullanılabilir. Ticari kullanım, değiştirme ve yeniden dağıtım serbesttir; kopyalarda telif ve lisans bildirimi korunmalıdır. Ayrıntılar [LICENSE](LICENSE) dosyasındadır.
 
-Güncel sürüm `v1.1.0`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
+Güncel sürüm `v1.1.1`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

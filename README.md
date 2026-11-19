@@ -28,7 +28,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v1.1.0
+go get github.com/yestefir/micup.go@v1.1.1
 ```
 
 ## Quick start
@@ -101,7 +101,7 @@ src/
 docs/          User, API, architecture, and contributor guides
 ```
 
-Package dependencies point one way and are enforced by a test; see [Architecture](docs/architecture.md). Go source files intentionally contain no comments.
+Package dependencies point one way and are enforced by a test; see [Architecture](docs/architecture.md). Go source files intentionally contain no comments, apart from the package documentation in each `doc.go`.
 
 Run `make check` before sending a change. CI runs the same checks on Linux, macOS and Windows.
 
@@ -109,6 +109,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v1.1.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v1.1.1`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).
