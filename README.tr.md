@@ -10,6 +10,7 @@
 - **Önbellek:** ayarları, emojileri ve çıkartmalarıyla guild'ler, izin geçersiz kılmalı kanallar ve thread'ler, roller, üye rolleri, ses durumları; izin ve rol hiyerarşisi kontrolleri.
 - **REST:** mesajlar (gönderme, düzenleme, iletme, yayınlama, silme, toplu silme, listeleme, arama), butonlar, seçim menüleri, modallar ve komutlar, tepkiler, sabitleme, yazıyor göstergesi, DM, dosyalar, kanallar, thread ve forumlar, roller, guild ayarları, üyeler, davetler, emojiler, çıkartmalar, denetim kayıtları, yasaklar, moderasyon ve webhook'lar; sayfalama yineleyicileri, Micup hata kodları ve rate limit kurallarıyla.
 - **Yardımcılar:** bahsetmeler, zaman damgaları, markdown kaçışı, embed oluşturucu, medya URL'leri, snowflake zamanları ve izin adları.
+- **Yerelleştirme:** komut adı ve açıklaması çevirileri, etkileşimin diliyle yanıt veren bir mesaj kataloğu ve çevrilmiş metinlerin doğrulanması; onaylı botlar için.
 - **Yönlendirme:** komut, otomatik tamamlama, bileşen ve modal etkileşimleri için yönlendirici ve isteğe bağlı `slog` günlüğü.
 - **Ses:** hızlı ret ve izin kontrolüyle katılma, yetki yenileme, LiveKit'e Opus yayını ve FFmpeg kaynağı, duraklatma, atlama ve ses seviyesi olan bir oynatıcı.
 
@@ -26,7 +27,7 @@ Micup'taki en büyük müzik botlarından biri olan [mitune.net](https://mitune.
 - Ses yayını için `libopus` destekli FFmpeg
 
 ```sh
-go get github.com/yestefir/micup.go@v1.2.1
+go get github.com/yestefir/micup.go@v1.3.0
 ```
 
 ## Başlangıç
@@ -100,6 +101,6 @@ Değişiklik göndermeden önce `make check` çalıştırın; CI aynı kontrolle
 
 Proje MIT lisansıyla ücretsiz kullanılabilir. Ticari kullanım, değiştirme ve yeniden dağıtım serbesttir; kopyalarda telif ve lisans bildirimi korunmalıdır. Ayrıntılar [LICENSE](LICENSE) dosyasındadır.
 
-Güncel sürüm `v1.2.1`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
+Güncel sürüm `v1.3.0`'dır. Sürüm notları [CHANGELOG.md](CHANGELOG.md) dosyasındadır.
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

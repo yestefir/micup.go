@@ -23,6 +23,10 @@ type (
 
 func New(ctx context.Context, config Config) (*Bot, error) { return bot.New(ctx, config) }
 
+func NewCatalog(fallback string, messages Messages) (*Catalog, error) {
+	return model.NewCatalog(fallback, messages)
+}
+
 const DefaultOrigin = discovery.DefaultOrigin
 
 type Endpoints = discovery.Endpoints
@@ -380,6 +384,8 @@ type (
 	ApplicationCommand = model.ApplicationCommand
 	CommandOption      = model.CommandOption
 	CommandChoice      = model.CommandChoice
+	Catalog            = model.Catalog
+	Messages           = model.Messages
 	CommandData        = model.CommandData
 	CommandDataOption  = model.CommandDataOption
 	Resolved           = model.Resolved

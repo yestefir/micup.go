@@ -88,3 +88,29 @@ func ExampleFormatTimestamp() {
 	// Output:
 	// <t:1700000000:R>
 }
+
+func ExampleNewCatalog() {
+	catalog, err := micup.NewCatalog("en-US", micup.Messages{
+		"en-US": {"play.name": "play", "play.description": "Play a song", "playing": "Now playing %s"},
+		"tr":    {"play.name": "oynat", "play.description": "Bir şarkı çal", "playing": "%s çalınıyor"},
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	command := micup.ApplicationCommand{
+		Name:                     catalog.TextIn("en-US", "play.name"),
+		NameLocalizations:        catalog.Localizations("play.name"),
+		Description:              catalog.TextIn("en-US", "play.description"),
+		DescriptionLocalizations: catalog.Localizations("play.description"),
+	}
+	fmt.Println(command.Validate(), command.NameLocalizations["tr"])
+
+	interaction := micup.Interaction{Locale: "tr"}
+	fmt.Println(catalog.Text(interaction, "playing", "Ezgi"))
+	fmt.Println(catalog.Text(micup.Interaction{Locale: "de"}, "playing", "Ezgi"))
+	// Output:
+	// <nil> oynat
+	// Ezgi çalınıyor
+	// Now playing Ezgi
+}

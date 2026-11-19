@@ -89,6 +89,13 @@
 //
 // A router returns [ErrNoRoute] for interactions it has no handler for.
 //
+// # Localization
+//
+// Verified bots must speak the user's language. A [Catalog] holds one set of
+// translations and serves both the NameLocalizations and
+// DescriptionLocalizations of commands and the replies to an interaction in
+// its Locale; Validate checks the localized texts against Micup's limits.
+//
 // # Helpers
 //
 // Helpers cover mentions, timestamps, markdown escaping, an embed builder,

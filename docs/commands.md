@@ -45,7 +45,7 @@ Create and set requests are checked before they are sent, and an invalid command
 - subcommand groups contain subcommands, which contain options, and nothing is nested deeper;
 - user and message commands have a 1–32 character name and no description or options.
 
-`DefaultMemberPermissions` hides a command from members without those permissions (`micup.PermissionAdministrator` for example), and `DMPermission` controls whether it appears in DMs. `NameLocalizations` and `DescriptionLocalizations` map locales such as `tr` to translated text. Micup has no per-command permission overrides: `…/commands/permissions` returns 400.
+`DefaultMemberPermissions` hides a command from members without those permissions (`micup.PermissionAdministrator` for example), and `DMPermission` controls whether it appears in DMs. `NameLocalizations` and `DescriptionLocalizations` map locales such as `tr` to translated text; see [Localization](#localization). Micup has no per-command permission overrides: `…/commands/permissions` returns 400.
 
 ## Handling a command
 
@@ -154,3 +154,47 @@ if data, ok := i.ModalData(); ok && data.CustomID == "song-request" {
 ```
 
 `Modal.Validate` rejects a title over 45 characters, a missing or duplicate custom ID, more than 5 inputs, a label over 45 characters, an unknown style and lengths outside 0–4000. `RespondWithModal` refuses autocomplete and modal submit interactions, which cannot open another modal. A modal submit is answered with `RespondToInteraction`, `DeferInteraction` or `SendInteractionFollowup`.
+
+## Localization
+
+Micup's verified-bot rules ask for commands and replies in the user's language. `ApplicationCommand`, `CommandOption` and `CommandChoice` carry `NameLocalizations` (`CommandChoice` has no description), and commands and options also carry `DescriptionLocalizations`. Every interaction carries `Locale` (the user's language, for example `tr`) and `GuildLocale`. `ApplicationCommand.Validate` checks the localized names and descriptions against the same limits as the originals: names 1-32 lowercase letters, digits, `-` or `_`, descriptions 1-100 characters, and locale keys that look like language tags.
+
+`micup.Catalog` keeps the texts in one place and serves both uses. The fallback locale holds every message; other locales may translate any subset, and a key missing from a locale falls back to the fallback text:
+
+```go
+catalog, err := micup.NewCatalog("en-US", micup.Messages{
+	"en-US": {"play.name": "play", "play.description": "Play a song", "playing": "Now playing %s", "no-voice": "Join a voice channel first."},
+	"tr":    {"play.name": "oynat", "play.description": "Bir şarkı çal", "playing": "%s çalınıyor", "no-voice": "Önce bir ses kanalına katıl."},
+})
+if err != nil {
+	return err
+}
+
+play := micup.ApplicationCommand{
+	Name:                     catalog.TextIn("en-US", "play.name"),
+	NameLocalizations:        catalog.Localizations("play.name"),
+	Description:              catalog.TextIn("en-US", "play.description"),
+	DescriptionLocalizations: catalog.Localizations("play.description"),
+	Options: []micup.CommandOption{{
+		Type: micup.OptionTypeString, Name: "query", Description: "Song name or link", Required: true,
+		NameLocalizations:        map[string]string{"tr": "şarkı"},
+		DescriptionLocalizations: map[string]string{"tr": "Şarkı adı veya bağlantısı"},
+	}},
+}
+
+err = b.REST.RespondToInteraction(ctx, interaction,
+	micup.MessageOptions{Content: catalog.Text(interaction, "no-voice")}, true)
+```
+
+| Method | Behavior |
+|---|---|
+| `NewCatalog(fallback, messages)` | Builds a catalog. It returns an error when the fallback locale has no messages, when a locale is not a language tag, when a locale is listed twice, or when another locale has a key the fallback lacks (usually a typo) |
+| `Text(interaction, key, args...)` | The message in the interaction's `Locale`, or in its `GuildLocale` when `Locale` is empty. `args` are passed to `fmt.Sprintf` when present |
+| `TextIn(locale, key, args...)` | The same for a locale you already hold |
+| `Localizations(key)` | A `locale → text` map of every translation except the fallback's, for the localization fields above. It is `nil` when nothing is translated |
+| `Fallback()`, `Locales()` | The fallback locale and every locale, sorted |
+
+Locales match without regard to case or `_` against `-`. `tr_TR` and `TR` find `tr`; `pt` finds `pt-BR` when no plain `pt` exists; `en-GB` finds `en`. A locale with no match, and an unknown key, give the fallback text and the key itself, so a missing translation shows up as a visible key. Translate error messages too, not only the success path.
+
+micup.go checks only that a locale key looks like a language tag. Micup decides which locales it accepts, so use the codes it documents.
+

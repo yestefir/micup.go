@@ -490,6 +490,7 @@ micup.func.MentionUser
 micup.func.MentionableSelect
 micup.func.New
 micup.func.NewActionRow
+micup.func.NewCatalog
 micup.func.NewEmbed
 micup.func.NewEventMux
 micup.func.NewEventRouter
@@ -539,6 +540,7 @@ micup.type.Bot
 micup.type.Button
 micup.type.Call
 micup.type.CallDelete
+micup.type.Catalog
 micup.type.Channel
 micup.type.ChannelCreate
 micup.type.ChannelEdit
@@ -650,6 +652,7 @@ micup.type.MessageSearch
 micup.type.MessageSearchResult
 micup.type.MessageSnapshot
 micup.type.MessageUpdate
+micup.type.Messages
 micup.type.Modal
 micup.type.ModalData
 micup.type.MutualGuild

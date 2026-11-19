@@ -88,6 +88,12 @@ func (c ApplicationCommand) Validate() error {
 		if err := validDescription("command "+c.Name, c.Description); err != nil {
 			return err
 		}
+		if err := validLocalizations("command "+c.Name, c.NameLocalizations, validChatInputName); err != nil {
+			return err
+		}
+		if err := validLocalizations("command "+c.Name+" description", c.DescriptionLocalizations, validDescriptionText); err != nil {
+			return err
+		}
 		return validOptions(c.Name, c.Options, 0)
 	case CommandTypeUser, CommandTypeMessage:
 		if n := utf8.RuneCountInString(c.Name); n == 0 || n > MaxCommandName {
@@ -96,9 +102,42 @@ func (c ApplicationCommand) Validate() error {
 		if c.Description != "" || len(c.Options) != 0 {
 			return fmt.Errorf("context menu command %q cannot have a description or options", c.Name)
 		}
-		return nil
+		return validLocalizations("command "+c.Name, c.NameLocalizations, validMenuName)
 	}
 	return fmt.Errorf("unknown command type %d", c.Type)
+}
+
+func validChatInputName(name string) error {
+	if !chatInputName.MatchString(name) {
+		return fmt.Errorf("%q must be 1-%d lowercase letters, digits, - or _", name, MaxCommandName)
+	}
+	return nil
+}
+
+func validMenuName(name string) error {
+	if n := utf8.RuneCountInString(name); n == 0 || n > MaxCommandName {
+		return fmt.Errorf("%q must be 1-%d characters", name, MaxCommandName)
+	}
+	return nil
+}
+
+func validDescriptionText(text string) error {
+	if n := utf8.RuneCountInString(text); n == 0 || n > MaxCommandDescription {
+		return fmt.Errorf("%q must be 1-%d characters", text, MaxCommandDescription)
+	}
+	return nil
+}
+
+func validLocalizations(what string, localizations map[string]string, check func(string) error) error {
+	for locale, text := range localizations {
+		if !localeTag.MatchString(normalizeLocale(locale)) {
+			return fmt.Errorf("%s has localization for %q, which is not a language tag such as tr or en-US", what, locale)
+		}
+		if err := check(text); err != nil {
+			return fmt.Errorf("%s localization %s: %w", what, locale, err)
+		}
+	}
+	return nil
 }
 
 func validDescription(what, description string) error {
@@ -126,6 +165,12 @@ func validOptions(parent string, options []CommandOption, depth int) error {
 		if err := validDescription("option "+where, option.Description); err != nil {
 			return err
 		}
+		if err := validLocalizations("option "+where, option.NameLocalizations, validChatInputName); err != nil {
+			return err
+		}
+		if err := validLocalizations("option "+where+" description", option.DescriptionLocalizations, validDescriptionText); err != nil {
+			return err
+		}
 		switch option.Type {
 		case OptionTypeSubcommandGroup, OptionTypeSubcommand:
 			if option.Type == OptionTypeSubcommandGroup && depth > 0 || option.Type == OptionTypeSubcommand && depth > 1 {
@@ -148,6 +193,11 @@ func validOptions(parent string, options []CommandOption, depth int) error {
 		}
 		if len(option.Choices) > 0 && option.Autocomplete {
 			return fmt.Errorf("%s cannot use both choices and autocomplete", where)
+		}
+		for _, choice := range option.Choices {
+			if err := validLocalizations("choice "+choice.Name+" of "+where, choice.NameLocalizations, validDescriptionText); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

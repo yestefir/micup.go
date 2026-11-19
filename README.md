@@ -9,6 +9,7 @@
 - **Gateway commands:** member requests, guild and channel member counts, Lazy Request subscriptions and voice state updates; every Micup dispatch event, including threads, calls, emojis, stickers and member lists, has a typed payload.
 - **State:** guilds with settings, emojis and stickers, channels and threads with permission overwrites, roles, member roles and voice states, with permission and role hierarchy checks.
 - **REST:** messages (send, edit, forward, crosspost, delete, bulk delete, list, search), buttons, select menus, modals and commands, reactions, pins, typing, DMs, files (multipart and presigned uploads), channels, threads and forums, roles, guild settings, members, invites, emojis, stickers, audit logs, bans, moderation and webhooks, with paging iterators, Micup's error codes and rate limit rules.
+- **Localization:** command name and description translations, a message catalog that answers in the interaction's locale, and validation of the localized texts, for verified bots.
 - **Routing:** an interaction router for commands, autocomplete, components and modals, next to the typed event mux, and optional `slog` logging.
 - **Helpers:** mentions, timestamps, markdown escaping, an embed builder, media URLs, snowflake times and permission names.
 - **Voice:** the join handshake with fast refusal and permission checks, grant rotation, Opus publishing to LiveKit, and a player with FFmpeg sources, pause, skip and volume.
@@ -28,7 +29,7 @@ The module keeps platform transport separate from application behavior. It does 
 ## Install
 
 ```sh
-go get github.com/yestefir/micup.go@v1.2.1
+go get github.com/yestefir/micup.go@v1.3.0
 ```
 
 ## Quick start
@@ -109,6 +110,6 @@ Run `make check` before sending a change. CI runs the same checks on Linux, macO
 
 This project is free to use under the [MIT License](LICENSE), including in commercial projects. Keep the copyright and license notice with copies or substantial portions of the software.
 
-The current release is `v1.2.1`. Release history is in [CHANGELOG.md](CHANGELOG.md).
+The current release is `v1.3.0`. Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 `SessionOptions.TrackMembers` / `Session.MemberInventories()`: [maintained member inventories](docs/guilds.md#maintained-member-inventories).

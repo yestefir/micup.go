@@ -4,6 +4,16 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-19
+
+### Added
+
+- `micup.Catalog`, `micup.Messages` and `micup.NewCatalog`: one set of translations for command names and descriptions (`Localizations`) and for replies in the user's language (`Text`, `TextIn`), with locale matching by language and a fallback locale. See [Localization](docs/commands.md#localization).
+
+### Changed
+
+- `ApplicationCommand.Validate` checks `NameLocalizations`, `DescriptionLocalizations` and choice name localizations of commands, options and context menu commands against Micup's name and description limits and rejects locale keys that are not language tags.
+
 ## [1.2.1] - 2026-11-19
 
 ### Added
