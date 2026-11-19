@@ -53,6 +53,27 @@ s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
 
 Handlers for one event run in order on the session's goroutine; a slow handler delays the next event.
 
+## Errors, panics and timeouts
+
+A handler error closes the connection and the event is replayed after the reconnect (see [the Gateway guide](gateway.md#session)). A permanent failure, such as a `403` when the bot cannot write to a channel, would reconnect forever, and a panic in a handler stops the whole process. `micup.Safe` wraps an `EventHandler` against both:
+
+```go
+handler := micup.Safe(mux.Handle, micup.SafeOptions{
+	Timeout: 30 * time.Second,
+	Logger:  slog.Default(),
+	Retry:   func(err error) bool { return errors.Is(err, errDatabaseDown) },
+})
+s, err := b.NewSession(micup.SessionOptions{Handler: handler})
+```
+
+| Field | Behavior |
+|---|---|
+| `Timeout` | Cancels the context passed to the handler after this long. The handler must honor its context; `Safe` cannot stop code that ignores it. Zero means no limit |
+| `Logger` | Receives handler errors and panics, with the event name and, for panics, the stack. Defaults to `slog.Default()` |
+| `Retry` | Reports which errors are worth a reconnect and replay. Every other error is logged and swallowed. Nil retries nothing |
+
+A panic is logged and swallowed. When the session's own context has ended, `Safe` returns the handler's error unchanged so the event stays unacknowledged. `Safe` does not run handlers concurrently; events still arrive in order, so keep long work such as searches off the handler (start a goroutine and respond when it finishes).
+
 ## Guild tags
 
 A user can show the tag of one guild next to their name. Micup sends this as `tag_guild_id` on the user object (`micup.User.TagGuildID`, `nil` when no tag is shown). A guild's own tag text and badge are `micup.Guild.GuildTag` and `GuildTagBadge`, delivered with `GUILD_CREATE` and `GUILD_UPDATE`. Micup has no dedicated guild tag event: a changed tag arrives inside `GUILD_MEMBER_UPDATE` (any member) or `USER_UPDATE` (the bot itself).

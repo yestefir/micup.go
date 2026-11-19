@@ -504,6 +504,7 @@ micup.func.ParseSnowflake
 micup.func.PrimaryButton
 micup.func.RoleSelect
 micup.func.RunGateway
+micup.func.Safe
 micup.func.SecondaryButton
 micup.func.Set
 micup.func.ShardForGuild
@@ -693,6 +694,7 @@ micup.type.RoleEvent
 micup.type.RoleHoistPosition
 micup.type.RolePosition
 micup.type.RoleUpdateBulk
+micup.type.SafeOptions
 micup.type.SelectDefault
 micup.type.SelectMenu
 micup.type.SelectOption

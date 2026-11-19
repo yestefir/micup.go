@@ -30,7 +30,7 @@
 //		return err
 //	}))
 //
-//	s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
+//	s, err := b.NewSession(micup.SessionOptions{Handler: micup.Safe(mux.Handle, micup.SafeOptions{})})
 //	if err != nil {
 //		log.Fatal(err)
 //	}
@@ -43,6 +43,11 @@
 // stream compression, accepts ignored events and presence, and paces commands
 // below Micup's limits. Gateway commands cover member requests, guild and
 // channel member counts, Lazy Request subscriptions and voice state updates.
+//
+// A handler error closes the connection and replays the event, and a handler
+// panic stops the process, so wrap your handler in [Safe]. It logs errors and
+// panics, applies an optional timeout and lets only errors you choose through
+// for a retry.
 //
 // Bots in many guilds use a shard manager instead of a single session:
 //

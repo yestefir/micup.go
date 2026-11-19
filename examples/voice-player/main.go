@@ -80,7 +80,7 @@ func run() error {
 	mux.On(micup.EventInteractionCreate, router.Listener())
 
 	app.session, err = b.NewSession(micup.SessionOptions{
-		Handler:      mux.Handle,
+		Handler:      micup.Safe(mux.Handle, micup.SafeOptions{Timeout: 30 * time.Second}),
 		Logger:       slog.Default(),
 		OnVoiceLost:  func(guildID, connectionID string) { app.leave(guildID, connectionID) },
 		OnVoiceEmpty: app.scheduleLeave,

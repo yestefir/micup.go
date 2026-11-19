@@ -92,6 +92,7 @@ type (
 	EventMux                  = events.Mux
 	EventListener             = events.Listener
 	EventRouter               = events.Router
+	SafeOptions               = events.SafeOptions
 	GuildTagChange            = events.GuildTagChange
 	InteractionHandler        = events.InteractionHandler
 )
@@ -107,6 +108,10 @@ func NewEventMux() *EventMux { return events.NewMux() }
 func NewEventRouter() *EventRouter { return events.NewRouter() }
 
 var ErrNoRoute = events.ErrNoRoute
+
+func Safe(handler EventHandler, options SafeOptions) EventHandler {
+	return events.Safe(handler, options)
+}
 
 func Listen[T any](fn func(context.Context, T) error) EventListener { return events.Listen(fn) }
 

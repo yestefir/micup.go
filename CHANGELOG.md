@@ -4,6 +4,14 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+### Added
+
+- `micup.Safe` and `micup.SafeOptions`: wraps an event handler so a panic or a failing request is logged instead of crashing the bot or forcing a reconnect, with an optional `Timeout` and a `Retry` filter for errors that should replay the event. See [Errors, panics and timeouts](docs/events.md#errors-panics-and-timeouts).
+
+### Changed
+
+- The runnable examples wrap their handler in `micup.Safe`, so a permanent error such as a missing permission no longer reconnects the bot in a loop.
+
 ## [1.1.1] - 2026-11-19
 
 ### Changed

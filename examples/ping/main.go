@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	micup "github.com/yestefir/micup.go"
 )
@@ -40,7 +41,7 @@ func run() error {
 		_, err := b.REST.SendMessage(ctx, message.ChannelID, "pong", message.ID)
 		return err
 	}))
-	s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
+	s, err := b.NewSession(micup.SessionOptions{Handler: micup.Safe(mux.Handle, micup.SafeOptions{Timeout: 30 * time.Second})})
 	if err != nil {
 		return fmt.Errorf("create session: %w", err)
 	}

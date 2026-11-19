@@ -50,7 +50,7 @@ mux.On(micup.EventMessageCreate, micup.Listen(func(ctx context.Context, message 
 	return err
 }))
 
-s, err := b.NewSession(micup.SessionOptions{Handler: mux.Handle})
+s, err := b.NewSession(micup.SessionOptions{Handler: micup.Safe(mux.Handle, micup.SafeOptions{})})
 if err != nil {
 	log.Fatal(err)
 }
