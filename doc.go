@@ -47,7 +47,8 @@
 // A handler error closes the connection and replays the event, and a handler
 // panic stops the process, so wrap your handler in [Safe]. It logs errors and
 // panics, applies an optional timeout and lets only errors you choose through
-// for a retry.
+// for a retry. Long work such as a search belongs in [Go], which runs it in the
+// background with the same panic recovery and an optional timeout.
 //
 // Bots in many guilds use a shard manager instead of a single session:
 //

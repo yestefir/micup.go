@@ -72,7 +72,26 @@ s, err := b.NewSession(micup.SessionOptions{Handler: handler})
 | `Logger` | Receives handler errors and panics, with the event name and, for panics, the stack. Defaults to `slog.Default()` |
 | `Retry` | Reports which errors are worth a reconnect and replay. Every other error is logged and swallowed. Nil retries nothing |
 
-A panic is logged and swallowed. When the session's own context has ended, `Safe` returns the handler's error unchanged so the event stays unacknowledged. `Safe` does not run handlers concurrently; events still arrive in order, so keep long work such as searches off the handler (start a goroutine and respond when it finishes).
+A panic is logged and swallowed. When the session's own context has ended, `Safe` returns the handler's error unchanged so the event stays unacknowledged. `Safe` does not run handlers concurrently; events still arrive in order, so a slow handler delays the next event.
+
+### Long work in the background
+
+Keep long work such as a music search off the handler. `micup.Go` runs it in its own goroutine with the same protection as `Safe`: a panic is logged and swallowed, an error is logged, and `Timeout` cancels its context.
+
+```go
+mux.On(micup.EventInteractionCreate, micup.Listen(func(ctx context.Context, i micup.Interaction) error {
+	micup.Go(appCtx, micup.GoOptions{Name: "search", Timeout: time.Minute}, func(ctx context.Context) error {
+		results, err := search(ctx, query)
+		if err != nil {
+			return err
+		}
+		return respond(ctx, i, results)
+	})
+	return nil
+}))
+```
+
+Pass your application's context, not the handler's, so the task survives a Gateway reconnect and stops when the application shuts down; a context that ends silences the error log. `Go` returns a channel that closes when the task ends, which lets you wait for running tasks before exiting. The handler returns at once, so Micup treats the event as processed and does not replay it if the task fails; report failures to the user from inside the task. Interactions need an initial response within Micup's deadline, so defer first (`DeferInteraction`) before long work.
 
 ## Guild tags
 

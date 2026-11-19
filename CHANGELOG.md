@@ -4,6 +4,12 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-19
+
+### Added
+
+- `micup.Go` and `micup.GoOptions`: runs long work such as a search in its own goroutine with a recovered panic, a logged error and an optional `Timeout`, so a slow task no longer delays the next Gateway event and a panic inside it cannot stop the bot. It returns a channel that closes when the task ends. See [Long work in the background](docs/events.md#long-work-in-the-background).
+
 ## [1.2.0] - 2026-11-19
 
 ### Added

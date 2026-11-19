@@ -475,6 +475,7 @@ micup.func.ErrorCode
 micup.func.EscapeMarkdown
 micup.func.EventAs
 micup.func.FormatTimestamp
+micup.func.Go
 micup.func.ImageData
 micup.func.InviteURL
 micup.func.IsErrorCode
@@ -593,6 +594,7 @@ micup.type.GatewayError
 micup.type.GatewayInfo
 micup.type.GatewayOptions
 micup.type.GatewayRollout
+micup.type.GoOptions
 micup.type.Guild
 micup.type.GuildBan
 micup.type.GuildCount

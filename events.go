@@ -93,6 +93,7 @@ type (
 	EventListener             = events.Listener
 	EventRouter               = events.Router
 	SafeOptions               = events.SafeOptions
+	GoOptions                 = events.GoOptions
 	GuildTagChange            = events.GuildTagChange
 	InteractionHandler        = events.InteractionHandler
 )
@@ -111,6 +112,10 @@ var ErrNoRoute = events.ErrNoRoute
 
 func Safe(handler EventHandler, options SafeOptions) EventHandler {
 	return events.Safe(handler, options)
+}
+
+func Go(ctx context.Context, options GoOptions, task func(context.Context) error) <-chan struct{} {
+	return events.Go(ctx, options, task)
 }
 
 func Listen[T any](fn func(context.Context, T) error) EventListener { return events.Listen(fn) }
