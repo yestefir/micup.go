@@ -87,6 +87,12 @@ Only `DEFAULT` and `REPLY` messages can be edited, pinned or replied to.
 
 `EachMessage(ctx, channelID, query)` fetches successive pages lazily. With `After`, messages are yielded in ascending ID order; otherwise they are yielded newest first. `Around` is not supported for iteration. Each traversal starts from the supplied query, including when the same iterator is used concurrently. Break from the loop to stop fetching pages. Iteration stops if the next cursor is empty or unchanged; a repeated page may already have been yielded before this check.
 
+### DM limits
+
+Micup's default bot quota for starting new one-to-one conversations is 60 per hour and 500 per 24 hours. Capacity returns gradually. `CreateDM` and `SendDM` can return `micup.CodeNewDMRateLimited` (HTTP 429). Use `errors.As` to read `RetryAfter` on `*micup.APIError`. When the wait exceeds 30 seconds, the REST client returns the error to the caller immediately.
+
+Micup can reject repeated content sent to different recipients who have yet to reply. The default threshold blocks the 21st distinct recipient for the same content within the 24-hour counter lifetime. `SendDM` returns `micup.CodeSpamBlocked` (HTTP 400) immediately, with no automatic retry. Quotas and thresholds are controlled by the server.
+
 ## Reactions and pins
 
 Pass a Unicode emoji as is, or `name:id` for a custom emoji (`micup.EmojiString(emoji)` builds it from a `micup.Emoji`).

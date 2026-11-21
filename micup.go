@@ -49,6 +49,7 @@ func EmojiString(emoji Emoji) string { return rest.EmojiString(emoji) }
 const (
 	CodeInvalidFormBody       = rest.CodeInvalidFormBody
 	CodeRateLimited           = rest.CodeRateLimited
+	CodeNewDMRateLimited      = rest.CodeNewDMRateLimited
 	CodeSlowmodeRateLimited   = rest.CodeSlowmodeRateLimited
 	CodeResourceLocked        = rest.CodeResourceLocked
 	CodeUnauthorized          = rest.CodeUnauthorized
@@ -57,6 +58,7 @@ const (
 	CodeTwoFactorRequired     = rest.CodeTwoFactorRequired
 	CodeCommunicationDisabled = rest.CodeCommunicationDisabled
 	CodeContentBlocked        = rest.CodeContentBlocked
+	CodeSpamBlocked           = rest.CodeSpamBlocked
 	CodeCannotSendEmpty       = rest.CodeCannotSendEmpty
 	CodeUnknownChannel        = rest.CodeUnknownChannel
 	CodeUnknownGuild          = rest.CodeUnknownGuild

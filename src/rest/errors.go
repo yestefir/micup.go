@@ -94,6 +94,7 @@ func secondsDuration(seconds float64) time.Duration {
 const (
 	CodeInvalidFormBody       = "INVALID_FORM_BODY"
 	CodeRateLimited           = "RATE_LIMITED"
+	CodeNewDMRateLimited      = "NEW_DM_RATE_LIMITED"
 	CodeSlowmodeRateLimited   = "SLOWMODE_RATE_LIMITED"
 	CodeResourceLocked        = "RESOURCE_LOCKED"
 	CodeUnauthorized          = "UNAUTHORIZED"
@@ -102,6 +103,7 @@ const (
 	CodeTwoFactorRequired     = "TWO_FACTOR_REQUIRED"
 	CodeCommunicationDisabled = "COMMUNICATION_DISABLED"
 	CodeContentBlocked        = "CONTENT_BLOCKED"
+	CodeSpamBlocked           = "SPAM_BLOCKED"
 	CodeCannotSendEmpty       = "CANNOT_SEND_EMPTY_MESSAGE"
 	CodeUnknownChannel        = "UNKNOWN_CHANNEL"
 	CodeUnknownGuild          = "UNKNOWN_GUILD"
