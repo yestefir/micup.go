@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/yestefir/micup.go/src/model"
 )
@@ -31,6 +33,16 @@ func (r *recorder) last() recorded {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.requests[len(r.requests)-1]
+}
+
+func (r *recorder) paths() []string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	paths := make([]string, 0, len(r.requests))
+	for _, request := range r.requests {
+		paths = append(paths, request.path)
+	}
+	return paths
 }
 
 func recordingClient(t *testing.T, respond func(w http.ResponseWriter, r *http.Request)) (*Client, *recorder) {
@@ -104,6 +116,43 @@ func TestMessageEndpoints(t *testing.T) {
 	if dm, err := c.CreateDM(ctx, "u"); err != nil || dm.ID != "dm" || rec.last().body["recipient_id"] != "u" {
 		t.Fatalf("DM failed: %v", err)
 	}
+}
+
+func TestSendDMPreservesQuotaAndSpamErrors(t *testing.T) {
+	t.Run("new DM quota", func(t *testing.T) {
+		c, rec := recordingClient(t, func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Retry-After", "60")
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, `{"code":"NEW_DM_RATE_LIMITED","retry_after":60}`)
+		})
+		_, err := c.SendDM(context.Background(), "u", model.MessageOptions{Content: "hello"})
+		var apiErr *APIError
+		if !errors.As(err, &apiErr) || !apiErr.RateLimited() || !IsErrorCode(err, CodeNewDMRateLimited) || apiErr.RetryAfter != time.Minute {
+			t.Fatalf("expected a new DM rate limit with a one-minute wait, got %#v", err)
+		}
+		if paths := rec.paths(); len(paths) != 1 || paths[0] != "/users/@me/channels" {
+			t.Fatalf("expected only one channel creation request, got %v", paths)
+		}
+	})
+
+	t.Run("spam blocked", func(t *testing.T) {
+		c, rec := recordingClient(t, func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/v1/users/@me/channels" {
+				fmt.Fprint(w, `{"id":"dm","type":1}`)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"code":"SPAM_BLOCKED"}`)
+		})
+		_, err := c.SendDM(context.Background(), "u", model.MessageOptions{Content: "hello"})
+		var apiErr *APIError
+		if !errors.As(err, &apiErr) || apiErr.StatusCode != http.StatusBadRequest || !IsErrorCode(err, CodeSpamBlocked) {
+			t.Fatalf("expected a spam block, got %#v", err)
+		}
+		if paths := rec.paths(); len(paths) != 2 || paths[0] != "/users/@me/channels" || paths[1] != "/channels/dm/messages" {
+			t.Fatalf("expected one channel creation and one send request, got %v", paths)
+		}
+	})
 }
 
 func TestSendMessageWithFilesUsesMultipart(t *testing.T) {

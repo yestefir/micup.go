@@ -4,6 +4,12 @@ Notable changes to micup.go are recorded here.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-22
+
+### Added
+
+- `micup.CodeNewDMRateLimited` (HTTP 429) and `micup.CodeSpamBlocked` (HTTP 400) let bots distinguish new DM quota errors from spam blocks. See [DM limits](docs/messages.md#dm-limits) for how to read `RetryAfter` and when the REST client returns the error immediately.
+
 ## [1.3.0] - 2026-11-19
 
 ### Added

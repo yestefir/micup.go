@@ -85,9 +85,11 @@ micup.const.CodeMaxActiveThreads
 micup.const.CodeMissingAccess
 micup.const.CodeMissingPermissions
 micup.const.CodeNSFWAgeRestricted
+micup.const.CodeNewDMRateLimited
 micup.const.CodeRateLimited
 micup.const.CodeResourceLocked
 micup.const.CodeSlowmodeRateLimited
+micup.const.CodeSpamBlocked
 micup.const.CodeThreadArchived
 micup.const.CodeThreadLocked
 micup.const.CodeTwoFactorRequired
